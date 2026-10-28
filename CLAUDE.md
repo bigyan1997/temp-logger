@@ -17,6 +17,9 @@ Django + DRF, Postgres, React + Vite + Tailwind (plain JavaScript, no TypeScript
 ## Business rules (non-negotiable)
 - **Never delete records.** No delete endpoints, no admin delete, block DELETE in Postgres. Corrections = void with reason + replacement row linked via `supersedes`; every change goes to AuditLog.
 - Named accounts, roles `admin` (day) and `night`. Both roles enter storage, receiving and dispatch readings; only admin signs off corrective actions, voids, views all records and manages settings.
+- **Who took the reading:** logins are shared (admin@ and night@), so every reading/check must also record `recorded_by` = a `StaffMember` picked from an admin-managed list ("Your name", required, remembered per phone). Use the `setup.models.Attributed` abstract model on StorageReading/ReceivingCheck/DispatchReading and `RecordedBySerializerMixin` on their serializers. Staff are deactivated, never deleted.
+- **Code style:** the owner wants all code clean, tidy and easy to understand: small focused files, plain names, short comments that explain why, no clever tricks. Reuse the existing patterns (`ConfigViewSet` on the backend; `sections.js` + `ResourcePage` on the frontend) instead of writing one-off screens.
+- **Admin never needs Django admin:** everything day staff manage (logins, staff names, units and limits, suppliers, runs) is in the React Settings area (`/settings`).
 - Limits: chilled/coolrooms/dispatch ≤5 °C, frozen ≤-15 °C. Baked pies over 5 °C on receiving are acceptable only if moved to the coolroom immediately. An out-of-limit reading cannot be saved without a corrective action.
 - Storage units: Coolroom, Old Coolroom, Freezer, Chest Freezer. Storage slots: Sun 21:00; Mon–Thu 09:00 and 21:00; Fri 09:00 and 15:00.
 - Dispatch runs: A, B, C, D, E, G, H, J, K, L, M (no F or I).

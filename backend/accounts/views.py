@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 
+from .models import User
 from .serializers import ChangePasswordSerializer, LoginSerializer, UserSerializer
 
 
@@ -32,14 +33,16 @@ class LoginView(APIView):
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        # Sign in with email (case-insensitive). The username is kept equal to the email.
+        account = User.objects.filter(email__iexact=serializer.validated_data['email']).first()
         user = authenticate(
             request,
-            username=serializer.validated_data['username'],
+            username=account.username if account else '',
             password=serializer.validated_data['password'],
         )
         if user is None:
             return Response(
-                {'code': 'invalid_credentials', 'message': 'Wrong username or password.'},
+                {'code': 'invalid_credentials', 'message': 'Wrong email or password.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         login(request, user)

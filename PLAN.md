@@ -49,8 +49,9 @@ Login is per person, so "entered by" is automatic. No self-registration; admin c
 
 ## 4. Data model
 
-Every table has `created_at`, and records carry `entered_by`. No hard deletes anywhere.
+Every table has `created_at`, and records carry `entered_by` (the login) and `recorded_by` (the StaffMember). No hard deletes anywhere.
 
+- **StaffMember** — name, `active`; the people who take readings, picked in a required "Your name" dropdown on every entry (logins are the shared admin@/night@ accounts). Admin manages the list; never deleted
 - **User** — Django user + `role` (admin/night), `active`
 - **Unit** — name (Coolroom, Old Coolroom, Freezer, Chest Freezer), kind (chilled/frozen), `max_temp`, `active`
 - **StorageSlot** (config) — weekday + time (Sun 21:00; Mon–Thu 09:00, 21:00; Fri 09:00, 15:00) and which unit(s) apply; generates the "due" list

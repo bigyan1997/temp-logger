@@ -8,7 +8,7 @@ const inputClass =
 
 export default function Login() {
   const { user, login } = useAuth()
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -20,7 +20,7 @@ export default function Login() {
     setBusy(true)
     setError('')
     try {
-      await login(username.trim(), password)
+      await login(email.trim(), password)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -41,13 +41,14 @@ export default function Login() {
           </div>
         </div>
 
-        <label htmlFor="username" className="mb-1 block text-sm font-medium">Username</label>
+        <label htmlFor="email" className="mb-1 block text-sm font-medium">Email</label>
         <input
-          id="username"
+          id="email"
+          type="email"
           autoComplete="username"
           autoCapitalize="none"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           className={inputClass}
           required
         />

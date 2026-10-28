@@ -41,6 +41,6 @@ npm run build      # production bundle into frontend/dist (served by Django)
 ```
 
 ## Accounts
-Named accounts only; create them in Django admin (`/admin/`). Roles: **Admin (day)** and **Night**. Accounts are switched off, never deleted.
+Login is by **email + password**. Two shared accounts: `admin@achievecafeprovisions.com.au` (role Admin) and `night@achievecafeprovisions.com.au` (role Night). Admin staff manage logins, staff names, storage units (with limits), suppliers and delivery runs in the app itself under **Settings**, so Django admin (`/admin/`) is only a back-up tool. Logins live in the database, so they must be created again on each new database (including the orders PC). Accounts are deactivated, never deleted.
 
 Deployment instructions for the orders PC will be added when the first deploy happens.

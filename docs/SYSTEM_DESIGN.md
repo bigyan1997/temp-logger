@@ -100,6 +100,7 @@ erDiagram
 
 Design details:
 - **Corrective action link:** three separate nullable foreign keys (one per reading type) with a database CHECK that exactly one is set. This is preferred over a generic foreign key so integrity is enforced by Postgres. (PLAN.md mentions a generic FK; this supersedes it.)
+- **Who took it:** every reading has `entered_by` (the shared login) and `recorded_by` (a required StaffMember chosen from an admin-managed list). Implemented as the abstract model `setup.models.Attributed`.
 - **Idempotency:** each submit carries a client-generated UUID that becomes the row id, so a double-tap or retry cannot create a duplicate.
 - **Uniqueness:** one non-voided StorageReading per (unit, slot_date, slot_time); one non-voided ReceivingCheck per (supplier, date) unless admin permits extras; one non-voided DispatchReading per (run, date).
 - **Limits are copied** onto the reading (`limit_at_time`) so later limit changes never rewrite history.

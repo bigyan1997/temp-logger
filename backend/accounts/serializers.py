@@ -8,12 +8,12 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'display_name', 'role']
+        fields = ['id', 'email', 'display_name', 'role']
         read_only_fields = fields
 
 
 class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
+    email = serializers.EmailField()
     password = serializers.CharField(trim_whitespace=False)
 
 
