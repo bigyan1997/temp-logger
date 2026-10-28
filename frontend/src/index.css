@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+/* Design tokens (PLAN.md section 10): calm teal and white, status never by colour alone. */
+@theme {
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+
+  --color-bg: #f5f8f8;
+  --color-surface: #ffffff;
+  --color-ink: #12262b;
+  --color-muted: #5a6e73;
+  --color-line: #d8e3e4;
+  --color-brand: #0b7a75;
+  --color-brand-dark: #095f5b;
+  --color-brand-soft: #dff2f0;
+
+  --color-ok: #1b7f4b;
+  --color-near: #a35a00;
+  --color-bad: #b4233c;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+}

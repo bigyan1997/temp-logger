@@ -1,0 +1,21 @@
+# secrets and host details
+.env
+backend/.env
+DEPLOYMENT_NOTES.md
+
+# python
+backend/.venv/
+**/__pycache__/
+*.pyc
+backend/staticfiles/
+backend/logs/
+
+# node
+frontend/node_modules/
+frontend/dist/
+frontend/dist-next/
+
+# editor/OS
+.DS_Store
+Thumbs.db
+test.sqlite3
