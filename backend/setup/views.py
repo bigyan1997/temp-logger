@@ -2,6 +2,7 @@ from rest_framework import mixins, viewsets
 from rest_framework.permissions import IsAuthenticated
 
 from accounts.permissions import IsAdminRole
+from audit.models import AuditLog, record
 
 from .models import Run, StaffMember, Supplier, Unit
 from .serializers import RunSerializer, StaffMemberSerializer, SupplierSerializer, UnitSerializer
@@ -46,6 +47,15 @@ class StaffMemberViewSet(ConfigViewSet):
 class UnitViewSet(ConfigViewSet):
     queryset = Unit.objects.all()
     serializer_class = UnitSerializer
+
+    def perform_update(self, serializer):
+        old_limit = serializer.instance.max_temp
+        unit = serializer.save()
+        if unit.max_temp != old_limit:
+            record(
+                self.request.user, AuditLog.Action.LIMIT_CHANGED,
+                f'{unit.name} limit changed from {old_limit} °C to {unit.max_temp} °C',
+            )
 
 
 class SupplierViewSet(ConfigViewSet):

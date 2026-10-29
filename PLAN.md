@@ -142,6 +142,14 @@ Server validates everything: limit check sets `status`, an out-of-limit save is 
 
 Goal: a night-shift worker in a cold room, wearing gloves, can log a reading in under 10 seconds without training. Admin can see "is everything OK?" in one glance.
 
+### Device decision (owner, 2026-10-29): everyone uses a computer
+Night and day staff both work on desktop/laptop computers with a keyboard and mouse. Design **desktop-first and keyboard-first**: the on-screen number pad and phone-first bottom tab bar below are NOT needed. Instead:
+- Type temperatures straight into a number field (the minus key works), move between fields with Tab, save with Enter; the first field is focused automatically.
+- One screen can take several readings at once (for example all four storage units in one grid) so a round of readings is done in one go.
+- Large, clear numbers and status text sized for reading on a monitor; mouse targets still comfortable (at least 40 px).
+- Keep the layout responsive so it does not break on a small window or a tablet, but do not optimise for phones.
+- The "remember last name on this device" behaviour stays (works the same on a shared computer; the name picker is shown prominently and can be changed in one click).
+
 ### Principles (informed by web research, sources in NOTES.md)
 1. **One task per screen, big targets.** Tap targets at least 48 px (research suggests 44 px minimum; field use with gloves benefits from larger). Custom on-screen number pad with keys around 20 mm, laid out like a phone keypad, including a large **±** key and a decimal key.
 2. **Right keyboard.** Where the system keyboard is used, `inputmode="decimal"`. Labels sit above fields, never as placeholders.
@@ -175,3 +183,6 @@ Design tokens (colours, spacing, radii) defined once in the Tailwind config; sma
 - Dashboard top row = key numbers only (Missed, Out of limit, Awaiting sign-off, Logged today). Use colour sparingly, and use the same colour/icon for each status on every screen.
 - Separate lists for "needs action now" (overdue, out of limit) and "all good", so critical items never get lost in a long list.
 - Role-based home screens: night sees their checklist, admin sees oversight. Not one screen for everyone.
+
+## 11. Build status (2026-10-29)
+Phases 1 and 2 and the PDF reports are built. Phase 3 (monthly review checklist, thermometer calibration, non-conformance report, Table 13 audit checklist) and Phase 4 (email and SMS alerts) are not built. See NOTES.md for the full log and docs/DEPLOYMENT.md for going live.

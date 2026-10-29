@@ -118,7 +118,7 @@ status = "out_of_limit"  if value > max_temp
 Plausibility warnings (not blockers, need "confirm"): positive value for a frozen unit, a jump of more than 10 °C from the previous reading, a value outside -40 to +40.
 
 ### 5.2 Due and overdue slots (computed, not stored)
-`SlotSchedule` holds weekday + time + which units apply. Expected slots for a date range are generated on the fly and compared with existing readings:
+The weekly slot times live in code (`readings/schedule.py`), not in the database. Expected slots for a date range are generated on the fly and compared with existing readings:
 - **Upcoming:** slot time in the future.
 - **Due:** slot time reached, within the grace window (default 2 h, admin-editable).
 - **Overdue / missed:** grace window passed and no non-voided reading exists.
@@ -177,23 +177,34 @@ Unsigned actions show in the dashboard "Awaiting sign-off" tile.
 
 ## 6. API surface
 
-| Method & path | Role | Purpose |
-|---|---|---|
-| POST `/api/auth/login`, `/logout`; GET `/api/auth/me`, `/api/auth/csrf` | any | Session auth |
-| GET `/api/due` | any | Slots due/overdue for the current shift |
-| POST `/api/storage-readings` | any | Log storage reading(s) |
-| POST `/api/receiving-checks` | any | Log delivery or no-delivery |
-| POST `/api/dispatch-readings` | any | Log run temperature |
-| GET `/api/my-entries` | any | Own recent entries |
-| POST `/api/corrective-actions/{id}/signoff` | admin | Sign off |
-| GET `/api/storage-readings`, `/receiving-checks`, `/dispatch-readings` | admin | Filtered lists (date, unit/supplier/run, status, voided) |
-| POST `/api/<record>/{id}/void` | admin | Void/correct with reason |
-| GET `/api/dashboard` | admin | Tile counts and attention lists |
-| GET `/api/trends?unit=&from=&to=` | admin | Series for charts |
-| GET `/api/reports/{storage,receiving,dispatch}.pdf` | admin | Auditor PDFs |
-| CRUD (no delete) `/api/units`, `/suppliers`, `/runs`, `/users`, `/slots`, `/limits` | admin | Settings |
+**Built so far** (all under `/api/`, JSON, session login). "Anyone" means any signed-in login.
 
-Conventions: JSON, ISO timestamps in UTC, pagination on lists, errors as `{code, message, fields}`.
+| Method and path | Who | Purpose |
+|---|---|---|
+| POST `auth/login/`, `auth/logout/`; GET `auth/me/`, `auth/csrf/`; POST `auth/change-password/` | Anyone | Sign in with email and password |
+| GET `health/` | Public | Is the server up |
+| GET `staff/`, `units/`, `suppliers/`, `runs/` | Anyone | Active items for the entry forms. Admin can add `?all=1` |
+| POST, PATCH the same four lists | Admin | Add, edit, deactivate (no delete) |
+| GET, POST, PATCH `users/` | Admin | Manage logins, reset passwords (no delete) |
+| POST `storage-readings/`, `receiving-checks/`, `dispatch-readings/` | Anyone | Log a reading. Sending the same `id` again returns the saved entry |
+| GET the same three, plus `{id}/` | Anyone | Night: own entries from the last 2 days. Admin: everything, filter by `from`, `to`, `status`, `include_voided`, `unit` or `supplier` or `run` |
+| GET `corrective-actions/` (`?unsigned=1`) | Admin | Corrective actions, with a one-line summary of each reading |
+| POST `corrective-actions/{id}/signoff/` | Admin | Sign off; body `{"staff": id}` names the person (the login is shared); written to the audit log |
+| GET `dashboard/` | Admin | Tile counts, missed storage readings (today and yesterday, after a 2-hour grace period), out-of-limit readings from the last 7 days |
+| GET `day/?date=` | Anyone | What is due and already logged on a day: storage slots (done, due, missed, upcoming) per unit, receiving per supplier, dispatch per run |
+| POST `{storage-readings,receiving-checks,dispatch-readings}/{id}/void/` | Admin | Void an entry with a reason, optionally with a `replacement` (the correction). Undone entirely if the correction is refused. Written to the audit log |
+| GET `audit-log/` | Admin | The audit log (voids, limit changes, login changes) |
+| GET `trends/?unit=&from=&to=` | Admin | One unit's temperatures over time |
+| GET `reports/{storage,receiving,dispatch}.pdf?from=&to=` | Admin | PDF copying paper Tables 9, 10 and 11 (up to 186 days (about 6 months); whole Sunday-to-Friday weeks; Table 9 has 4 weeks per page with rotated unit names, Tables 10 and 11 have a row per day, starting with a Sunday night row) |
+| GET `reading-options/` | Anyone | Limits, corrective-action choices per kind of check, product types, storage slot times |
+
+How saving a reading answers:
+- `201` saved (or `200` if the same `id` was already saved).
+- `400` the entry is wrong (duplicate, not a scheduled time, deactivated item, missing name, impossible value).
+- `422` with `code: needs_confirmation` and `warnings`: the value looks odd, resend with `confirm_unusual: true`.
+- `422` with `code: corrective_required`: resend with `corrective: {action, notes, hours_above_limit}`.
+
+**Everything in the plan is built.** Possible later additions: email and SMS alerts, thermometer calibration records (Table 14), the monthly review checklist (Table 15), a non-conformance report (Table 5).
 
 ## 7. Security
 

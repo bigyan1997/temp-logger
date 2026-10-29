@@ -26,6 +26,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'accounts',
     'setup',
+    'readings',
+    'audit',
+    'reports',
 ]
 
 MIDDLEWARE = [
@@ -57,7 +60,7 @@ REST_FRAMEWORK = {
 # same-origin and no CORS setup is needed. In production Django serves the
 # built frontend itself.
 CSRF_TRUSTED_ORIGINS = config(
-    'CSRF_TRUSTED_ORIGINS', default='http://localhost:5173', cast=Csv()
+    'CSRF_TRUSTED_ORIGINS', default='http://localhost:5173,http://127.0.0.1:5173', cast=Csv()
 )
 
 # Staff stay signed in on their phones for a week; the session slides forward

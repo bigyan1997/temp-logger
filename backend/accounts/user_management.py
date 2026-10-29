@@ -4,6 +4,8 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import mixins, serializers, viewsets
 from rest_framework.routers import DefaultRouter
 
+from audit.models import AuditLog, record
+
 from .models import User
 from .permissions import IsAdminRole
 
@@ -69,6 +71,25 @@ class LoginAccountViewSet(
     serializer_class = LoginAccountSerializer
     permission_classes = [IsAdminRole]
     pagination_class = None
+
+    def perform_create(self, serializer):
+        login = serializer.save()
+        record(self.request.user, AuditLog.Action.LOGIN_CREATED, f'Login created: {login.email} ({login.role})')
+
+    def perform_update(self, serializer):
+        before = {'role': serializer.instance.role, 'active': serializer.instance.is_active}
+        password_reset = bool(serializer.validated_data.get('password'))
+        login = serializer.save()
+
+        changes = []
+        if login.role != before['role']:
+            changes.append(f'role is now {login.role}')
+        if login.is_active != before['active']:
+            changes.append('reactivated' if login.is_active else 'deactivated')
+        if password_reset:
+            changes.append('password reset')
+        if changes:
+            record(self.request.user, AuditLog.Action.LOGIN_CHANGED, f'{login.email}: {", ".join(changes)}')
 
 
 router = DefaultRouter()

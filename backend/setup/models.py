@@ -51,7 +51,7 @@ class Supplier(models.Model):
     active = models.BooleanField(default=True)
 
     class Meta:
-        ordering = ['name']
+        ordering = ['id']  # the order they were added, which is the order of the paper sheet
         constraints = [models.UniqueConstraint(Lower('name'), name='supplier_name_ci_unique')]
 
     def __str__(self):

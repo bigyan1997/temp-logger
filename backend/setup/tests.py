@@ -103,3 +103,17 @@ class ConfigListTests(ApiTestCase):
         self.client.force_login(self.night)
         names = [s['name'] for s in self.client.get('/api/suppliers/').json()]
         self.assertNotIn('Posh Foods', names)
+
+
+class SupplierOrderTests(ApiTestCase):
+    def test_suppliers_come_in_the_order_of_the_paper_sheet(self):
+        self.client.force_login(self.night)
+        names = [s['name'] for s in self.client.get('/api/suppliers/').json()]
+        self.assertEqual(names[:3], ['Atown - Knefeh only', 'Posh Foods', "Shepherd's - Pies/Rolls only"])
+        self.assertEqual(names[-1], 'Quality Patisserie')
+
+    def test_a_new_supplier_goes_on_the_end(self):
+        self.client.force_login(self.admin)
+        self.client.post('/api/suppliers/', {'name': 'Aardvark Bakery'}, format='json')
+        names = [s['name'] for s in self.client.get('/api/suppliers/').json()]
+        self.assertEqual(names[-1], 'Aardvark Bakery')

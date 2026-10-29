@@ -5,15 +5,20 @@ function getCookie(name) {
   return match ? decodeURIComponent(match[1]) : ''
 }
 
+// Every text message inside an error body, however deeply it is nested.
+function messagesIn(value) {
+  if (typeof value === 'string') return [value]
+  if (Array.isArray(value)) return value.flatMap(messagesIn)
+  if (value && typeof value === 'object') return Object.values(value).flatMap(messagesIn)
+  return []
+}
+
 // Turns an API error body into one readable sentence.
-// Handles {message: "..."} and Django-style {field: ["problem", ...]}.
+// Handles {message: "..."} and Django-style {field: ["problem"]}, including nested fields.
 function describeError(body, status) {
-  if (body?.message) return body.message
-  if (body && typeof body === 'object') {
-    const problems = Object.values(body).flat().filter((v) => typeof v === 'string')
-    if (problems.length) return problems.join(' ')
-  }
-  return `Something went wrong (${status}).`
+  if (typeof body?.message === 'string') return body.message
+  const problems = messagesIn(body)
+  return problems.length ? problems.join(' ') : `Something went wrong (${status}).`
 }
 
 export class ApiError extends Error {
