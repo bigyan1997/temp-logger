@@ -9,7 +9,7 @@ function visibleFields(fields, isNew) {
 }
 
 function startingValues(fields, item) {
-  return Object.fromEntries(fields.map((f) => [f.name, item?.[f.name] ?? (f.type === 'select' ? f.options[0].value : '')]))
+  return Object.fromEntries(fields.map((f) => [f.name, item?.[f.name] ?? (f.type === 'select' ? f.options[0].value : f.type === 'checkbox' ? false : '')]))
 }
 
 // Add / edit form for one list item, driven by the section's field list.
@@ -35,10 +35,23 @@ export default function ItemForm({ fields, item, saving, error, onSave, onCancel
           const required = field.required && !(field.optionalOnEdit && !isNew)
           return (
             <div key={field.name}>
-              <label htmlFor={id} className="mb-1 block text-sm font-medium">
-                {field.label}
-              </label>
-              {field.type === 'select' ? (
+              {field.type !== 'checkbox' && (
+                <label htmlFor={id} className="mb-1 block text-sm font-medium">
+                  {field.label}
+                </label>
+              )}
+              {field.type === 'checkbox' ? (
+                <label htmlFor={id} className="flex items-center gap-3 text-sm font-medium">
+                  <input
+                    id={id}
+                    type="checkbox"
+                    checked={values[field.name]}
+                    onChange={(e) => setValues({ ...values, [field.name]: e.target.checked })}
+                    className="size-5 accent-brand"
+                  />
+                  {field.label}
+                </label>
+              ) : field.type === 'select' ? (
                 <select
                   id={id}
                   value={values[field.name]}

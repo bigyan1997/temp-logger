@@ -30,11 +30,21 @@ class CorrectiveActionInputSerializer(serializers.Serializer):
 
 
 class SignOffSerializer(serializers.Serializer):
-    """Who is approving: a person currently on the staff list."""
+    """Who is approving (a manager on the staff list) and, if it is their own entry, why that is fine."""
 
     staff = serializers.PrimaryKeyRelatedField(
-        queryset=StaffMember.objects.filter(active=True), error_messages={'does_not_exist': 'Pick a name from the list.'}
+        queryset=StaffMember.objects.filter(active=True, can_sign_off=True),
+        error_messages={'does_not_exist': 'Pick a manager who can sign off.'},
     )
+    note = serializers.CharField(max_length=500, required=False, allow_blank=True, default='')
+
+    def validate(self, attrs):
+        own_entry = attrs['staff'].pk == self.context['action'].reading.recorded_by_id
+        if own_entry and not attrs['note'].strip():
+            raise serializers.ValidationError(
+                {'note': 'You took this reading, so add a note saying why you are signing it off.'}
+            )
+        return attrs
 
 
 class CorrectiveActionSerializer(serializers.ModelSerializer):
@@ -45,12 +55,13 @@ class CorrectiveActionSerializer(serializers.ModelSerializer):
     action_label = serializers.CharField(source='get_action_display', read_only=True)
     signed_off_by_name = serializers.CharField(source='signed_off_name', default=None, read_only=True)
     logged_by_name = serializers.SerializerMethodField()
+    logged_by_id = serializers.SerializerMethodField()
 
     class Meta:
         model = CorrectiveAction
         fields = [
             'id', 'kind', 'summary', 'action', 'action_label', 'notes', 'hours_above_limit',
-            'created_at', 'logged_by_name', 'signed_off_at', 'signed_off_by_name',
+            'created_at', 'logged_by_name', 'logged_by_id', 'signed_off_at', 'signed_off_by_name', 'signed_off_note',
         ]
 
     def get_kind(self, action):
@@ -63,6 +74,9 @@ class CorrectiveActionSerializer(serializers.ModelSerializer):
 
     def get_logged_by_name(self, action):
         return action.reading.recorded_by.name
+
+    def get_logged_by_id(self, action):
+        return action.reading.recorded_by_id
 
 
 class ReadingSerializer(RecordedBySerializerMixin, serializers.ModelSerializer):

@@ -17,7 +17,16 @@ export const sections = [
     empty: 'No names yet. Add the first one.',
     activeKey: 'active',
     title: (item) => item.name,
-    fields: [{ name: 'name', label: 'Full name', type: 'text', required: true }],
+    detail: (item) => (item.can_sign_off ? 'Can sign off corrective actions' : ''),
+    fields: [
+      { name: 'name', label: 'Full name', type: 'text', required: true },
+      {
+        name: 'can_sign_off',
+        label: 'Manager: can sign off corrective actions',
+        type: 'checkbox',
+        help: 'Day or night managers. They choose their name when approving an out-of-limit reading.',
+      },
+    ],
   },
   {
     path: 'units',

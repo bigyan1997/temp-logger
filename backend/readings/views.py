@@ -156,10 +156,13 @@ class DispatchReadingViewSet(ReadingViewSet):
 
 
 class CorrectiveActionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
-    """Admin list of corrective actions (?unsigned=1 for those still waiting) and sign-off."""
+    """Corrective actions (?unsigned=1 for those still waiting) and sign-off.
+
+    Admin sees them all. The night login sees only those waiting, so the night manager can sign off.
+    """
 
     serializer_class = CorrectiveActionSerializer
-    permission_classes = [IsAdminRole]
+    permission_classes = [IsAuthenticated]
     pagination_class = ReadingPagination
 
     def get_queryset(self):
@@ -168,23 +171,29 @@ class CorrectiveActionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             'storage_reading__recorded_by', 'receiving_check__recorded_by', 'dispatch_reading__recorded_by',
             'signed_off_by', 'signed_off_person',
         )
-        if self.request.query_params.get('unsigned') == '1':
-            actions = actions.filter(signed_off_at__isnull=True)
-        return actions
+        waiting_only = self.request.query_params.get('unsigned') == '1' or not self.request.user.is_admin_role
+        return actions.filter(signed_off_at__isnull=True) if waiting_only else actions
 
     @action(detail=True, methods=['post'])
     def signoff(self, request, pk=None):
-        """Approve an action. The body names the person doing it: {"staff": id} (the login is shared)."""
+        """Approve an action. The body names the manager: {"staff": id, "note": "..."} (the logins are shared).
+
+        The note is required when the manager also took the reading.
+        """
         corrective_action = self.get_object()
         if corrective_action.signed_off_at is None:
-            who = SignOffSerializer(data=request.data)
+            who = SignOffSerializer(data=request.data, context={'action': corrective_action})
             who.is_valid(raise_exception=True)
-            person = who.validated_data['staff']
+            person, note = who.validated_data['staff'], who.validated_data['note'].strip()
             corrective_action.signed_off_by = request.user
             corrective_action.signed_off_person = person
+            corrective_action.signed_off_note = note
             corrective_action.signed_off_at = timezone.now()
-            corrective_action.save(update_fields=['signed_off_by', 'signed_off_person', 'signed_off_at'])
-            record(request.user, AuditLog.Action.SIGNED_OFF, f'{corrective_action.reading} signed off by {person.name}')
+            corrective_action.save(
+                update_fields=['signed_off_by', 'signed_off_person', 'signed_off_note', 'signed_off_at']
+            )
+            summary = f'{corrective_action.reading} signed off by {person.name}'
+            record(request.user, AuditLog.Action.SIGNED_OFF, summary, reason=note)
         return Response(self.get_serializer(corrective_action).data)
 
 

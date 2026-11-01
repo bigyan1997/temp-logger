@@ -20,6 +20,8 @@ from readings.schedule import STORAGE_SLOTS
 from setup.models import Run, Supplier, Unit
 
 MAX_DAYS = 186  # about 6 months
+NO_DELIVERY = 'No delivery'
+RUN_NOT_USED = 'Run not used'
 WEEKS_PER_STORAGE_SHEET = 4
 DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 STORAGE_DAY_ORDER = [6, 0, 1, 2, 3, 4]  # Sunday first, then Monday to Friday (Python weekday numbers)
@@ -124,7 +126,7 @@ def weekly_rows(sundays, entries, items, text_for, sunday_label):
 
 
 def receiving_grid(start, end):
-    """Table 10: a column per supplier, with a "Sunday night" row. "-" means no delivery; "(pkg)" means packaging was not OK."""
+    """Table 10: a column per supplier, with a "Sunday night" row. "(pkg)" means packaging was not OK."""
     sundays = week_sundays(start, end)
     checks = ReceivingCheck.objects.filter(
         date__gte=sundays[0], date__lte=sundays[-1] + timedelta(days=6), voided=False
@@ -135,7 +137,9 @@ def receiving_grid(start, end):
     def text_for(check):
         if check is None:
             return ''
-        text = '-' if check.no_delivery else f'{check.temp}'
+        if check.no_delivery:
+            return NO_DELIVERY
+        text = f'{check.temp}'
         if not check.packaging_ok:
             text += ' (pkg)'
         return f'{text}*' if check.status == Status.OUT_OF_LIMIT or not check.packaging_ok else text
@@ -143,8 +147,12 @@ def receiving_grid(start, end):
     return {'columns': [s.name for s in suppliers], 'rows': weekly_rows(sundays, entries, suppliers, text_for, 'Sunday night')}
 
 
-def dispatch_grid(start, end):
-    """Table 11: a column per run, with a "Sunday" row."""
+def dispatch_grid(start, end, today=None):
+    """Table 11: a column per run, with a "Sunday" row.
+
+    A run with no reading on a day when other runs were logged was not used that day, and says so.
+    A day with nothing logged at all is left blank (it may simply not have happened yet).
+    """
     sundays = week_sundays(start, end)
     readings = DispatchReading.objects.filter(
         date__gte=sundays[0], date__lte=sundays[-1] + timedelta(days=6), voided=False
@@ -155,10 +163,22 @@ def dispatch_grid(start, end):
     def text_for(reading):
         return starred(reading, f'{reading.temp}') if reading else ''
 
-    return {'columns': [f'Run {r.code}' for r in runs], 'rows': weekly_rows(sundays, entries, runs, text_for, 'Sunday')}
+    rows = weekly_rows(sundays, entries, runs, text_for, 'Sunday')
+    for row in rows:
+        if row['date'] < (today or timezone.localdate()) and any(row['cells']):
+            row['cells'] = [cell or RUN_NOT_USED for cell in row['cells']]
+    return {'columns': [f'Run {r.code}' for r in runs], 'rows': rows}
 
 
 # Corrective actions listed under each report -------------------------------
+
+def signed_off_text(action):
+    """"Jessica, 30/10/2026", followed by her note when she signed off her own entry."""
+    if not action.signed_off_at:
+        return 'Not signed off'
+    text = f'{action.signed_off_name}, {timezone.localtime(action.signed_off_at):%d/%m/%Y}'
+    return f'{text} - {action.signed_off_note}' if action.signed_off_note else text
+
 
 def logged_by(reading):
     """The person who took the reading and the login they used: "Sam (night)"."""
@@ -166,7 +186,18 @@ def logged_by(reading):
     return f'{reading.recorded_by.name} ({shift})'
 
 
+def reading_date(reading):
+    """The day a reading belongs to (a storage reading by its slot, in Sydney time)."""
+    return timezone.localtime(reading.slot).date() if hasattr(reading, 'slot') else reading.date
+
+
+def week_start(day):
+    """The Sunday that starts the week containing `day` (weeks run Sunday to Saturday)."""
+    return day - timedelta(days=(day.weekday() + 1) % 7)
+
+
 def corrective_rows(start, end, kind):
+    """Corrective actions in date order. `week_starts` has the Sunday of each row, so the PDF can group by week."""
     filters = {
         'storage': {'storage_reading__slot__date__range': (start, end), 'storage_reading__voided': False},
         'receiving': {'receiving_check__date__range': (start, end), 'receiving_check__voided': False},
@@ -176,14 +207,15 @@ def corrective_rows(start, end, kind):
     for parent in ('storage_reading', 'receiving_check', 'dispatch_reading'):
         actions = actions.select_related(f'{parent}__recorded_by', f'{parent}__entered_by')
 
-    rows = []
-    for action in actions.order_by('created_at'):
-        signed = (
-            f'{action.signed_off_name}, {timezone.localtime(action.signed_off_at):%d/%m/%Y}'
-            if action.signed_off_at else 'Not signed off'
-        )
-        rows.append([str(action.reading), action.get_action_display(), action.notes, logged_by(action.reading), signed])
-    return {'headers': ['Reading', 'Action taken', 'Notes', 'Logged by', 'Signed off'], 'rows': rows}
+    ordered = sorted(actions, key=lambda action: (reading_date(action.reading), action.created_at))
+    rows = [
+        [str(a.reading), a.get_action_display(), a.notes, logged_by(a.reading), signed_off_text(a)] for a in ordered
+    ]
+    return {
+        'headers': ['Reading', 'Action taken', 'Notes', 'Logged by', 'Signed off'],
+        'rows': rows,
+        'week_starts': [week_start(reading_date(a.reading)) for a in ordered],
+    }
 
 
 # kind -> (heading as on the paper sheet, function that builds the content)

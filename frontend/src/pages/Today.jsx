@@ -1,6 +1,7 @@
 import { ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth.jsx'
+import SignOffPanel from '../components/SignOffPanel.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import { formatLongDate, formatTime, todayInSydney } from '../lib/format.js'
 import { useDay } from '../lib/useDay.js'
@@ -71,6 +72,10 @@ export default function Today() {
           </Card>
         </div>
       )}
+
+      <div className="mt-6">
+        <SignOffPanel />
+      </div>
     </div>
   )
 }

@@ -38,7 +38,7 @@ class StaffMemberSerializer(UniqueNameMixin, serializers.ModelSerializer):
 
     class Meta:
         model = StaffMember
-        fields = ['id', 'name', 'active']
+        fields = ['id', 'name', 'active', 'can_sign_off']
 
 
 class UnitSerializer(UniqueNameMixin, serializers.ModelSerializer):

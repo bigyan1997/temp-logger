@@ -2,6 +2,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from readings.dashboard import build_dashboard, missed_storage_slots
+from setup.models import StaffMember
 
 from .base import MONDAY_9AM, ReadingTestCase
 
@@ -73,7 +74,8 @@ class DashboardApiTests(ReadingTestCase):
         self.sign_in(self.night)
         self.dispatch('6.0', corrective=FIX)
         self.sign_in(self.admin)
+        manager = StaffMember.objects.create(name='Jess', can_sign_off=True)
         action_id = self.client.get('/api/corrective-actions/').json()['results'][0]['id']
-        self.client.post(f'/api/corrective-actions/{action_id}/signoff/', {'staff': self.sam.pk}, format='json')
+        self.client.post(f'/api/corrective-actions/{action_id}/signoff/', {'staff': manager.pk}, format='json')
         tiles = self.client.get('/api/dashboard/').json()['tiles']
         self.assertEqual(tiles['awaiting_signoff'], 0)

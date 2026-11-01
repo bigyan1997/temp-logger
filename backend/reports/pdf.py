@@ -15,17 +15,22 @@ from reportlab.lib.units import mm
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.platypus import Flowable, PageBreak, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
+from .grids import NO_DELIVERY, RUN_NOT_USED
+
 COMPANY = 'Achieve Cafe Provisions'
 HACCP_PLAN = 'HACCP Plan 1.6'  # update when the HACCP plan version changes
 
 INK = colors.black
-RED = colors.HexColor('#b4233c')
+RED = colors.HexColor('#8c1020')            # text of an out-of-limit reading
+RED_CELL = colors.HexColor('#f2a0a8')       # the whole cell is filled, so it is easy to spot
+QUIET = colors.HexColor('#666666')          # "No delivery" and "Run not used"
+WEEK_HEADING = colors.HexColor('#d9d9d9')   # the heading above each week of corrective actions
 BAND = colors.HexColor('#e9e9e9')       # the grey bands on Tables 10 and 11
 DATE_ROW = colors.HexColor('#f3f3f3')   # the date rows on Table 9
 LEGENDS = {
-    'storage': '* = out of limit',
-    'receiving': '* = out of limit or packaging not OK      - = no delivery      (pkg) = packaging not OK',
-    'dispatch': '* = out of limit',
+    'storage': 'Red cell * = out of limit',
+    'receiving': 'Red cell * = out of limit or packaging not OK      (pkg) = packaging not OK',
+    'dispatch': 'Red cell * = out of limit',
 }
 
 STYLES = getSampleStyleSheet()
@@ -59,12 +64,20 @@ def date_text(day):
     return f'{day:%d/%m/%Y}' if day else ''
 
 
-def red_stars(data, style, first_row, first_column=1):
-    """Marks every cell ending in * in red bold, so out-of-limit readings stand out."""
+def mark_special_cells(data, style, first_row, first_column=1):
+    """Out-of-limit readings (ending in *) get a red cell; "No delivery" and "Run not used" get small grey text."""
     for r, row in enumerate(data):
         for c, cell in enumerate(row):
-            if r >= first_row and c >= first_column and isinstance(cell, str) and cell.endswith('*'):
-                style += [('TEXTCOLOR', (c, r), (c, r), RED), ('FONTNAME', (c, r), (c, r), 'Helvetica-Bold')]
+            if r < first_row or c < first_column or not isinstance(cell, str):
+                continue
+            if cell.endswith('*'):
+                style += [
+                    ('BACKGROUND', (c, r), (c, r), RED_CELL),
+                    ('TEXTCOLOR', (c, r), (c, r), RED),
+                    ('FONTNAME', (c, r), (c, r), 'Helvetica-Bold'),
+                ]
+            elif cell in (NO_DELIVERY, RUN_NOT_USED):
+                style += [('TEXTCOLOR', (c, r), (c, r), QUIET), ('FONTSIZE', (c, r), (c, r), 6.5)]
 
 
 def storage_table(sheet, width):
@@ -110,7 +123,7 @@ def storage_table(sheet, width):
             style.append(('ALIGN', (0, row_number), (0, row_number), 'LEFT'))
         data.append(cells)
 
-    red_stars(data, style, first_row=2)
+    mark_special_cells(data, style, first_row=2)
     # Heavier line between weeks, like the paper sheet.
     style += [('LINEBEFORE', (1 + week * unit_count, 0), (1 + week * unit_count, -1), 1.5, INK) for week in range(4)]
 
@@ -141,7 +154,7 @@ def weekly_table(grid, width):
         style.append(('BACKGROUND', (0, index), (-1, index), BAND if index % 2 == 0 else colors.white))
         if row['new_week'] and index > 1:
             style.append(('LINEABOVE', (0, index), (-1, index), 1.5, INK))
-    red_stars(data, style, first_row=1, first_column=2)
+    mark_special_cells(data, style, first_row=1, first_column=2)
 
     # Compact rows so four weeks (24 rows) fit on one landscape page, like the paper sheet.
     row_heights = [11 * mm] + [5.7 * mm] * (len(data) - 1)
@@ -154,16 +167,31 @@ def weekly_table(grid, width):
 
 def corrective_table(corrective, width):
     # Paragraphs wrap long notes inside their cell instead of running into the next column.
-    rows = [[Paragraph(escape(text), CELL) for text in row] for row in corrective['rows']]
-    data = [corrective['headers'], *rows]
-    table = Table(data, repeatRows=1, colWidths=[width * 0.17, width * 0.17, width * 0.32, width * 0.16, width * 0.18])
-    table.setStyle(TableStyle([
+    # A grey heading row starts each week, like the heavier week lines on the main tables.
+    data = [corrective['headers']]
+    style = [
         ('FONTSIZE', (0, 0), (-1, -1), 8),
         ('GRID', (0, 0), (-1, -1), 0.5, INK),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('BACKGROUND', (0, 0), (-1, 0), BAND),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-    ]))
+    ]
+    current_week = None
+    for week, row in zip(corrective['week_starts'], corrective['rows']):
+        if week != current_week:
+            current_week = week
+            heading = f'Week starting Sunday {date_text(week)}'
+            style += [
+                ('SPAN', (0, len(data)), (-1, len(data))),
+                ('BACKGROUND', (0, len(data)), (-1, len(data)), WEEK_HEADING),
+                ('FONTNAME', (0, len(data)), (-1, len(data)), 'Helvetica-Bold'),
+                ('LINEABOVE', (0, len(data)), (-1, len(data)), 1.5, INK),
+            ]
+            data.append([heading] + [''] * (len(row) - 1))
+        data.append([Paragraph(escape(text), CELL) for text in row])
+
+    table = Table(data, repeatRows=1, colWidths=[width * 0.17, width * 0.17, width * 0.32, width * 0.16, width * 0.18])
+    table.setStyle(TableStyle(style))
     return table
 
 

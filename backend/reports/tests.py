@@ -2,6 +2,7 @@ from datetime import date
 
 from django.test import SimpleTestCase
 
+from readings.models import CorrectiveAction
 from readings.tests.base import MONDAY_9AM, MONDAY_9PM, ReadingTestCase
 
 from .grids import clock_label, corrective_rows, dispatch_grid, receiving_grid, storage_sheets, week_sundays
@@ -108,7 +109,20 @@ class WeeklyGridTests(ReadingTestCase):
         )
         grid = receiving_grid(START, END)
         column = grid['columns'].index('Posh Foods')
-        self.assertEqual([row['cells'][column] for row in grid['rows']], ['', '4.0', '-', '3.0 (pkg)*', '13.0*', ''])
+        self.assertEqual([row['cells'][column] for row in grid['rows']], ['', '4.0', 'No delivery', '3.0 (pkg)*', '13.0*', ''])
+
+    def test_a_run_with_no_reading_says_not_used_on_days_when_other_runs_went_out(self):
+        self.dispatch('4.0', date='2026-11-03')  # Run A only, on the Tuesday
+        rows = dispatch_grid(START, END, today=date(2026, 11, 10))['rows']
+        tuesday = rows[2]['cells']
+        self.assertEqual(tuesday[0], '4.0')
+        self.assertTrue(all(cell == 'Run not used' for cell in tuesday[1:]))
+        self.assertEqual(rows[3]['cells'], [''] * len(tuesday))  # nothing logged that day: left blank
+
+    def test_nothing_says_not_used_for_today_or_the_future(self):
+        self.dispatch('4.0', date='2026-11-03')
+        tuesday = dispatch_grid(START, END, today=date(2026, 11, 3))['rows'][2]['cells']
+        self.assertEqual(tuesday[1], '')
 
     def test_sunday_night_entries_have_their_own_row(self):
         self.receiving('4.5', date='2026-11-01')
@@ -135,6 +149,25 @@ class WeeklyGridTests(ReadingTestCase):
         self.assertEqual(rows['headers'][3], 'Logged by')
         self.assertEqual(rows['rows'][0][3], 'Sam (night)')
         self.assertEqual(rows['rows'][0][4], 'Not signed off')
+
+    def test_corrective_actions_are_in_date_order_with_their_week(self):
+        self.dispatch('5.1', date='2026-11-10', corrective={'action': 'rechecked'})  # entered first, but later
+        self.dispatch('5.2', date='2026-11-03', corrective={'action': 'rechecked'})
+        rows = corrective_rows(date(2026, 11, 1), date(2026, 11, 14), 'dispatch')
+        self.assertIn('5.2', rows['rows'][0][0])
+        self.assertEqual(rows['week_starts'], [date(2026, 11, 1), date(2026, 11, 8)])
+
+    def test_signed_off_column_shows_the_manager_and_any_note(self):
+        self.sam.can_sign_off = True  # Sam took the reading and signs it off too
+        self.sam.save()
+        self.dispatch('5.1', corrective={'action': 'rechecked'})
+        action = CorrectiveAction.objects.get()
+        self.client.post(
+            f'/api/corrective-actions/{action.pk}/signoff/',
+            {'staff': self.sam.pk, 'note': 'Only manager on shift'}, format='json',
+        )
+        signed = corrective_rows(START, END, 'dispatch')['rows'][0][4]
+        self.assertTrue(signed.startswith('Sam, ') and signed.endswith(' - Only manager on shift'), signed)
 
     def test_weeks_are_marked_so_the_pdf_can_draw_a_heavier_line(self):
         rows = dispatch_grid(date(2026, 11, 2), date(2026, 11, 10))['rows']

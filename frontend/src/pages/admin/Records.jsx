@@ -117,7 +117,7 @@ export default function Records() {
                 </td>
                 <td className="px-4 py-3 text-right">
                   {!r.voided && (
-                    <button onClick={() => setVoiding(r)} className="h-9 rounded-lg border border-line px-3 text-sm font-medium hover:bg-brand-soft">
+                    <button onClick={() => setVoiding(r)} className="h-9 whitespace-nowrap rounded-lg border border-line px-3 text-sm font-medium hover:bg-brand-soft">
                       Void / correct
                     </button>
                   )}

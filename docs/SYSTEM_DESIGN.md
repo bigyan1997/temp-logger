@@ -188,8 +188,8 @@ Unsigned actions show in the dashboard "Awaiting sign-off" tile.
 | GET, POST, PATCH `users/` | Admin | Manage logins, reset passwords (no delete) |
 | POST `storage-readings/`, `receiving-checks/`, `dispatch-readings/` | Anyone | Log a reading. Sending the same `id` again returns the saved entry |
 | GET the same three, plus `{id}/` | Anyone | Night: own entries from the last 2 days. Admin: everything, filter by `from`, `to`, `status`, `include_voided`, `unit` or `supplier` or `run` |
-| GET `corrective-actions/` (`?unsigned=1`) | Admin | Corrective actions, with a one-line summary of each reading |
-| POST `corrective-actions/{id}/signoff/` | Admin | Sign off; body `{"staff": id}` names the person (the login is shared); written to the audit log |
+| GET `corrective-actions/` (`?unsigned=1`) | Any login | Corrective actions with a one-line summary of each reading. Admin sees all; the night login sees only those waiting |
+| POST `corrective-actions/{id}/signoff/` | Any login | Sign off; body `{"staff": id, "note": "..."}`. `staff` must be an active manager (`can_sign_off`); `note` is required when that person also took the reading. Written to the audit log |
 | GET `dashboard/` | Admin | Tile counts, missed storage readings (today and yesterday, after a 2-hour grace period), out-of-limit readings from the last 7 days |
 | GET `day/?date=` | Anyone | What is due and already logged on a day: storage slots (done, due, missed, upcoming) per unit, receiving per supplier, dispatch per run |
 | POST `{storage-readings,receiving-checks,dispatch-readings}/{id}/void/` | Admin | Void an entry with a reason, optionally with a `replacement` (the correction). Undone entirely if the correction is refused. Written to the audit log |

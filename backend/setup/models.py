@@ -11,6 +11,9 @@ class StaffMember(models.Model):
 
     name = models.CharField(max_length=80)
     active = models.BooleanField(default=True)
+    can_sign_off = models.BooleanField(
+        default=False, help_text='A manager who may approve corrective actions (day or night).'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

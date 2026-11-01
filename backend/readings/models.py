@@ -133,6 +133,10 @@ class CorrectiveAction(models.Model):
         help_text='The person who approved it (the login is shared). Empty on sign-offs made before names were recorded.',
     )
     signed_off_at = models.DateTimeField(null=True, blank=True)
+    signed_off_note = models.CharField(
+        max_length=500, blank=True,
+        help_text='Required when the person signing off also took the reading.',
+    )
 
     objects = CorrectiveActionQuerySet.as_manager()
 
