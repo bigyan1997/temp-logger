@@ -2,7 +2,8 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from readings.dashboard import build_dashboard, missed_storage_slots
-from setup.models import StaffMember
+from django.utils import timezone
+from setup.models import Run, StaffMember
 
 from .base import MONDAY_9AM, ReadingTestCase
 
@@ -69,6 +70,16 @@ class DashboardApiTests(ReadingTestCase):
         self.assertEqual(data['out_of_limit'][0]['kind'], 'storage')
         self.assertEqual(data['out_of_limit'][0]['recorded_by'], 'Sam')
         self.assertFalse(data['out_of_limit'][0]['signed_off'])
+
+    def test_progress_today(self):
+        self.sign_in(self.night)
+        today = timezone.localdate().isoformat()
+        self.dispatch('3.0', date=today)
+        self.dispatch('6.0', date=today, run=Run.objects.get(code='B'), corrective=FIX)
+
+        self.sign_in(self.admin)
+        data = self.client.get('/api/dashboard/').json()
+        self.assertEqual(data['today']['dispatch']['done'], 2)
 
     def test_signing_off_clears_the_awaiting_count(self):
         self.sign_in(self.night)

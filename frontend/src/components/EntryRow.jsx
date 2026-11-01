@@ -28,9 +28,9 @@ export default function EntryRow({ label, hint, done, limit, entry, onChange, on
       <li className="flex flex-wrap items-center gap-3 px-4 py-3">
         <span className="w-48 font-medium">{label}</span>
         <span className="text-lg font-semibold tabular-nums">{done.summary}</span>
-        <StatusBadge status={done.status} />
+        {done.status !== 'none' && <StatusBadge status={done.status} />}
         <span className="ml-auto flex items-center gap-1 text-sm text-ok">
-          <CheckCircle2 size={16} aria-hidden="true" /> Logged
+          <CheckCircle2 size={16} aria-hidden="true" /> Logged{done.loggedBy && ` by ${done.loggedBy}`}
         </span>
       </li>
     )

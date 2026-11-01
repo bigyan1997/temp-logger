@@ -60,7 +60,7 @@ function DispatchScreen({ staffId, date }) {
     <>
       {notShown.length > 0 && (
         <div className="mb-4 flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium">Add a run that went out:</span>
+          <span className="text-sm font-medium">Which runs went out?</span>
           {notShown.map((run) => (
             <button
               key={run.run_id}
@@ -70,13 +70,11 @@ function DispatchScreen({ staffId, date }) {
               {run.code}
             </button>
           ))}
-          <span className="text-sm text-muted">or press its letter on the keyboard</span>
+          <span className="text-sm text-muted">(or press its letter)</span>
         </div>
       )}
 
-      {shown.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-line p-6 text-muted">No runs added yet. Choose the runs that went out above.</p>
-      ) : (
+      {shown.length > 0 && (
         <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
           {shown.map((run) => {
             const key = String(run.run_id)
@@ -85,9 +83,8 @@ function DispatchScreen({ staffId, date }) {
                 key={key}
                 kind="dispatch"
                 label={`Run ${run.code}`}
-                hint={`Limit ${formatTemp(limit)} or colder`}
                 limit={limit}
-                done={run.entry && { summary: formatTemp(run.entry.temp), status: run.entry.status }}
+                done={run.entry && { summary: formatTemp(run.entry.temp), status: run.entry.status, loggedBy: run.entry.logged_by }}
                 entry={form.entryFor(key)}
                 onChange={(patch) => form.setField(key, patch)}
                 onSave={() => form.save(key)}
@@ -110,7 +107,7 @@ export default function LogDispatch() {
   return (
     <EntryShell
       title="Log dispatch temperatures"
-      intro="Add the runs that went out, then record the temperature of each load before it leaves. It must be 5 °C or colder."
+      intro="Pick the runs that went out and type each load's temperature (5 °C or colder)."
     >
       {(props) => <DispatchScreen key={props.date} {...props} />}
     </EntryShell>

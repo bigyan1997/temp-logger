@@ -28,8 +28,6 @@ function ReceivingScreen({ staffId, date }) {
   const chilledLimit = Number(options.limits.chilled_max)
   const frozenLimit = Number(options.limits.frozen_max)
   const limitFor = (entry) => (entry.noDelivery ? null : entry.productType === 'frozen' ? frozenLimit : chilledLimit)
-  const hintFor = (entry) =>
-    entry.productType === 'frozen' ? `Frozen: ${formatTemp(frozenLimit)} or colder` : `Chilled: ${formatTemp(chilledLimit)} or colder`
 
   const firstOpen = day.receiving.findIndex((s) => !s.entry)
 
@@ -56,11 +54,11 @@ function ReceivingScreen({ staffId, date }) {
               kind="receiving"
               receiving
               label={supplier.name}
-              hint={hintFor(entry)}
               limit={limitFor(entry)}
               done={logged && {
                 summary: logged.no_delivery ? 'No delivery' : formatTemp(logged.temp),
                 status: logged.no_delivery ? 'none' : logged.status,
+                loggedBy: logged.logged_by,
               }}
               entry={entry}
               onChange={(patch) => form.setField(key, patch)}
@@ -82,7 +80,7 @@ export default function LogReceiving() {
   return (
     <EntryShell
       title="Log deliveries received"
-      intro="Check the temperature of each delivery when it arrives. Chilled must be 5 °C or colder, frozen -15 °C or colder. Tick No delivery if nothing came."
+      intro="Type the temperature of each delivery (chilled 5 °C or colder, frozen -15 °C or colder). Tick No delivery if nothing came."
     >
       {(props) => <ReceivingScreen key={props.date} {...props} />}
     </EntryShell>

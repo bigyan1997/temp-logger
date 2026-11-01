@@ -22,7 +22,7 @@ def storage_for_day(day, now):
     units = list(Unit.objects.filter(active=True))
     logged = {
         (r.unit_id, r.slot): r
-        for r in StorageReading.objects.filter(slot__in=slots, voided=False)
+        for r in StorageReading.objects.filter(slot__in=slots, voided=False).select_related('recorded_by')
     }
 
     result = []
@@ -35,7 +35,8 @@ def storage_for_day(day, now):
                 'name': unit.name,
                 'kind': unit.kind,
                 'limit': str(unit.max_temp),
-                'reading': {'id': str(reading.pk), 'value': str(reading.value), 'status': reading.status}
+                'reading': {'id': str(reading.pk), 'value': str(reading.value), 'status': reading.status,
+                           'logged_by': reading.recorded_by.name}
                 if reading else None,
             })
         all_done = all(row['reading'] for row in rows)
@@ -44,7 +45,7 @@ def storage_for_day(day, now):
 
 
 def receiving_for_day(day):
-    checks = {c.supplier_id: c for c in ReceivingCheck.objects.filter(date=day, voided=False)}
+    checks = {c.supplier_id: c for c in ReceivingCheck.objects.filter(date=day, voided=False).select_related('recorded_by')}
     return [
         {
             'supplier_id': supplier.pk,
@@ -54,6 +55,7 @@ def receiving_for_day(day):
                 'temp': str(check.temp) if check.temp is not None else None,
                 'no_delivery': check.no_delivery,
                 'status': check.status,
+                'logged_by': check.recorded_by.name,
             } if (check := checks.get(supplier.pk)) else None,
         }
         for supplier in Supplier.objects.filter(active=True)
@@ -61,12 +63,13 @@ def receiving_for_day(day):
 
 
 def dispatch_for_day(day):
-    readings = {r.run_id: r for r in DispatchReading.objects.filter(date=day, voided=False)}
+    readings = {r.run_id: r for r in DispatchReading.objects.filter(date=day, voided=False).select_related('recorded_by')}
     return [
         {
             'run_id': run.pk,
             'code': run.code,
-            'entry': {'id': str(reading.pk), 'temp': str(reading.temp), 'status': reading.status}
+            'entry': {'id': str(reading.pk), 'temp': str(reading.temp), 'status': reading.status,
+                      'logged_by': reading.recorded_by.name}
             if (reading := readings.get(run.pk)) else None,
         }
         for run in Run.objects.filter(active=True)

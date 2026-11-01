@@ -1,6 +1,7 @@
-import { BarChart3, ClipboardList, FileText, History, Home, LogOut, Settings, Thermometer } from 'lucide-react'
+import { BarChart3, ClipboardList, FileText, History, Home, LogOut, Settings, Thermometer, UserRound } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../auth.jsx'
+import { useStaffChoice } from './StaffPicker.jsx'
 
 const navClass = ({ isActive }) =>
   `inline-flex h-10 items-center gap-2 whitespace-nowrap rounded-lg px-3 text-sm font-medium ${
@@ -25,7 +26,9 @@ const adminLinks = [
 
 // The frame around every signed-in page: a full-width top bar and the page below it.
 export default function AppLayout() {
-  const { user, logout, isAdmin } = useAuth()
+  const { logout, isAdmin } = useAuth()
+  const { staff, staffId, setStaffId } = useStaffChoice()
+  const person = staff.find((s) => String(s.id) === String(staffId))
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -65,8 +68,27 @@ export default function AppLayout() {
 
           <div className="ml-auto flex items-center gap-3">
             <div className="text-right leading-tight">
-              <p className="text-sm font-medium">{user.display_name}</p>
-              <p className="text-xs text-muted">{isAdmin ? 'Admin (day)' : 'Night shift'}</p>
+              <label className="flex items-center justify-end gap-1 text-sm font-semibold">
+                <UserRound size={14} aria-hidden="true" />
+                <span className="sr-only">Who is using this computer</span>
+                <select
+                  value={staffId}
+                  onChange={(e) => setStaffId(e.target.value)}
+                  className={`h-8 rounded-md border bg-surface px-1 text-sm font-semibold focus:outline-2 focus:outline-brand ${
+                    person ? 'border-transparent hover:border-line' : 'border-near'
+                  }`}
+                >
+                  <option value="" disabled>
+                    Who is using this?
+                  </option>
+                  {staff.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <p className="text-xs text-muted">{isAdmin ? 'Admin login (day)' : 'Night login'}</p>
             </div>
             <button
               onClick={logout}

@@ -4,7 +4,7 @@ from datetime import timedelta
 
 from django.utils import timezone
 
-from setup.models import Unit
+from setup.models import Supplier, Unit
 
 from .choices import Status
 from .models import CorrectiveAction, DispatchReading, ReceivingCheck, StorageReading
@@ -68,8 +68,26 @@ def logged_today(now):
     )
 
 
+def progress_today(today):
+    """How much of today's logging is done: storage slots, suppliers checked, runs sent out."""
+    slots = slots_on(today)
+    units = Unit.objects.filter(active=True).count()
+    return {
+        'storage': {
+            'done': StorageReading.objects.filter(slot__in=slots, voided=False).count(),
+            'total': len(slots) * units,
+        },
+        'receiving': {
+            'done': ReceivingCheck.objects.filter(date=today, voided=False).count(),
+            'total': Supplier.objects.filter(active=True).count(),
+        },
+        'dispatch': {'done': DispatchReading.objects.filter(date=today, voided=False).count()},
+    }
+
+
 def build_dashboard(now=None):
     now = now or timezone.now()
+    today = timezone.localtime(now).date()
     missed = missed_storage_slots(now)
     out_of_limit = out_of_limit_readings(now)
     awaiting = CorrectiveAction.objects.live().filter(signed_off_at__isnull=True).count()
@@ -81,6 +99,7 @@ def build_dashboard(now=None):
             'awaiting_signoff': awaiting,
             'logged_today': logged_today(now),
         },
+        'today': progress_today(today),
         'missed': [{'unit': m['unit'].name, 'slot': m['slot']} for m in missed],
         'out_of_limit': out_of_limit,
     }

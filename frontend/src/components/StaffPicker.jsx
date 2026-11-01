@@ -1,41 +1,50 @@
 import { useQuery } from '@tanstack/react-query'
 import { UserRound } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useSyncExternalStore } from 'react'
 import { api } from '../api/client.js'
 
 const KEY = 'tl.staffId'
+const CHANGED = 'tl:staff-changed'
 
 export function useStaffList() {
   return useQuery({ queryKey: ['staff'], queryFn: () => api('/staff/') })
 }
 
-// Remembers the last person picked on this phone, but only if they are still on the list.
+// The chosen person is kept here (and in localStorage) so the top bar and the entry screens always agree.
+let chosenId = ''
+try {
+  chosenId = localStorage.getItem(KEY) || ''
+} catch {
+  /* private mode: just don't remember */
+}
+
+const subscribe = (onChange) => {
+  window.addEventListener(CHANGED, onChange)
+  return () => window.removeEventListener(CHANGED, onChange)
+}
+
+function setChosenId(id) {
+  chosenId = id
+  try {
+    localStorage.setItem(KEY, id)
+  } catch {
+    /* private mode: just don't remember */
+  }
+  window.dispatchEvent(new Event(CHANGED))
+}
+
+// Remembers the last person picked on this computer, but only if they are still on the list.
 export function useStaffChoice() {
   const { data: staff = [] } = useStaffList()
-  const [staffId, setStaffIdState] = useState(() => {
-    try {
-      return localStorage.getItem(KEY) || ''
-    } catch {
-      return ''
-    }
-  })
+  const staffId = useSyncExternalStore(subscribe, () => chosenId)
 
   useEffect(() => {
     if (staffId && staff.length && !staff.some((s) => String(s.id) === String(staffId))) {
-      setStaffIdState('')
+      setChosenId('')
     }
   }, [staff, staffId])
 
-  function setStaffId(id) {
-    setStaffIdState(id)
-    try {
-      localStorage.setItem(KEY, id)
-    } catch {
-      /* private mode: just don't remember */
-    }
-  }
-
-  return { staff, staffId, setStaffId }
+  return { staff, staffId, setStaffId: setChosenId }
 }
 
 // "Who is taking this reading?" Required on every entry form.

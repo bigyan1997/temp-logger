@@ -79,7 +79,7 @@ function StorageScreen({ staffId, date }) {
               label={unit.name}
               hint={`Limit ${formatTemp(unit.limit)} or colder`}
               limit={Number(unit.limit)}
-              done={unit.reading && { summary: formatTemp(unit.reading.value), status: unit.reading.status }}
+              done={unit.reading && { summary: formatTemp(unit.reading.value), status: unit.reading.status, loggedBy: unit.reading.logged_by }}
               entry={entry}
               onChange={(patch) => form.setField(key, patch)}
               onSave={() => form.save(key)}
