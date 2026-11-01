@@ -29,7 +29,7 @@ Keep this up to date. It is how a fresh Claude session (for example on the order
 ## Open questions
 - Highlighter colour meaning on Tables 10/11 (owner will confirm later; do not work on it now).
 - Time of reading (proposed 2026-11-02, not built, waiting for owner's yes): Receiving gets a "Time received" and Storage a "Time taken", both defaulting to now and editable; Storage `slot` stays the scheduled 9AM/9PM/3PM so missed-slot logic and the PDF are unchanged. `recorded_at` stays server-set (entry time). No future times; a time more than about 2 hours before saving needs a short note. Open: also add to Dispatch? Is 2 hours the right cutoff?
-- Google Drive 4-weekly PDF export: not built; needs the Sunday a 4-week block starts and whether Google Drive for desktop is on the orders PC.
+- Google Drive 4-weekly PDF export: not built. Owner says the first week starts with Sunday night, 1 Nov 2026 (4-week blocks count from that Sunday). Still needs: whether Google Drive for desktop is on the orders PC.
 - First deploy on the orders PC: run `scripts\deploy.ps1`, then `scripts\install_autostart.ps1` as administrator.
 
 ## Progress log
