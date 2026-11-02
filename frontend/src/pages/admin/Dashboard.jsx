@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { CheckCircle2, Clock } from 'lucide-react'
+import { CheckCircle2, ChevronRight, Clock } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { api } from '../../api/client.js'
 import { AllClear, Panel } from '../../components/Panel.jsx'
 import SignOffPanel from '../../components/SignOffPanel.jsx'
@@ -23,7 +24,7 @@ export default function Dashboard() {
   ]
 
   return (
-    <div className="max-w-6xl">
+    <div>
       <h1 className="text-2xl font-semibold">Dashboard</h1>
       <p className="mb-5 text-muted">{formatLongDate()}</p>
 
@@ -49,11 +50,19 @@ export default function Dashboard() {
           {data?.missed.length === 0 && <AllClear>Every reading is logged.</AllClear>}
           <ul className="divide-y divide-line">
             {data?.missed.map((m) => (
-              <li key={`${m.unit}-${m.slot}`} className="flex items-center justify-between gap-3 px-4 py-3">
-                <span className="font-medium">{m.unit}</span>
-                <span className="flex items-center gap-1 text-sm text-muted">
-                  <Clock size={14} aria-hidden="true" /> due {formatDateTime(m.slot)}
-                </span>
+              <li key={`${m.unit}-${m.slot}`}>
+                <Link
+                  to={`/log/storage?date=${m.date}&slot=${encodeURIComponent(m.slot)}`}
+                  className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-brand-soft"
+                >
+                  <span className="font-medium">{m.unit}</span>
+                  <span className="flex items-center gap-1 text-sm text-muted">
+                    <Clock size={14} aria-hidden="true" /> due {formatDateTime(m.slot)}
+                    <span className="ml-2 flex items-center font-medium text-brand-dark">
+                      Log it <ChevronRight size={16} aria-hidden="true" />
+                    </span>
+                  </span>
+                </Link>
               </li>
             ))}
           </ul>

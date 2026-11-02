@@ -104,7 +104,7 @@ Design details:
 - **Idempotency:** each submit carries a client-generated UUID that becomes the row id, so a double-tap or retry cannot create a duplicate.
 - **Uniqueness:** one non-voided StorageReading per (unit, slot_date, slot_time); one non-voided ReceivingCheck per (supplier, date) unless admin permits extras; one non-voided DispatchReading per (run, date).
 - **Limits are copied** onto the reading (`limit_at_time`) so later limit changes never rewrite history.
-- **Never delete:** no DELETE endpoints, Django admin delete disabled, and a Postgres trigger raising an error on DELETE for record tables. Deactivate (`active=false`) for users, units, suppliers and runs.
+- **Never delete records:** no DELETE endpoints, Django admin delete disabled, and a Postgres trigger raising an error on DELETE for record tables (readings, checks, corrective actions, audit log). Settings list items (users, units, suppliers, runs, staff names, alert emails) can be deleted by an admin only when nothing refers to them; otherwise deactivate (`active=false`).
 - **Voiding:** sets `voided=true` plus reason, creates a replacement row via `supersedes_id` when a corrected value is given, and writes AuditLog rows, all in one transaction.
 
 ## 5. Core logic
@@ -184,8 +184,8 @@ Unsigned actions show in the dashboard "Waiting for sign-off" count.
 | POST `auth/login/`, `auth/logout/`; GET `auth/me/`, `auth/csrf/`; POST `auth/change-password/` | Anyone | Sign in with email and password |
 | GET `health/` | Public | Is the server up |
 | GET `staff/`, `units/`, `suppliers/`, `runs/` | Anyone | Active items for the entry forms. Admin can add `?all=1` |
-| POST, PATCH the same four lists | Admin | Add, edit, deactivate (no delete) |
-| GET, POST, PATCH `users/` | Admin | Manage logins, reset passwords (no delete) |
+| POST, PATCH, DELETE the same four lists (and `alert-recipients/`) | Admin | Add, edit, deactivate, or delete an item nothing uses (409 `in_use` otherwise: deactivate it) |
+| GET, POST, PATCH, DELETE `users/` | Admin | Manage logins, reset passwords, delete a login that has saved nothing (not your own) |
 | POST `storage-readings/`, `receiving-checks/`, `dispatch-readings/` | Anyone | Log a reading. Sending the same `id` again returns the saved entry |
 | GET the same three, plus `{id}/` | Anyone | Night: own entries from the last 2 days. Admin: everything, filter by `from`, `to`, `status`, `include_voided`, `unit` or `supplier` or `run` |
 | GET `corrective-actions/` (`?unsigned=1`) | Any login | Corrective actions with a one-line summary of each reading. Admin sees all; the night login sees only those waiting |

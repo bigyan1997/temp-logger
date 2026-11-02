@@ -100,6 +100,9 @@ def build_dashboard(now=None):
             'logged_today': logged_today(now),
         },
         'today': progress_today(today),
-        'missed': [{'unit': m['unit'].name, 'slot': m['slot']} for m in missed],
+        'missed': [
+            {'unit': m['unit'].name, 'slot': m['slot'], 'date': timezone.localtime(m['slot']).date()}
+            for m in missed
+        ],
         'out_of_limit': out_of_limit,
     }

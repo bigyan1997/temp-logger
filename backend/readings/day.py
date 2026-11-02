@@ -4,6 +4,7 @@ from django.utils import timezone
 
 from setup.models import Run, Supplier, Unit
 
+from .dashboard import missed_storage_slots
 from .models import DispatchReading, ReceivingCheck, StorageReading
 from .schedule import GRACE_PERIOD, slots_on
 
@@ -77,6 +78,20 @@ def dispatch_for_day(day):
     ]
 
 
+def missed_for_screen(now):
+    """Storage readings still missing after their grace period (today and yesterday), grouped by time.
+
+    `date` is the day to open on the screen to log them.
+    """
+    groups = {}
+    for item in missed_storage_slots(now):
+        group = groups.setdefault(
+            item['slot'], {'slot': item['slot'], 'date': timezone.localtime(item['slot']).date(), 'units': []}
+        )
+        group['units'].append(item['unit'].name)
+    return list(groups.values())
+
+
 def build_day(day, now=None):
     now = now or timezone.now()
     return {
@@ -84,4 +99,5 @@ def build_day(day, now=None):
         'storage': storage_for_day(day, now),
         'receiving': receiving_for_day(day),
         'dispatch': dispatch_for_day(day),
+        'missed': missed_for_screen(now),
     }

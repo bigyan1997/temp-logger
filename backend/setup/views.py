@@ -2,6 +2,7 @@ from rest_framework import mixins, viewsets
 from rest_framework.permissions import IsAuthenticated
 
 from accounts.permissions import IsAdminRole
+from audit.deletion import delete_unused
 from audit.models import AuditLog, record
 
 from .models import AlertRecipient, Run, StaffMember, Supplier, Unit
@@ -14,6 +15,7 @@ class ConfigViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
     """An admin-managed list: staff names, units, suppliers or runs.
@@ -21,7 +23,8 @@ class ConfigViewSet(
     - Anyone signed in can read the active items (the entry forms need them).
     - Only admin can add, edit or deactivate items. Admin can add ?all=1 to
       the list to also see deactivated items.
-    - There is no delete: records are never removed.
+    - Admin can delete an item that nothing refers to (a mistake, never used). One that has records cannot be
+      deleted and must be deactivated, so the records keep its name.
     """
 
     pagination_class = None
@@ -30,6 +33,9 @@ class ConfigViewSet(
         if self.action == 'list':
             return [IsAuthenticated()]
         return [IsAdminRole()]
+
+    def perform_destroy(self, instance):
+        delete_unused(self.request.user, instance, f'{instance._meta.verbose_name}: {instance}')
 
     def get_queryset(self):
         items = self.queryset.all()

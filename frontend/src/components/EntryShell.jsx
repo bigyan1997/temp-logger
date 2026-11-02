@@ -1,12 +1,14 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { todayInSydney } from '../lib/format.js'
 import StaffPicker, { useStaffChoice } from './StaffPicker.jsx'
 
 // The top of every entry screen: title, who is taking the readings, and which day.
-// `children` is a function that receives { staffId, date } so the screen below can use them.
+// `children` is a function that receives { staffId, date, setDate } so the screen below can use them.
 export default function EntryShell({ title, intro, children }) {
   const { staff, staffId, setStaffId } = useStaffChoice()
-  const [date, setDate] = useState(todayInSydney)
+  const [searchParams] = useSearchParams()
+  const [date, setDate] = useState(() => searchParams.get('date') || todayInSydney()) // a link can open another day
 
   return (
     <div className="max-w-6xl">
@@ -32,7 +34,7 @@ export default function EntryShell({ title, intro, children }) {
         </div>
       </div>
 
-      <div className="mt-6">{children({ staffId, date })}</div>
+      <div className="mt-6">{children({ staffId, date, setDate })}</div>
     </div>
   )
 }

@@ -2,6 +2,7 @@ from django.test import TestCase
 from rest_framework.test import APIClient
 
 from accounts.models import User
+from audit.models import AuditLog
 
 from .models import Run, StaffMember, Supplier, Unit
 
@@ -92,11 +93,16 @@ class ConfigListTests(ApiTestCase):
         self.assertEqual(first.json()['code'], 'N')
         self.assertEqual(self.client.post('/api/runs/', {'code': 'n'}, format='json').status_code, 400)
 
-    def test_nothing_can_be_deleted(self):
+    def test_an_unused_item_can_be_deleted_and_is_audited(self):
         self.client.force_login(self.admin)
-        for path, model in [('units', Unit), ('suppliers', Supplier), ('runs', Run)]:
-            response = self.client.delete(f'/api/{path}/{model.objects.first().pk}/')
-            self.assertEqual(response.status_code, 405, path)
+        run = self.client.post('/api/runs/', {'code': 'n'}, format='json').json()
+        self.assertEqual(self.client.delete(f'/api/runs/{run["id"]}/').status_code, 204)
+        self.assertFalse(Run.objects.filter(code='N').exists())
+        self.assertTrue(AuditLog.objects.filter(action='deleted', summary__contains='N').exists())
+
+    def test_night_cannot_delete(self):
+        self.client.force_login(self.night)
+        self.assertEqual(self.client.delete(f'/api/suppliers/{Supplier.objects.first().pk}/').status_code, 403)
 
     def test_deactivated_supplier_is_hidden_from_night(self):
         Supplier.objects.filter(name='Posh Foods').update(active=False)

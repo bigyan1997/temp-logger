@@ -119,6 +119,6 @@ class LoginManagementTests(TestCase):
         response = self.client.patch(f'/api/users/{self.night.pk}/', {'email': 'other@example.com'}, format='json')
         self.assertEqual(response.status_code, 400)
 
-    def test_no_delete(self):
-        self.client.force_login(self.admin)
-        self.assertEqual(self.client.delete(f'/api/users/{self.night.pk}/').status_code, 405)
+    def test_only_admin_can_delete_a_login(self):
+        self.client.force_login(self.night)
+        self.assertEqual(self.client.delete(f'/api/users/{self.admin.pk}/').status_code, 403)

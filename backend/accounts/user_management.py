@@ -4,6 +4,7 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import mixins, serializers, viewsets
 from rest_framework.routers import DefaultRouter
 
+from audit.deletion import delete_unused
 from audit.models import AuditLog, record
 
 from .models import User
@@ -63,9 +64,10 @@ class LoginAccountViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
-    """List, add and edit logins. There is no delete: deactivate a login instead."""
+    """List, add, edit and delete logins. A login that has saved anything cannot be deleted: deactivate it."""
 
     queryset = User.objects.order_by('role', 'email')
     serializer_class = LoginAccountSerializer
@@ -75,6 +77,11 @@ class LoginAccountViewSet(
     def perform_create(self, serializer):
         login = serializer.save()
         record(self.request.user, AuditLog.Action.LOGIN_CREATED, f'Login created: {login.email} ({login.role})')
+
+    def perform_destroy(self, instance):
+        if instance == self.request.user:
+            raise serializers.ValidationError('You cannot delete your own login.')
+        delete_unused(self.request.user, instance, f'login: {instance.email}')
 
     def perform_update(self, serializer):
         before = {'role': serializer.instance.role, 'active': serializer.instance.is_active}

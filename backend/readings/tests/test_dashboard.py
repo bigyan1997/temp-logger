@@ -81,6 +81,10 @@ class DashboardApiTests(ReadingTestCase):
         data = self.client.get('/api/dashboard/').json()
         self.assertEqual(data['today']['dispatch']['done'], 2)
 
+    def test_missed_readings_say_which_day_to_open(self):
+        missed = build_dashboard(sydney(2, 23))['missed']  # Monday 11 pm: Sunday night and both Monday readings are missing
+        self.assertEqual({item['date'].isoformat() for item in missed}, {'2026-11-01', '2026-11-02'})
+
     def test_signing_off_clears_the_awaiting_count(self):
         self.sign_in(self.night)
         self.dispatch('6.0', corrective=FIX)

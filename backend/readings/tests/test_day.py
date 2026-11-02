@@ -18,6 +18,17 @@ class DayTests(ReadingTestCase):
     def states(self, now):
         return [slot['state'] for slot in build_day(MONDAY, now)['storage']]
 
+    def test_missed_readings_are_grouped_by_time_with_the_day_to_open(self):
+        self.sign_in(self.night)
+        for unit in Unit.objects.filter(active=True):
+            self.storage(unit, '-18.0' if unit.kind == 'frozen' else '3.0', slot=MONDAY_9AM)  # Monday morning is done
+
+        missed = build_day(date(2026, 11, 3), sydney(3, 1))['missed']  # early Tuesday
+        self.assertEqual(len(missed), 1)
+        self.assertEqual(missed[0]['date'], MONDAY)
+        self.assertIn('Coolroom', missed[0]['units'])
+        self.assertEqual(len(missed[0]['units']), Unit.objects.filter(active=True).count())
+
     def test_slot_states_through_the_day(self):
         self.assertEqual(self.states(sydney(2, 8)), ['upcoming', 'upcoming'])
         self.assertEqual(self.states(sydney(2, 10)), ['due', 'upcoming'])

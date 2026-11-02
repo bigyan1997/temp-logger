@@ -1,7 +1,9 @@
 import { AlertTriangle, CheckCircle2, Clock, Circle } from 'lucide-react'
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import EntryRow from '../components/EntryRow.jsx'
 import EntryShell from '../components/EntryShell.jsx'
+import MissedReadings from '../components/MissedReadings.jsx'
 import { formatDateTime, formatTime } from '../lib/format.js'
 import { formatTemp, parseTemp } from '../lib/status.js'
 import { useDay } from '../lib/useDay.js'
@@ -20,9 +22,10 @@ function defaultSlot(slots) {
   return open ?? slots.find((s) => s.state === 'upcoming') ?? slots[0]
 }
 
-function StorageScreen({ staffId, date }) {
+function StorageScreen({ staffId, date, setDate }) {
   const { data: day } = useDay(date)
-  const [chosen, setChosen] = useState(null)
+  const [searchParams] = useSearchParams()
+  const [chosen, setChosen] = useState(searchParams.get('slot')) // a link can open a given reading time
   const slots = day?.storage ?? []
   const slot = slots.find((s) => s.slot === chosen) ?? defaultSlot(slots)
 
@@ -51,8 +54,15 @@ function StorageScreen({ staffId, date }) {
     for (const unit of toSave) await form.save(keyFor(unit))
   }
 
+  function logMissed(group) {
+    setDate(group.date)
+    setChosen(group.slot)
+  }
+
   return (
     <>
+      <MissedReadings missed={day.missed} onLog={logMissed} />
+
       <div role="tablist" aria-label="Reading times" className="flex flex-wrap gap-2">
         {slots.map((s) => {
           const { label, Icon, className } = slotStates[s.state]

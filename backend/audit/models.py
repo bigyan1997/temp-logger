@@ -15,6 +15,7 @@ class AuditLog(models.Model):
         LIMIT_CHANGED = 'limit_changed', 'Temperature limit changed'
         LOGIN_CREATED = 'login_created', 'Login created'
         LOGIN_CHANGED = 'login_changed', 'Login changed'
+        DELETED = 'deleted', 'Item deleted'
 
     at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='+')
