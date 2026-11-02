@@ -19,3 +19,10 @@ frontend/dist-next/
 .DS_Store
 Thumbs.db
 test.sqlite3
+
+# Google service account keys must never be committed
+*-key.json
+*service-account*.json
+
+# Saved report PDFs (real records, kept on the PC only)
+report_exports/

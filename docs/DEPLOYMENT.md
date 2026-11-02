@@ -65,6 +65,21 @@ Keep real addresses, passwords and keys out of the repo. Put them in `backend\.e
     ```
     Run `scripts\backup.ps1` once by hand and check that a `.dump` file appears. **Test a restore before relying on it** (see below).
 
+11. **Alert emails.** Every 5 minutes (the task `install_autostart.ps1` makes) the app emails the people under *Settings, Alert emails* when: a storage reading is due in 15 minutes and units are not logged, a reading was missed (2 hours after its time), a reading is saved out of limit, or a corrective action has waited 2 hours for a manager. Each alert is sent once. To send real email, put the sending account in `backend\.env`: `EMAIL_HOST` (for Gmail `smtp.gmail.com`, for Microsoft 365 `smtp.office365.com`), `EMAIL_PORT=587`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD` (Gmail needs an *app password*, made under the Google account's Security, 2-Step Verification, App passwords) and `EMAIL_FROM`. Then add your address under Settings and test: `cd backend; .\.venv\Scripts\python.exe manage.py send_alerts --test`. With `EMAIL_HOST` empty the emails are only printed in the server window.
+12. **Reports into Google Drive** (automatic, every 4 weeks). Every day at 3:30 am a task saves three PDFs (Storage, Receiving, Dispatch) for each finished 4-week block, named like `2026-11-01 to 2026-11-28 - Storage.pdf`. A block is only made once, and one missed while the PC was off is made the next time. Blocks are 28 days, Sunday to Saturday, counted from Sunday 1 Nov 2026 (`FIRST_BLOCK_START` in `backend/reports/management/commands/export_reports.py`), so the first PDFs appear on 29 Nov 2026. They are always kept in the `report_exports` folder inside the project (not in git). To also get them into Google Drive, choose one of these extra copies:
+
+    **A. Upload straight to Drive (no desktop app).** One-off setup in Google:
+    1. console.cloud.google.com: create a project, turn on the **Google Drive API**.
+    2. IAM & Admin, Service Accounts: create one (give it **no project role**), then Keys, Add key, JSON. A key file downloads. It is a secret: never put it in the repo or send it in a message.
+    3. In Drive make a folder "Temperature Logger Reports" and share it with the service account's email (`...@...iam.gserviceaccount.com`) as **Editor**.
+    4. Save the key file on the orders PC outside the repo, e.g. `C:\TempLoggerSecrets\drive-key.json`.
+    5. In `backend\.env` set `GOOGLE_SERVICE_ACCOUNT_FILE=C:\TempLoggerSecrets\drive-key.json` and `GOOGLE_DRIVE_FOLDER_ID=` the last part of the folder's web address (after `/folders/`).
+    6. Check it: `cd backend; .\.venv\Scripts\python.exe manage.py export_reports --check` should say it can see the folder. Test an upload with `manage.py export_reports --include-current` (saves the block under way; delete the test files in Drive afterwards).
+
+    **B. Google Drive for desktop.** Install it on the orders PC, sign in, choose **Mirror files** (not Stream), and put the path of the synced folder in `backend\.env` as `REPORTS_EXPORT_DIR=...`. The scheduled task below must then run as the same Windows user Drive is signed in under.
+
+    Either way, finish with: `.\scripts\install_report_export.ps1` (ordinary PowerShell as that Windows user, not administrator), then `.\scripts\export_reports.ps1` and read `backend\logs\export_reports.log`. After pulling, run `pip install -r requirements.txt` (`deploy.ps1` does) because Drive upload needs the Google packages.
+
 ## Updating
 
 After new code is pushed to GitHub, on the orders PC:

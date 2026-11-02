@@ -4,8 +4,10 @@ from rest_framework.permissions import IsAuthenticated
 from accounts.permissions import IsAdminRole
 from audit.models import AuditLog, record
 
-from .models import Run, StaffMember, Supplier, Unit
-from .serializers import RunSerializer, StaffMemberSerializer, SupplierSerializer, UnitSerializer
+from .models import AlertRecipient, Run, StaffMember, Supplier, Unit
+from .serializers import (
+    AlertRecipientSerializer, RunSerializer, StaffMemberSerializer, SupplierSerializer, UnitSerializer,
+)
 
 
 class ConfigViewSet(
@@ -66,3 +68,13 @@ class SupplierViewSet(ConfigViewSet):
 class RunViewSet(ConfigViewSet):
     queryset = Run.objects.all()
     serializer_class = RunSerializer
+
+
+class AlertRecipientViewSet(ConfigViewSet):
+    """Who gets the alert emails. Unlike the other lists, only admin may even read it."""
+
+    queryset = AlertRecipient.objects.all()
+    serializer_class = AlertRecipientSerializer
+
+    def get_permissions(self):
+        return [IsAdminRole()]

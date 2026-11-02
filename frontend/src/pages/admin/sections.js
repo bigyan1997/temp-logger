@@ -83,6 +83,18 @@ export const sections = [
     fields: [{ name: 'code', label: 'Run letter', type: 'text', required: true }],
   },
   {
+    path: 'alerts',
+    label: 'Alert emails',
+    endpoint: '/alert-recipients/',
+    intro:
+      'Who is emailed when a storage reading is almost due, was missed, is out of limit, or a corrective action is still waiting for a manager. Deactivate an address to stop its emails.',
+    addLabel: 'Add an email address',
+    empty: 'No addresses yet. Add one to start getting alerts.',
+    activeKey: 'active',
+    title: (item) => item.email,
+    fields: [{ name: 'email', label: 'Email address', type: 'email', required: true }],
+  },
+  {
     path: 'logins',
     label: 'Logins',
     endpoint: '/users/',

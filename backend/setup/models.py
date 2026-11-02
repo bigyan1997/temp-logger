@@ -75,6 +75,20 @@ class Run(models.Model):
         return f'Run {self.code}'
 
 
+class AlertRecipient(models.Model):
+    """An email address that receives the alerts (reading due, missed, out of limit). Never deleted; deactivate."""
+
+    email = models.EmailField()
+    active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['email']
+        constraints = [models.UniqueConstraint(Lower('email'), name='alertrecipient_email_ci_unique')]
+
+    def __str__(self):
+        return self.email
+
+
 class Attributed(models.Model):
     """Shared fields for every reading/check: which login saved it and which
     person took it. Add this to StorageReading, ReceivingCheck, DispatchReading."""

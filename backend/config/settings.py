@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'readings',
     'audit',
     'reports',
+    'alerts',
 ]
 
 MIDDLEWARE = [
@@ -136,3 +137,21 @@ STORAGES = {
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Where the 4-weekly report PDFs go (see docs/DEPLOYMENT.md). They are always kept in the project's
+# report_exports folder; the other two are optional extra copies (empty means not used).
+REPORTS_LOCAL_DIR = BASE_DIR.parent / 'report_exports'
+REPORTS_EXPORT_DIR = config('REPORTS_EXPORT_DIR', default='')  # a folder, e.g. Google Drive for desktop
+GOOGLE_DRIVE_FOLDER_ID = config('GOOGLE_DRIVE_FOLDER_ID', default='')  # upload straight to this Drive folder
+GOOGLE_SERVICE_ACCOUNT_FILE = config('GOOGLE_SERVICE_ACCOUNT_FILE', default='')  # the key file, kept outside the repo
+
+# Alert emails (see docs/DEPLOYMENT.md). With no EMAIL_HOST they are only printed in the server window.
+EMAIL_HOST = config('EMAIL_HOST', default='')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+DEFAULT_FROM_EMAIL = config('EMAIL_FROM', default=EMAIL_HOST_USER or 'temperature-logger@localhost')
+EMAIL_BACKEND = (
+    'django.core.mail.backends.smtp.EmailBackend' if EMAIL_HOST else 'django.core.mail.backends.console.EmailBackend'
+)

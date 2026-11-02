@@ -6,6 +6,7 @@
 #   Server task     starts at boot (no one needs to log in), runs hidden as SYSTEM,
 #                   has no time limit and is restarted by Windows if it ever stops.
 #   Keep-alive task every 5 minutes, restarts the server if it stops answering.
+#   Alerts task     every 5 minutes, emails readings that are almost due, missed or out of limit.
 #   Power           the PC never goes to sleep while plugged in.
 
 #Requires -RunAsAdministrator
@@ -38,11 +39,20 @@ $watchSettings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan 
 Register-ScheduledTask -TaskName $watchTask -Action $watchAction -Trigger $everyFive `
     -Settings $watchSettings -Principal $asSystem -Force | Out-Null
 
+# --- Alert emails: every 5 minutes (who gets them is set under Settings, Alert emails) ---
+$alertTask = 'Temperature Logger Alerts'
+$alertAction = New-ScheduledTaskAction -Execute "$root\backend\.venv\Scripts\python.exe" `
+    -Argument 'manage.py send_alerts' -WorkingDirectory "$root\backend"
+$alertSettings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Minutes 5) `
+    -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -MultipleInstances IgnoreNew
+Register-ScheduledTask -TaskName $alertTask -Action $alertAction -Trigger $everyFive `
+    -Settings $alertSettings -Principal $asSystem -Force | Out-Null
+
 # --- Never sleep while plugged in (0 = never) ---
 powercfg /change standby-timeout-ac 0
 powercfg /change hibernate-timeout-ac 0
 
 # Start the server now instead of waiting for the next boot.
 Start-ScheduledTask -TaskName $serverTask
-Write-Host "Done. '$serverTask' and '$watchTask' are installed and the server is starting."
+Write-Host "Done. '$serverTask', '$watchTask' and '$alertTask' are installed and the server is starting."
 Write-Host "Check in a minute: http://localhost:8003   (log: $logDir\server.log)"

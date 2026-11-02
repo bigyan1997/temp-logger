@@ -1,6 +1,11 @@
+import tempfile
 from datetime import date
+from io import StringIO
+from pathlib import Path
 
-from django.test import SimpleTestCase
+from django.core.management import call_command
+from django.core.management.base import CommandError
+from django.test import SimpleTestCase, TestCase
 
 from readings.models import CorrectiveAction
 from readings.tests.base import MONDAY_9AM, MONDAY_9PM, ReadingTestCase
@@ -225,3 +230,34 @@ class TrendsApiTests(ReadingTestCase):
         self.assertEqual(self.client.get('/api/trends/').status_code, 400)
         self.sign_in(self.night)
         self.assertEqual(self.client.get(f'/api/trends/?unit={self.coolroom.pk}').status_code, 403)
+
+
+class ExportReportsTests(TestCase):
+    def export(self, today, **options):
+        out = StringIO()
+        call_command('export_reports', folder=self.folder, today=today, stdout=out, **options)
+        return sorted(path.name for path in Path(self.folder).iterdir())
+
+    def setUp(self):
+        self._temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._temp.cleanup)
+        self.folder = self._temp.name
+
+    def test_nothing_is_saved_until_the_first_block_has_ended(self):
+        self.assertEqual(self.export('2026-11-28'), [])
+
+    def test_a_finished_block_saves_three_pdfs_once(self):
+        names = self.export('2026-11-29')
+        self.assertEqual(names, [
+            '2026-11-01 to 2026-11-28 - Dispatch.pdf',
+            '2026-11-01 to 2026-11-28 - Receiving.pdf',
+            '2026-11-01 to 2026-11-28 - Storage.pdf',
+        ])
+        self.assertEqual(self.export('2026-11-30'), names)  # a second run adds nothing
+
+    def test_a_missed_block_is_made_up_later(self):
+        self.assertEqual(len(self.export('2026-12-30')), 6)  # blocks 1 and 2
+
+    def test_a_missing_folder_is_an_error(self):
+        with self.assertRaises(CommandError):
+            call_command('export_reports', folder=self.folder + '-nope')

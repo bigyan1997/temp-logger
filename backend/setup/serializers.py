@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Run, StaffMember, Supplier, Unit
+from .models import AlertRecipient, Run, StaffMember, Supplier, Unit
 
 
 def tidy(text):
@@ -67,6 +67,15 @@ class RunSerializer(UniqueNameMixin, serializers.ModelSerializer):
 
     def validate_code(self, value):
         return value.strip().upper()
+
+
+class AlertRecipientSerializer(UniqueNameMixin, serializers.ModelSerializer):
+    unique_field = 'email'
+    unique_message = 'That address is already on the list.'
+
+    class Meta:
+        model = AlertRecipient
+        fields = ['id', 'email', 'active']
 
 
 class RecordedBySerializerMixin:
