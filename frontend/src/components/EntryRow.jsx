@@ -17,8 +17,9 @@ const inputClass =
 //   saveButton      false when the screen has one Save button for all its rows
 //   kind            storage | receiving | dispatch
 //   receiving       true to show the product type, packaging and "no delivery" fields
+//   skipLabel       text of a tick box meaning "nothing to measure" (storage: "Not used"); receiving has "No delivery"
 //   autoFocus       focus the temperature box when the screen opens
-export default function EntryRow({ label, hint, done, limit, entry, onChange, onSave, onConfirm, onEnter = onSave, saveButton = true, kind, receiving, autoFocus }) {
+export default function EntryRow({ label, hint, done, limit, entry, onChange, onSave, onConfirm, onEnter = onSave, saveButton = true, kind, receiving, skipLabel, autoFocus }) {
   const value = parseTemp(entry.temp)
   const liveStatus = value !== null && limit !== null ? statusFor(value, limit) : 'none'
   const busy = entry.phase === 'saving'
@@ -76,16 +77,19 @@ export default function EntryRow({ label, hint, done, limit, entry, onChange, on
               <option value="frozen">Frozen</option>
               <option value="baked_pie">Freshly baked pies</option>
             </select>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={entry.noDelivery}
-                onChange={(e) => onChange({ noDelivery: e.target.checked, temp: '' })}
-                className="size-5 accent-brand"
-              />
-              No delivery
-            </label>
           </>
+        )}
+
+        {(receiving || skipLabel) && (
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={entry.noDelivery}
+              onChange={(e) => onChange({ noDelivery: e.target.checked, temp: '' })}
+              className="size-5 accent-brand"
+            />
+            {skipLabel ?? 'No delivery'}
+          </label>
         )}
 
         <input

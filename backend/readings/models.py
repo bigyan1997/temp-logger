@@ -37,7 +37,8 @@ class StorageReading(Reading):
 
     unit = models.ForeignKey(Unit, on_delete=models.PROTECT, related_name='+')
     slot = models.DateTimeField(help_text='The scheduled reading time this belongs to.')
-    value = models.DecimalField(max_digits=4, decimal_places=1)
+    not_used = models.BooleanField(default=False, help_text='The unit was not in use at this time (no temperature).')
+    value = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
 
     class Meta:
         ordering = ['-slot', 'unit__sort_order']
@@ -45,10 +46,16 @@ class StorageReading(Reading):
             models.UniqueConstraint(
                 fields=['unit', 'slot'], condition=Q(voided=False), name='one_storage_reading_per_slot'
             ),
+            # A reading has a temperature, or it says the unit was not used, never both.
+            models.CheckConstraint(
+                condition=Q(not_used=True, value__isnull=True) | Q(not_used=False, value__isnull=False),
+                name='storage_value_or_not_used',
+            ),
         ]
 
     def __str__(self):
-        return f'{self.unit} {self.value} °C at {timezone.localtime(self.slot):%d/%m %H:%M}'
+        what = 'not used' if self.not_used else f'{self.value} °C'
+        return f'{self.unit} {what} at {timezone.localtime(self.slot):%d/%m %H:%M}'
 
 
 class ReceivingCheck(Reading):

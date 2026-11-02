@@ -22,6 +22,30 @@ class SaveStorageReadingTests(ReadingTestCase):
         self.assertEqual(reading.entered_by, self.night)
         self.assertEqual(reading.recorded_by, self.sam)
 
+    def test_a_unit_that_was_not_used_saves_without_a_temperature(self):
+        response = self.storage(self.coolroom, None, not_used=True)
+        self.assertEqual(response.status_code, 201, response.json())
+        reading = StorageReading.objects.get()
+        self.assertTrue(reading.not_used)
+        self.assertIsNone(reading.value)
+        self.assertEqual(reading.status, 'ok')
+
+    def test_not_used_and_a_temperature_cannot_be_combined_and_one_is_needed(self):
+        self.assertEqual(self.storage(self.coolroom, '3.0', not_used=True).status_code, 400)
+        self.assertEqual(self.storage(self.coolroom, None).status_code, 400)
+        self.assertEqual(StorageReading.objects.count(), 0)
+
+    def test_not_used_counts_as_logged_and_stays_out_of_the_trend(self):
+        for unit in (self.coolroom, self.freezer):
+            self.storage(unit, None, slot=MONDAY_9AM, not_used=True)
+        day = self.client.get('/api/day/?date=2026-11-02').json()
+        done = [u['reading'] for u in day['storage'][0]['units'] if u['unit_id'] == self.coolroom.pk]
+        self.assertTrue(done[0]['not_used'])
+        self.assertIsNone(done[0]['value'])
+        self.sign_in(self.admin)
+        trend = self.client.get(f'/api/trends/?unit={self.coolroom.pk}&from=2026-11-01&to=2026-11-07').json()
+        self.assertEqual(trend['points'], [])
+
     def test_out_of_limit_needs_a_corrective_action_and_saves_nothing_without_it(self):
         response = self.storage(self.coolroom, '6.5')
         self.assertEqual(response.status_code, 422)

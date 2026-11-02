@@ -13,7 +13,7 @@ const kinds = {
     endpoint: '/storage-readings/',
     valueField: 'value',
     what: (r) => `${r.unit_name} · ${formatDateTime(r.slot)}`,
-    temp: (r) => formatTemp(r.value),
+    temp: (r) => (r.not_used ? 'Not used' : formatTemp(r.value)),
   },
   receiving: {
     label: 'Receiving',

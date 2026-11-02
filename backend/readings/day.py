@@ -35,7 +35,8 @@ def storage_for_day(day, now):
                 'name': unit.name,
                 'kind': unit.kind,
                 'limit': str(unit.max_temp),
-                'reading': {'id': str(reading.pk), 'value': str(reading.value), 'status': reading.status,
+                'reading': {'id': str(reading.pk), 'value': None if reading.not_used else str(reading.value),
+                           'not_used': reading.not_used, 'status': reading.status,
                            'logged_by': reading.recorded_by.name}
                 if reading else None,
             })

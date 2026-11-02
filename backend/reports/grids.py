@@ -10,7 +10,7 @@ So a report covers whole Sunday-to-Friday weeks that overlap the dates asked for
 A reading that was out of limit ends with "*".
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 
 from django.utils import timezone
 
@@ -22,6 +22,8 @@ from setup.models import Run, Supplier, Unit
 MAX_DAYS = 186  # about 6 months
 NO_DELIVERY = 'No delivery'
 RUN_NOT_USED = 'Run not used'
+UNIT_NOT_USED = 'Not used'
+DISPATCH_DONE_BY = time(7, 0)  # all runs have left by 5 am, so from 7 am an empty run is a run not used
 WEEKS_PER_STORAGE_SHEET = 4
 DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 STORAGE_DAY_ORDER = [6, 0, 1, 2, 3, 4]  # Sunday first, then Monday to Friday (Python weekday numbers)
@@ -45,6 +47,10 @@ def clock_label(slot_time):
 
 def starred(reading, text):
     return f'{text}*' if reading.status == Status.OUT_OF_LIMIT else text
+
+
+def storage_text(reading):
+    return UNIT_NOT_USED if reading.not_used else starred(reading, f'{reading.value}')
 
 
 def columns(model, used_ids):
@@ -92,7 +98,7 @@ def storage_sheets(start, end):
                         continue
                     slot = timezone.make_aware(datetime.combine(week + timedelta(days=offset), slot_time))
                     cells.append([
-                        starred(r, f'{r.value}') if (r := by_slot.get((unit.pk, slot))) else '' for unit in units
+                        storage_text(r) if (r := by_slot.get((unit.pk, slot))) else '' for unit in units
                     ])
                 rows.append({'kind': 'time', 'label': clock_label(slot_time), 'cells': cells})
 
@@ -147,12 +153,19 @@ def receiving_grid(start, end):
     return {'columns': [s.name for s in suppliers], 'rows': weekly_rows(sundays, entries, suppliers, text_for, 'Sunday night')}
 
 
-def dispatch_grid(start, end, today=None):
+def dispatch_finished(day, now):
+    """True once the runs of `day` have all gone out: any earlier day, or today from 7 am (they leave by 5 am)."""
+    local = timezone.localtime(now)
+    return day < local.date() or (day == local.date() and local.time() >= DISPATCH_DONE_BY)
+
+
+def dispatch_grid(start, end, now=None):
     """Table 11: a column per run, with a "Sunday" row.
 
-    A run with no reading on a day when other runs were logged was not used that day, and says so.
-    A day with nothing logged at all is left blank (it may simply not have happened yet).
+    A run with no reading on a day when other runs were logged, and the runs have all gone out, was not used
+    that day, and says so. A day with nothing logged at all is left blank (it may simply not have happened).
     """
+    now = now or timezone.now()
     sundays = week_sundays(start, end)
     readings = DispatchReading.objects.filter(
         date__gte=sundays[0], date__lte=sundays[-1] + timedelta(days=6), voided=False
@@ -165,7 +178,7 @@ def dispatch_grid(start, end, today=None):
 
     rows = weekly_rows(sundays, entries, runs, text_for, 'Sunday')
     for row in rows:
-        if row['date'] < (today or timezone.localdate()) and any(row['cells']):
+        if dispatch_finished(row['date'], now) and any(row['cells']):
             row['cells'] = [cell or RUN_NOT_USED for cell in row['cells']]
     return {'columns': [f'Run {r.code}' for r in runs], 'rows': rows}
 

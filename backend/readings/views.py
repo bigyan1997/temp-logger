@@ -261,7 +261,7 @@ class TrendsView(APIView):
             return Response({'code': 'bad_date', 'message': 'Use dates like 2026-11-02.'}, status=400)
 
         readings = StorageReading.objects.filter(
-            unit=unit, slot__date__gte=start, slot__date__lte=end, voided=False
+            unit=unit, slot__date__gte=start, slot__date__lte=end, voided=False, not_used=False
         ).order_by('slot')
         return Response({
             'unit': {'id': unit.pk, 'name': unit.name, 'limit': str(unit.max_temp)},

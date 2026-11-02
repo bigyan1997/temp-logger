@@ -176,7 +176,7 @@ class StorageReadingSerializer(ReadingSerializer):
 
     class Meta:
         model = StorageReading
-        fields = COMMON_FIELDS + ['unit', 'unit_name', 'slot', 'value']
+        fields = COMMON_FIELDS + ['unit', 'unit_name', 'slot', 'value', 'not_used']
         read_only_fields = READ_ONLY_FIELDS
         validators = []  # duplicates are checked in check_not_duplicate, with a friendlier message
 
@@ -190,13 +190,25 @@ class StorageReadingSerializer(ReadingSerializer):
             raise serializers.ValidationError('That is not a scheduled reading time.')
         return slot
 
+    def validate(self, attrs):
+        if attrs.get('not_used'):
+            if attrs.get('value') is not None:
+                raise serializers.ValidationError({'value': 'Leave the temperature empty when the unit was not used.'})
+        elif attrs.get('value') is None:
+            raise serializers.ValidationError({'value': 'Enter the temperature.'})
+        return super().validate(attrs)
+
     def check_not_duplicate(self, attrs):
         if StorageReading.objects.filter(unit=attrs['unit'], slot=attrs['slot'], voided=False).exists():
             raise serializers.ValidationError('This unit already has a reading for that time.')
 
     def measurement(self, attrs):
+        if attrs.get('not_used'):
+            return None
         previous = (
-            StorageReading.objects.filter(unit=attrs['unit'], slot__lt=attrs['slot'], voided=False)
+            StorageReading.objects.filter(
+                unit=attrs['unit'], slot__lt=attrs['slot'], voided=False, not_used=False
+            )
             .order_by('-slot')
             .values_list('value', flat=True)
             .first()

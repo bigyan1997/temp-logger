@@ -91,7 +91,7 @@ erDiagram
     UNIT { int id string name string kind "chilled|frozen" decimal max_temp bool active }
     SUPPLIER { int id string name bool active }
     RUN { int id string code bool active }
-    STORAGE_READING { uuid id int unit_id date slot_date time slot_time decimal value timestamptz recorded_at int entered_by string status string note bool voided int supersedes_id }
+    STORAGE_READING { uuid id int unit_id date slot_date time slot_time bool not_used decimal value timestamptz recorded_at int entered_by string status string note bool voided int supersedes_id }
     RECEIVING_CHECK { uuid id int supplier_id date date bool no_delivery decimal temp string product_type bool packaging_ok string status bool voided }
     DISPATCH_READING { uuid id int run_id date date decimal temp string status bool voided }
     CORRECTIVE_ACTION { uuid id string action_taken decimal hours_above_limit string notes int entered_by int signed_off_by timestamptz signed_off_at }

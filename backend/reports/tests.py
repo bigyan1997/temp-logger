@@ -1,7 +1,8 @@
 import tempfile
-from datetime import date
+from datetime import date, datetime
 from io import StringIO
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from django.core.management import call_command
 from django.core.management.base import CommandError
@@ -34,10 +35,19 @@ class WeekTests(SimpleTestCase):
         self.assertEqual([clock_label(time(9)), clock_label(time(15)), clock_label(time(21))], ['9.00 AM', '3.00 PM', '9.00 PM'])
 
 
+def sydney(year, month, day, hour, minute=0):
+    return datetime(year, month, day, hour, minute, tzinfo=ZoneInfo('Australia/Sydney'))
+
+
 class StorageSheetTests(ReadingTestCase):
     def setUp(self):
         super().setUp()
         self.sign_in(self.night)
+
+    def test_a_unit_marked_not_used_says_so_on_the_sheet(self):
+        self.storage(self.coolroom, None, slot=MONDAY_9AM, not_used=True)
+        monday_morning = storage_sheets(START, END)[0]['rows'][3]
+        self.assertEqual(monday_morning['cells'][0][0], 'Not used')
 
     def test_layout_matches_the_paper_table(self):
         sheet = storage_sheets(START, END)[0]
@@ -118,15 +128,22 @@ class WeeklyGridTests(ReadingTestCase):
 
     def test_a_run_with_no_reading_says_not_used_on_days_when_other_runs_went_out(self):
         self.dispatch('4.0', date='2026-11-03')  # Run A only, on the Tuesday
-        rows = dispatch_grid(START, END, today=date(2026, 11, 10))['rows']
+        rows = dispatch_grid(START, END, now=sydney(2026, 11, 10, 12))['rows']
         tuesday = rows[2]['cells']
         self.assertEqual(tuesday[0], '4.0')
         self.assertTrue(all(cell == 'Run not used' for cell in tuesday[1:]))
         self.assertEqual(rows[3]['cells'], [''] * len(tuesday))  # nothing logged that day: left blank
 
-    def test_nothing_says_not_used_for_today_or_the_future(self):
+    def test_today_says_not_used_only_from_7_am_when_all_runs_have_left(self):
         self.dispatch('4.0', date='2026-11-03')
-        tuesday = dispatch_grid(START, END, today=date(2026, 11, 3))['rows'][2]['cells']
+        before = dispatch_grid(START, END, now=sydney(2026, 11, 3, 6, 59))['rows'][2]['cells']
+        after = dispatch_grid(START, END, now=sydney(2026, 11, 3, 7, 0))['rows'][2]['cells']
+        self.assertEqual(before[1], '')
+        self.assertEqual(after[1], 'Run not used')
+
+    def test_nothing_says_not_used_for_the_future(self):
+        self.dispatch('4.0', date='2026-11-03')
+        tuesday = dispatch_grid(START, END, now=sydney(2026, 11, 2, 12))['rows'][2]['cells']
         self.assertEqual(tuesday[1], '')
 
     def test_sunday_night_entries_have_their_own_row(self):

@@ -15,7 +15,7 @@ from reportlab.lib.units import mm
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.platypus import Flowable, PageBreak, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
-from .grids import NO_DELIVERY, RUN_NOT_USED
+from .grids import NO_DELIVERY, RUN_NOT_USED, UNIT_NOT_USED
 
 COMPANY = 'Achieve Cafe Provisions'
 HACCP_PLAN = 'HACCP Plan 1.6'  # update when the HACCP plan version changes
@@ -76,7 +76,7 @@ def mark_special_cells(data, style, first_row, first_column=1):
                     ('TEXTCOLOR', (c, r), (c, r), RED),
                     ('FONTNAME', (c, r), (c, r), 'Helvetica-Bold'),
                 ]
-            elif cell in (NO_DELIVERY, RUN_NOT_USED):
+            elif cell in (NO_DELIVERY, RUN_NOT_USED, UNIT_NOT_USED):
                 style += [('TEXTCOLOR', (c, r), (c, r), QUIET), ('FONTSIZE', (c, r), (c, r), 6.5)]
 
 

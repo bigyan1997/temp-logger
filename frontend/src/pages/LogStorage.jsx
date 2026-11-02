@@ -29,7 +29,11 @@ function StorageScreen({ staffId, date }) {
   const form = useEntryForm({
     endpoint: '/storage-readings/',
     staffId,
-    buildBody: (key, entry) => ({ unit: Number(key.split('|')[1]), slot: key.split('|')[0], value: entry.temp }),
+    buildBody: (key, entry) => ({
+      unit: Number(key.split('|')[1]),
+      slot: key.split('|')[0],
+      ...(entry.noDelivery ? { not_used: true } : { value: entry.temp }), // the form calls "skip" noDelivery
+    }),
   })
 
   if (!day) return <p className="text-muted">Loading…</p>
@@ -38,7 +42,10 @@ function StorageScreen({ staffId, date }) {
   }
 
   const keyFor = (unit) => `${slot.slot}|${unit.unit_id}`
-  const toSave = slot.units.filter((u) => !u.reading && parseTemp(form.entryFor(keyFor(u)).temp) !== null)
+  const toSave = slot.units.filter((u) => {
+    const entry = form.entryFor(keyFor(u))
+    return !u.reading && (entry.noDelivery || parseTemp(entry.temp) !== null)
+  })
 
   async function saveAll() {
     for (const unit of toSave) await form.save(keyFor(unit))
@@ -79,7 +86,12 @@ function StorageScreen({ staffId, date }) {
               label={unit.name}
               hint={`Limit ${formatTemp(unit.limit)} or colder`}
               limit={Number(unit.limit)}
-              done={unit.reading && { summary: formatTemp(unit.reading.value), status: unit.reading.status, loggedBy: unit.reading.logged_by }}
+              skipLabel="Not used"
+              done={unit.reading && {
+                summary: unit.reading.not_used ? 'Not used' : formatTemp(unit.reading.value),
+                status: unit.reading.not_used ? 'none' : unit.reading.status,
+                loggedBy: unit.reading.logged_by,
+              }}
               entry={entry}
               onChange={(patch) => form.setField(key, patch)}
               onSave={() => form.save(key)}
@@ -106,7 +118,7 @@ export default function LogStorage() {
   return (
     <EntryShell
       title="Log storage temperatures"
-      intro="Type each temperature and press Enter to save it. Coolrooms must be 5 °C or colder, freezers -15 °C or colder."
+      intro="Type each temperature and press Enter to save it (coolrooms 5 °C or colder, freezers -15 °C or colder). Tick Not used for a unit that is empty or switched off."
     >
       {(props) => <StorageScreen {...props} />}
     </EntryShell>
