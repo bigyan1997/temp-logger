@@ -10,6 +10,8 @@ netstat -ano -p tcp | findstr "LISTENING" | findstr /c:"0.0.0.0:8003 " >nul && (
     echo Temperature Logger is already running on port 8003 - nothing to do.
     exit /b 0
 )
+rem Copy the built frontend where the server finds it, so a new build is always picked up on start.
+python manage.py collectstatic --noinput >nul
 echo %date% %time% Starting Temperature Logger on port 8003...
 waitress-serve --listen=0.0.0.0:8003 config.wsgi:application
 echo %date% %time% Server stopped - restarting in 5 seconds...

@@ -4,7 +4,7 @@ import { useAuth } from '../auth.jsx'
 import { useStaffChoice } from './StaffPicker.jsx'
 
 const navClass = ({ isActive }) =>
-  `inline-flex h-10 items-center gap-2 whitespace-nowrap rounded-lg px-3 text-sm font-medium ${
+  `inline-flex h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-3 text-sm font-medium ${
     isActive ? 'bg-brand-soft text-brand-dark' : 'text-muted hover:bg-brand-soft hover:text-ink'
   }`
 
@@ -41,7 +41,7 @@ export default function AppLayout() {
             <span className="font-semibold">Temperature Logger</span>
           </div>
 
-          <nav aria-label="Main" className="flex flex-wrap items-center gap-1">
+          <nav aria-label="Main" className="order-last flex w-full items-center gap-1 overflow-x-auto md:order-none md:w-auto md:flex-wrap md:overflow-visible">
             <NavLink to="/" end className={navClass}>
               <Home size={16} aria-hidden="true" /> Home
             </NavLink>

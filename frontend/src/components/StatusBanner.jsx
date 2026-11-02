@@ -19,14 +19,14 @@ export default function StatusBanner({ items, loggedToday }) {
         <AlertTriangle size={32} className="text-near" aria-hidden="true" />
       )}
 
-      <div className="min-w-0 flex-1">
+      <div className="min-w-48 flex-1">
         <p className="text-xl font-semibold">{allClear ? 'All clear' : 'Needs attention'}</p>
         <p className="text-sm text-muted">
           {allClear ? 'Every reading is logged and nothing is waiting for sign-off.' : 'Work through these below.'}
         </p>
       </div>
 
-      <ul className="flex flex-wrap gap-3">
+      <ul className="flex w-full flex-wrap gap-3 sm:w-auto">
         {todo.map((item) => (
           <li key={item.label} className="rounded-lg border border-near/40 bg-surface px-4 py-2 text-center">
             <p className="text-2xl font-semibold tabular-nums text-near">{item.count}</p>
