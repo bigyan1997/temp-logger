@@ -21,16 +21,18 @@ const blankEntry = () => ({
 //   endpoint      where to POST, e.g. '/storage-readings/'
 //   staffId       the person taking the readings (required)
 //   buildBody     (rowKey, entry) => the fields for that row, without the shared ones
+//   startWith     optional (rowKey) => fields a row starts with instead of the blank ones
 //
 // Each row is saved on its own. The server may answer that a value needs confirming, or that
 // a corrective action is needed; the row then shows that question and the user answers it.
-export function useEntryForm({ endpoint, staffId, buildBody }) {
+export function useEntryForm({ endpoint, staffId, buildBody, startWith }) {
   const queryClient = useQueryClient()
   const [entries, setEntries] = useState({})
   const ids = useRef({}) // one stable id per row, so a retry can never save twice
 
-  const entryFor = (key) => entries[key] ?? blankEntry()
-  const update = (key, patch) => setEntries((all) => ({ ...all, [key]: { ...(all[key] ?? blankEntry()), ...patch } }))
+  const startingEntry = (key) => ({ ...blankEntry(), ...startWith?.(key) })
+  const entryFor = (key) => entries[key] ?? startingEntry(key)
+  const update = (key, patch) => setEntries((all) => ({ ...all, [key]: { ...(all[key] ?? startingEntry(key)), ...patch } }))
 
   function setField(key, patch) {
     // Changing the value starts over: any earlier confirmation no longer applies.

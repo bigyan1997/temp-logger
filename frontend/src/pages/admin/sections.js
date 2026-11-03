@@ -69,7 +69,16 @@ export const sections = [
     empty: 'No suppliers yet.',
     activeKey: 'active',
     title: (item) => item.name,
-    fields: [{ name: 'name', label: 'Supplier name', type: 'text', required: true }],
+    detail: (item) => (item.usually_frozen ? 'Usually frozen' : 'Usually chilled'),
+    fields: [
+      { name: 'name', label: 'Supplier name', type: 'text', required: true },
+      {
+        name: 'usually_frozen',
+        label: 'Usually frozen',
+        type: 'checkbox',
+        help: 'Receiving starts on Frozen for this supplier. It can still be changed to Chilled on any delivery.',
+      },
+    ],
   },
   {
     path: 'runs',

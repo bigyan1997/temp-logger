@@ -35,6 +35,12 @@ class DayTests(ReadingTestCase):
         self.assertEqual(self.states(sydney(2, 12)), ['missed', 'upcoming'])
         self.assertEqual(self.states(sydney(2, 23)), ['missed', 'missed'])
 
+    def test_receiving_says_which_suppliers_usually_deliver_frozen(self):
+        frozen = {s['name'] for s in build_day(MONDAY)['receiving'] if s['usually_frozen']}
+        self.assertEqual(len(frozen), 4)
+        for word in ('Quality', 'Garlos', 'Helen', 'Knefeh'):
+            self.assertTrue(any(word in name for name in frozen), word)
+
     def test_a_day_without_readings_has_no_storage_slots(self):
         self.assertEqual(build_day(date(2026, 11, 7))['storage'], [])  # Saturday
 

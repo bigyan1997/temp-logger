@@ -13,6 +13,11 @@ function ReceivingScreen({ staffId, date }) {
   const form = useEntryForm({
     endpoint: '/receiving-checks/',
     staffId,
+    // Frozen suppliers start on Frozen; staff can still change it for a delivery.
+    startWith: (supplierId) => {
+      const supplier = day?.receiving.find((s) => String(s.supplier_id) === supplierId)
+      return { productType: supplier?.usually_frozen ? 'frozen' : 'chilled' }
+    },
     buildBody: (supplierId, entry) => ({
       supplier: Number(supplierId),
       date,

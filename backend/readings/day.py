@@ -52,6 +52,7 @@ def receiving_for_day(day):
         {
             'supplier_id': supplier.pk,
             'name': supplier.name,
+            'usually_frozen': supplier.usually_frozen,
             'entry': {
                 'id': str(check.pk),
                 'temp': str(check.temp) if check.temp is not None else None,

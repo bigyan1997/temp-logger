@@ -55,7 +55,7 @@ class UnitSerializer(UniqueNameMixin, serializers.ModelSerializer):
 class SupplierSerializer(UniqueNameMixin, serializers.ModelSerializer):
     class Meta:
         model = Supplier
-        fields = ['id', 'name', 'active']
+        fields = ['id', 'name', 'active', 'usually_frozen']
 
 
 class RunSerializer(UniqueNameMixin, serializers.ModelSerializer):
