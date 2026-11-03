@@ -7,6 +7,7 @@
 #                   has no time limit and is restarted by Windows if it ever stops.
 #   Keep-alive task every 5 minutes, restarts the server if it stops answering.
 #   Alerts task     every 5 minutes, emails readings that are almost due, missed or out of limit.
+#   Auto-deploy     every 5 minutes, puts code pushed to GitHub live (auto_deploy.ps1).
 #   Power           the PC never goes to sleep while plugged in.
 
 #Requires -RunAsAdministrator
@@ -48,11 +49,20 @@ $alertSettings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan 
 Register-ScheduledTask -TaskName $alertTask -Action $alertAction -Trigger $everyFive `
     -Settings $alertSettings -Principal $asSystem -Force | Out-Null
 
+# --- Auto-deploy: every 5 minutes, puts code pushed to GitHub live ---
+$deployTask = 'Temperature Logger Auto Deploy'
+$deployAction = New-ScheduledTaskAction -Execute 'powershell.exe' `
+    -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$PSScriptRoot\auto_deploy.ps1`"" -WorkingDirectory $root
+$deploySettings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Minutes 30) `
+    -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -MultipleInstances IgnoreNew
+Register-ScheduledTask -TaskName $deployTask -Action $deployAction -Trigger $everyFive `
+    -Settings $deploySettings -Principal $asSystem -Force | Out-Null
+
 # --- Never sleep while plugged in (0 = never) ---
 powercfg /change standby-timeout-ac 0
 powercfg /change hibernate-timeout-ac 0
 
 # Start the server now instead of waiting for the next boot.
 Start-ScheduledTask -TaskName $serverTask
-Write-Host "Done. '$serverTask', '$watchTask' and '$alertTask' are installed and the server is starting."
+Write-Host "Done. '$serverTask', '$watchTask', '$alertTask' and '$deployTask' are installed and the server is starting."
 Write-Host "Check in a minute: http://localhost:8003   (log: $logDir\server.log)"

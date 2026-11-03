@@ -82,7 +82,9 @@ Keep real addresses, passwords and keys out of the repo. Put them in `backend\.e
 
 ## Updating
 
-After new code is pushed to GitHub, on the orders PC:
+**Automatic (normal way).** Code is changed on another computer and pushed to `main` on GitHub. Every 5 minutes the "Temperature Logger Auto Deploy" task (made by `install_autostart.ps1`) runs `scripts\auto_deploy.ps1`: it pulls, installs new packages, runs the tests, builds the frontend into a side folder, migrates, swaps the new frontend in and restarts the server, and goes back to the previous version if anything fails. Every deploy, skip and failure is written to `backend\logs\auto_deploy.log`. It skips (and logs why) while the orders PC folder has uncommitted changes or commits not on GitHub, so after changing anything on the orders PC itself, commit **and push**.
+
+**By hand**, on the orders PC:
 
 ```
 cd C:\Users\<you>\temp-logger

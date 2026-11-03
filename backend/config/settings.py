@@ -126,6 +126,8 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = (
     [('assets', FRONTEND_DIST / 'assets')] if (FRONTEND_DIST / 'assets').exists() else []
 )
+# Files Vite copies to the top of dist (from frontend/public, e.g. favicon.svg) are served at the site root.
+WHITENOISE_ROOT = FRONTEND_DIST if FRONTEND_DIST.exists() else None
 
 STORAGES = {
     'default': {
