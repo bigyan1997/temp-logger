@@ -2,7 +2,7 @@ from rest_framework.permissions import BasePermission
 
 
 class IsAdminRole(BasePermission):
-    """Day staff (role=admin) only. Used for sign-off, voiding, reports, settings."""
+    """Day staff (role=admin) only. Used for voiding, reports, settings."""
 
     def has_permission(self, request, view):
         user = request.user

@@ -9,7 +9,7 @@ from alerts.sender import recipients, send_due_alerts
 
 
 class Command(BaseCommand):
-    help = 'Email the alerts that are due (reading almost due, missed, out of limit, waiting for sign-off).'
+    help = 'Email the alerts that are due (reading almost due, missed, out of limit).'
 
     def add_arguments(self, parser):
         parser.add_argument('--test', action='store_true', help='Send one test email to the Alert emails list')
