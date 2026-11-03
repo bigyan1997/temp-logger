@@ -4,7 +4,7 @@ from readings.models import CorrectiveAction, StorageReading
 
 from .base import MONDAY_9AM, MONDAY_9PM, TUESDAY_9AM, ReadingTestCase
 
-FIX = {'action': 'used_immediately', 'hours_above_limit': '1.0'}
+FIX = {'action': 'used_immediately', 'notes': 'Done', 'hours_above_limit': '1.0'}
 
 
 class SaveStorageReadingTests(ReadingTestCase):
@@ -63,7 +63,7 @@ class SaveStorageReadingTests(ReadingTestCase):
         self.assertEqual(self.storage(self.coolroom, '2.0', corrective=FIX).status_code, 400)
 
     def test_corrective_action_must_suit_the_kind_of_check(self):
-        wrong = {'action': 'rejected'}  # a receiving action
+        wrong = {'action': 'rejected', 'notes': 'Done'}  # a receiving action
         self.assertEqual(self.storage(self.coolroom, '6.5', corrective=wrong).status_code, 400)
 
     def test_frozen_reading_above_zero_must_be_confirmed(self):

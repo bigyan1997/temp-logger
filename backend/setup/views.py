@@ -48,8 +48,21 @@ class ConfigViewSet(
 
 
 class StaffMemberViewSet(ConfigViewSet):
+    """Staff names. On the day (admin) login the name picker offers only managers; the other staff work nights.
+
+    Settings asks for ?all=1 and still sees everyone.
+    """
+
     queryset = StaffMember.objects.all()
     serializer_class = StaffMemberSerializer
+
+    def get_queryset(self):
+        names = super().get_queryset()
+        user = self.request.user
+        picking_a_name = self.action == 'list' and self.request.query_params.get('all') != '1'
+        if picking_a_name and user.is_authenticated and user.is_admin_role:
+            return names.filter(can_sign_off=True)
+        return names
 
 
 class UnitViewSet(ConfigViewSet):

@@ -1,11 +1,11 @@
 from django.db import connection, transaction
 
 from audit.models import AuditLog
-from readings.models import CorrectiveAction, DispatchReading, StorageReading
+from readings.models import DispatchReading, StorageReading
 
 from .base import ReadingTestCase
 
-FIX = {'action': 'discarded'}
+FIX = {'action': 'discarded', 'notes': 'Done'}
 
 
 class VoidStorageTests(ReadingTestCase):
@@ -37,20 +37,20 @@ class VoidStorageTests(ReadingTestCase):
         self.assertEqual(entry.reason, 'Entered in the wrong unit')
         self.assertEqual(entry.user, self.admin)
 
+    def test_a_correction_says_what_it_replaced_and_why(self):
+        self.sign_in(self.admin)
+        self.void(reason='Read the wrong dial', replacement={'value': '-18.0'})
+        rows = self.client.get('/api/storage-readings/').json()['results']
+        self.assertEqual(rows[0]['correction'], {'was': '-12.0 °C', 'reason': 'Read the wrong dial'})
+        voided = self.client.get('/api/storage-readings/?include_voided=1').json()['results']
+        self.assertIn('Read the wrong dial', [r['void_reason'] for r in voided])
+
     def test_voided_entries_leave_lists_and_free_the_slot(self):
         self.sign_in(self.admin)
         self.void(reason='wrong unit')
         self.assertEqual(self.client.get('/api/storage-readings/').json()['count'], 0)
         self.assertEqual(self.client.get('/api/storage-readings/?include_voided=1').json()['count'], 1)
         self.assertEqual(self.storage(self.freezer, '-18.0').status_code, 201)
-
-    def test_corrective_actions_of_voided_readings_are_not_waiting_for_sign_off(self):
-        self.sign_in(self.admin)
-        self.assertEqual(len(self.client.get('/api/corrective-actions/?unsigned=1').json()['results']), 1)
-        self.void(reason='wrong unit')
-        self.assertEqual(self.client.get('/api/corrective-actions/?unsigned=1').json()['results'], [])
-        self.assertEqual(self.client.get('/api/dashboard/').json()['tiles']['awaiting_signoff'], 0)
-        self.assertEqual(CorrectiveAction.objects.count(), 1)  # kept for the record
 
     def test_correction_replaces_the_value_and_links_back(self):
         self.sign_in(self.admin)

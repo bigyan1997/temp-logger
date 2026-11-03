@@ -3,7 +3,6 @@ import { CheckCircle2, ChevronRight, Clock } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { api } from '../../api/client.js'
 import { AllClear, Panel } from '../../components/Panel.jsx'
-import SignOffPanel from '../../components/SignOffPanel.jsx'
 import StatusBanner from '../../components/StatusBanner.jsx'
 import TodayProgress from '../../components/TodayProgress.jsx'
 import { formatDateTime, formatLongDate } from '../../lib/format.js'
@@ -20,7 +19,6 @@ export default function Dashboard() {
   const tiles = data?.tiles
   const banner = [
     { label: 'Missed readings', count: tiles?.missed ?? 0 },
-    { label: 'Waiting for sign-off', count: tiles?.awaiting_signoff ?? 0 },
   ]
 
   return (
@@ -43,9 +41,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <SignOffPanel />
-
+      <div className="mt-6">
         <Panel title="Missed readings" count={data?.missed.length}>
           {data?.missed.length === 0 && <AllClear>Every reading is logged.</AllClear>}
           <ul className="divide-y divide-line">
@@ -81,7 +77,6 @@ export default function Dashboard() {
                     <th className="px-4 py-2 font-medium">Action taken</th>
                     <th className="px-4 py-2 font-medium">Logged by</th>
                     <th className="px-4 py-2 font-medium">When</th>
-                    <th className="px-4 py-2 font-medium">Sign-off</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line">

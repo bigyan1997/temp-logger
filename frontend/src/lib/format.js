@@ -26,6 +26,10 @@ export const formatLongDate = (date = new Date()) => longDate.format(date)
 // Today's date in Sydney as "2026-11-02", the format the API uses.
 export const todayInSydney = () => new Intl.DateTimeFormat('en-CA', { timeZone: TIME_ZONE }).format(new Date())
 
+// "Tue 3 Nov 2026" from a date like "2026-11-03" (a calendar day has no time zone, so it is read as written).
+const dayOnly = new Intl.DateTimeFormat('en-AU', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
+export const formatDay = (isoDate) => dayOnly.format(new Date(`${isoDate}T00:00:00Z`))
+
 // "9:00 am" in Sydney time.
 const timeOnly = new Intl.DateTimeFormat('en-AU', { hour: 'numeric', minute: '2-digit', timeZone: TIME_ZONE })
 export const formatTime = (iso) => timeOnly.format(new Date(iso))

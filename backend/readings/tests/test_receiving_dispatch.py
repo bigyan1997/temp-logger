@@ -24,13 +24,13 @@ class ReceivingCheckTests(ReadingTestCase):
         self.assertEqual(self.receiving('-10.0', date='2026-11-03', product_type='frozen').status_code, 422)
 
     def test_warm_baked_pies_can_be_moved_to_the_coolroom(self):
-        response = self.receiving('7.5', product_type='baked_pie', corrective={'action': 'moved_to_coolroom'})
+        response = self.receiving('7.5', product_type='baked_pie', corrective={'action': 'moved_to_coolroom', 'notes': 'Done'})
         self.assertEqual(response.status_code, 201, response.json())
 
     def test_damaged_packaging_needs_a_corrective_action_even_if_cold(self):
         self.assertEqual(self.receiving('3.0', packaging_ok=False).status_code, 422)
         self.assertEqual(
-            self.receiving('3.0', packaging_ok=False, corrective={'action': 'rejected'}).status_code, 201
+            self.receiving('3.0', packaging_ok=False, corrective={'action': 'rejected', 'notes': 'Done'}).status_code, 201
         )
 
     def test_no_delivery_is_recorded_without_a_temperature(self):
@@ -60,7 +60,7 @@ class DispatchReadingTests(ReadingTestCase):
 
     def test_over_five_degrees_needs_a_corrective_action(self):
         self.assertEqual(self.dispatch('5.1').status_code, 422)
-        response = self.dispatch('5.1', corrective={'action': 'contacted_operations_manager'})
+        response = self.dispatch('5.1', corrective={'action': 'contacted_operations_manager', 'notes': 'Done'})
         self.assertEqual(response.status_code, 201, response.json())
         self.assertEqual(DispatchReading.objects.get().status, 'out_of_limit')
 

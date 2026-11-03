@@ -26,6 +26,7 @@ class Reading(Attributed):
     )
     note = models.CharField(max_length=300, blank=True)
     voided = models.BooleanField(default=False)
+    void_reason = models.CharField(max_length=300, blank=True, help_text='Why it was voided or corrected.')
     supersedes = models.ForeignKey('self', null=True, blank=True, on_delete=models.PROTECT, related_name='+')
 
     class Meta:
@@ -103,14 +104,6 @@ class DispatchReading(Reading):
         return f'{self.run} {self.date:%d/%m}: {self.temp} °C'
 
 
-class CorrectiveActionQuerySet(models.QuerySet):
-    def live(self):
-        """Leave out actions that belong to a voided reading: nobody needs to sign those off."""
-        return self.exclude(
-            Q(storage_reading__voided=True) | Q(receiving_check__voided=True) | Q(dispatch_reading__voided=True)
-        )
-
-
 class CorrectiveAction(models.Model):
     """What was done about a reading that was out of limit. Belongs to exactly one reading."""
 
@@ -132,6 +125,7 @@ class CorrectiveAction(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # Manager sign-off was dropped. These stay so sign-offs made before then remain in the records.
     signed_off_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name='+'
     )
@@ -144,8 +138,6 @@ class CorrectiveAction(models.Model):
         max_length=500, blank=True,
         help_text='Required when the person signing off also took the reading.',
     )
-
-    objects = CorrectiveActionQuerySet.as_manager()
 
     class Meta:
         ordering = ['-created_at']
@@ -160,13 +152,6 @@ class CorrectiveAction(models.Model):
                 ),
             ),
         ]
-
-    @property
-    def signed_off_name(self):
-        """Who approved it: the person if we know them, otherwise the login."""
-        if self.signed_off_person:
-            return self.signed_off_person.name
-        return self.signed_off_by.display_name if self.signed_off_by else None
 
     @property
     def reading(self):

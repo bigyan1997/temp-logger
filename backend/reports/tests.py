@@ -8,14 +8,13 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import SimpleTestCase, TestCase
 
-from readings.models import CorrectiveAction
 from readings.tests.base import MONDAY_9AM, MONDAY_9PM, ReadingTestCase
 
 from .grids import clock_label, corrective_rows, dispatch_grid, receiving_grid, storage_sheets, week_sundays
 
 SUNDAY = date(2026, 11, 1)
 START, END = date(2026, 11, 2), date(2026, 11, 6)  # the Monday to Friday after that Sunday
-FIX = {'action': 'discarded'}
+FIX = {'action': 'discarded', 'notes': 'Done'}
 
 
 class WeekTests(SimpleTestCase):
@@ -116,11 +115,11 @@ class WeeklyGridTests(ReadingTestCase):
         self.post('/api/receiving-checks/', supplier=self.supplier.pk, date='2026-11-03', no_delivery=True)
         self.post(
             '/api/receiving-checks/', supplier=self.supplier.pk, date='2026-11-04', temp='3.0',
-            packaging_ok=False, corrective={'action': 'rejected'},
+            packaging_ok=False, corrective={'action': 'rejected', 'notes': 'Done'},
         )
         self.post(
             '/api/receiving-checks/', supplier=self.supplier.pk, date='2026-11-05', temp='13.0',
-            corrective={'action': 'rejected'},
+            corrective={'action': 'rejected', 'notes': 'Done'},
         )
         grid = receiving_grid(START, END)
         column = grid['columns'].index('Posh Foods')
@@ -160,36 +159,24 @@ class WeeklyGridTests(ReadingTestCase):
         self.assertEqual(rows[-1]['day'], 'Saturday')
 
     def test_dispatch_columns_have_no_run_f_or_i(self):
-        self.dispatch('5.1', corrective={'action': 'rechecked'})
+        self.dispatch('5.1', corrective={'action': 'rechecked', 'notes': 'Done'})
         grid = dispatch_grid(START, END)
         self.assertEqual(grid['columns'], [f'Run {c}' for c in 'ABCDEGHJKLM'])
         self.assertEqual(grid['rows'][1]['cells'][0], '5.1*')  # the Monday row
 
     def test_corrective_actions_say_who_logged_them_and_on_which_login(self):
-        self.dispatch('5.1', corrective={'action': 'rechecked'})  # entered by the night login, as Sam
+        self.dispatch('5.1', corrective={'action': 'rechecked', 'notes': 'Done'})  # entered by the night login, as Sam
         rows = corrective_rows(START, END, 'dispatch')
         self.assertEqual(rows['headers'][3], 'Logged by')
         self.assertEqual(rows['rows'][0][3], 'Sam (night)')
-        self.assertEqual(rows['rows'][0][4], 'Not signed off')
+        self.assertEqual(len(rows['headers']), 4)  # no sign-off column any more
 
     def test_corrective_actions_are_in_date_order_with_their_week(self):
-        self.dispatch('5.1', date='2026-11-10', corrective={'action': 'rechecked'})  # entered first, but later
-        self.dispatch('5.2', date='2026-11-03', corrective={'action': 'rechecked'})
+        self.dispatch('5.1', date='2026-11-10', corrective={'action': 'rechecked', 'notes': 'Done'})  # entered first, but later
+        self.dispatch('5.2', date='2026-11-03', corrective={'action': 'rechecked', 'notes': 'Done'})
         rows = corrective_rows(date(2026, 11, 1), date(2026, 11, 14), 'dispatch')
         self.assertIn('5.2', rows['rows'][0][0])
         self.assertEqual(rows['week_starts'], [date(2026, 11, 1), date(2026, 11, 8)])
-
-    def test_signed_off_column_shows_the_manager_and_any_note(self):
-        self.sam.can_sign_off = True  # Sam took the reading and signs it off too
-        self.sam.save()
-        self.dispatch('5.1', corrective={'action': 'rechecked'})
-        action = CorrectiveAction.objects.get()
-        self.client.post(
-            f'/api/corrective-actions/{action.pk}/signoff/',
-            {'staff': self.sam.pk, 'note': 'Only manager on shift'}, format='json',
-        )
-        signed = corrective_rows(START, END, 'dispatch')['rows'][0][4]
-        self.assertTrue(signed.startswith('Sam, ') and signed.endswith(' - Only manager on shift'), signed)
 
     def test_weeks_are_marked_so_the_pdf_can_draw_a_heavier_line(self):
         rows = dispatch_grid(date(2026, 11, 2), date(2026, 11, 10))['rows']
@@ -202,7 +189,7 @@ class ReportApiTests(ReadingTestCase):
         self.storage(self.coolroom, '2.4', slot=MONDAY_9AM)
         self.storage(self.freezer, '-12.0', slot=MONDAY_9PM, corrective=FIX)
         self.receiving('4.0')
-        self.dispatch('5.1', corrective={'action': 'rechecked'})
+        self.dispatch('5.1', corrective={'action': 'rechecked', 'notes': 'Done'})
 
         self.sign_in(self.admin)
         for kind in ('storage', 'receiving', 'dispatch'):

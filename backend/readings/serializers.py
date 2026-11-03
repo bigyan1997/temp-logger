@@ -3,7 +3,6 @@ from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.exceptions import APIException
 
-from setup.models import StaffMember
 from setup.serializers import RecordedBySerializerMixin
 
 from . import rules
@@ -23,60 +22,23 @@ class UnprocessableEntry(APIException):
 
 class CorrectiveActionInputSerializer(serializers.Serializer):
     action = serializers.ChoiceField(choices=Action.choices)
-    notes = serializers.CharField(max_length=500, required=False, allow_blank=True, default='')
+    notes = serializers.CharField(
+        max_length=500,
+        error_messages={'required': 'Add a note saying what was done.', 'blank': 'Add a note saying what was done.'},
+    )
     hours_above_limit = serializers.DecimalField(
         max_digits=4, decimal_places=1, min_value=0, required=False, allow_null=True
     )
 
 
-class SignOffSerializer(serializers.Serializer):
-    """Who is approving (a manager on the staff list) and, if it is their own entry, why that is fine."""
-
-    staff = serializers.PrimaryKeyRelatedField(
-        queryset=StaffMember.objects.filter(active=True, can_sign_off=True),
-        error_messages={'does_not_exist': 'Pick a manager who can sign off.'},
-    )
-    note = serializers.CharField(max_length=500, required=False, allow_blank=True, default='')
-
-    def validate(self, attrs):
-        own_entry = attrs['staff'].pk == self.context['action'].reading.recorded_by_id
-        if own_entry and not attrs['note'].strip():
-            raise serializers.ValidationError(
-                {'note': 'You took this reading, so add a note saying why you are signing it off.'}
-            )
-        return attrs
-
-
 class CorrectiveActionSerializer(serializers.ModelSerializer):
-    """A corrective action as shown to the screen, with a one-line summary of its reading."""
+    """What was done about an out-of-limit reading, shown with the reading."""
 
-    kind = serializers.SerializerMethodField()
-    summary = serializers.SerializerMethodField()
     action_label = serializers.CharField(source='get_action_display', read_only=True)
-    signed_off_by_name = serializers.CharField(source='signed_off_name', default=None, read_only=True)
-    logged_by_name = serializers.SerializerMethodField()
-    logged_by_id = serializers.SerializerMethodField()
 
     class Meta:
         model = CorrectiveAction
-        fields = [
-            'id', 'kind', 'summary', 'action', 'action_label', 'notes', 'hours_above_limit',
-            'created_at', 'logged_by_name', 'logged_by_id', 'signed_off_at', 'signed_off_by_name', 'signed_off_note',
-        ]
-
-    def get_kind(self, action):
-        if action.storage_reading_id:
-            return CheckKind.STORAGE
-        return CheckKind.RECEIVING if action.receiving_check_id else CheckKind.DISPATCH
-
-    def get_summary(self, action):
-        return str(action.reading)
-
-    def get_logged_by_name(self, action):
-        return action.reading.recorded_by.name
-
-    def get_logged_by_id(self, action):
-        return action.reading.recorded_by_id
+        fields = ['id', 'action', 'action_label', 'notes', 'hours_above_limit', 'created_at']
 
 
 class ReadingSerializer(RecordedBySerializerMixin, serializers.ModelSerializer):
@@ -100,6 +62,9 @@ class ReadingSerializer(RecordedBySerializerMixin, serializers.ModelSerializer):
     confirm_unusual = serializers.BooleanField(write_only=True, default=False)
     corrective = CorrectiveActionInputSerializer(write_only=True, required=False)
     corrective_action = CorrectiveActionSerializer(read_only=True)
+    correction = serializers.SerializerMethodField()
+
+    value_field = 'temp'    # the field that holds the temperature
 
     # What subclasses fill in -----------------------------------------------
 
@@ -113,6 +78,20 @@ class ReadingSerializer(RecordedBySerializerMixin, serializers.ModelSerializer):
     def has_other_problem(self, attrs):
         """True if something besides temperature needs a corrective action."""
         return False
+
+    def value_text(self, reading):
+        if getattr(reading, 'not_used', False):
+            return 'Not used'
+        if getattr(reading, 'no_delivery', False):
+            return 'No delivery'
+        return f'{getattr(reading, self.value_field)} °C'
+
+    def get_correction(self, reading):
+        """For a row that replaces a voided one: what it replaced and why. Otherwise nothing."""
+        original = reading.supersedes
+        if original is None:
+            return None
+        return {'was': self.value_text(original), 'reason': original.void_reason}
 
     # The shared flow --------------------------------------------------------
 
@@ -163,14 +142,15 @@ class ReadingSerializer(RecordedBySerializerMixin, serializers.ModelSerializer):
 
 COMMON_FIELDS = [
     'id', 'recorded_by', 'recorded_by_name', 'entered_by_name', 'recorded_at', 'status', 'limit_at_time',
-    'note', 'voided', 'supersedes', 'confirm_unusual', 'corrective', 'corrective_action',
+    'note', 'voided', 'void_reason', 'supersedes', 'correction', 'confirm_unusual', 'corrective', 'corrective_action',
 ]
-READ_ONLY_FIELDS = ['recorded_at', 'status', 'limit_at_time', 'voided', 'supersedes']
+READ_ONLY_FIELDS = ['recorded_at', 'status', 'limit_at_time', 'voided', 'void_reason', 'supersedes']
 
 
 class StorageReadingSerializer(ReadingSerializer):
     unit_name = serializers.CharField(source='unit.name', read_only=True)
     kind = CheckKind.STORAGE
+    value_field = 'value'
     parent_field = 'storage_reading'
     identity_fields = ('unit', 'slot')
 

@@ -3,12 +3,12 @@ from zoneinfo import ZoneInfo
 
 from readings.dashboard import build_dashboard, missed_storage_slots
 from django.utils import timezone
-from setup.models import Run, StaffMember
+from setup.models import Run
 
 from .base import MONDAY_9AM, ReadingTestCase
 
 SYDNEY = ZoneInfo('Australia/Sydney')
-FIX = {'action': 'discarded'}
+FIX = {'action': 'discarded', 'notes': 'Done'}
 
 
 def sydney(day, hour, minute=0):
@@ -66,10 +66,8 @@ class DashboardApiTests(ReadingTestCase):
         data = self.client.get('/api/dashboard/').json()
         self.assertEqual(data['tiles']['logged_today'], 3)
         self.assertEqual(data['tiles']['out_of_limit'], 1)
-        self.assertEqual(data['tiles']['awaiting_signoff'], 1)
         self.assertEqual(data['out_of_limit'][0]['kind'], 'storage')
         self.assertEqual(data['out_of_limit'][0]['recorded_by'], 'Sam')
-        self.assertFalse(data['out_of_limit'][0]['signed_off'])
 
     def test_progress_today(self):
         self.sign_in(self.night)
@@ -84,13 +82,3 @@ class DashboardApiTests(ReadingTestCase):
     def test_missed_readings_say_which_day_to_open(self):
         missed = build_dashboard(sydney(2, 23))['missed']  # Monday 11 pm: Sunday night and both Monday readings are missing
         self.assertEqual({item['date'].isoformat() for item in missed}, {'2026-11-01', '2026-11-02'})
-
-    def test_signing_off_clears_the_awaiting_count(self):
-        self.sign_in(self.night)
-        self.dispatch('6.0', corrective=FIX)
-        self.sign_in(self.admin)
-        manager = StaffMember.objects.create(name='Jess', can_sign_off=True)
-        action_id = self.client.get('/api/corrective-actions/').json()['results'][0]['id']
-        self.client.post(f'/api/corrective-actions/{action_id}/signoff/', {'staff': manager.pk}, format='json')
-        tiles = self.client.get('/api/dashboard/').json()['tiles']
-        self.assertEqual(tiles['awaiting_signoff'], 0)

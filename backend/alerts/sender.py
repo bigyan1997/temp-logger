@@ -1,10 +1,9 @@
 """Emails the alerts that are due, once each, to everyone on the Alert emails list."""
 
-from django.core.mail import send_mail
-
 from setup.models import AlertRecipient
 
 from .checks import due_alerts
+from .emails import send_alert_email
 from .models import AlertSent
 
 
@@ -23,7 +22,7 @@ def send_due_alerts(now):
     for alert in due_alerts(now):
         if AlertSent.objects.filter(kind=alert.kind, key=alert.key).exists():
             continue
-        send_mail(f'[Temperature Logger] {alert.subject}', alert.body, None, to)
+        send_alert_email(alert, to)
         AlertSent.objects.create(kind=alert.kind, key=alert.key)
         sent.append(alert)
     return sent

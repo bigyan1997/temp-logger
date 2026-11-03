@@ -185,14 +185,6 @@ def dispatch_grid(start, end, now=None):
 
 # Corrective actions listed under each report -------------------------------
 
-def signed_off_text(action):
-    """"Jessica, 30/10/2026", followed by her note when she signed off her own entry."""
-    if not action.signed_off_at:
-        return 'Not signed off'
-    text = f'{action.signed_off_name}, {timezone.localtime(action.signed_off_at):%d/%m/%Y}'
-    return f'{text} - {action.signed_off_note}' if action.signed_off_note else text
-
-
 def logged_by(reading):
     """The person who took the reading and the login they used: "Sam (night)"."""
     shift = 'day' if reading.entered_by.role == 'admin' else 'night'
@@ -216,16 +208,16 @@ def corrective_rows(start, end, kind):
         'receiving': {'receiving_check__date__range': (start, end), 'receiving_check__voided': False},
         'dispatch': {'dispatch_reading__date__range': (start, end), 'dispatch_reading__voided': False},
     }[kind]
-    actions = CorrectiveAction.objects.filter(**filters).select_related('signed_off_by', 'signed_off_person')
+    actions = CorrectiveAction.objects.filter(**filters)
     for parent in ('storage_reading', 'receiving_check', 'dispatch_reading'):
         actions = actions.select_related(f'{parent}__recorded_by', f'{parent}__entered_by')
 
     ordered = sorted(actions, key=lambda action: (reading_date(action.reading), action.created_at))
     rows = [
-        [str(a.reading), a.get_action_display(), a.notes, logged_by(a.reading), signed_off_text(a)] for a in ordered
+        [str(a.reading), a.get_action_display(), a.notes, logged_by(a.reading)] for a in ordered
     ]
     return {
-        'headers': ['Reading', 'Action taken', 'Notes', 'Logged by', 'Signed off'],
+        'headers': ['Reading', 'Action taken', 'Notes', 'Logged by'],
         'rows': rows,
         'week_starts': [week_start(reading_date(a.reading)) for a in ordered],
     }

@@ -190,7 +190,7 @@ def corrective_table(corrective, width):
             data.append([heading] + [''] * (len(row) - 1))
         data.append([Paragraph(escape(text), CELL) for text in row])
 
-    table = Table(data, repeatRows=1, colWidths=[width * 0.17, width * 0.17, width * 0.32, width * 0.16, width * 0.18])
+    table = Table(data, repeatRows=1, colWidths=[width * 0.24, width * 0.2, width * 0.36, width * 0.2])
     table.setStyle(TableStyle(style))
     return table
 

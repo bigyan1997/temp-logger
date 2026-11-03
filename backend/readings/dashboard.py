@@ -7,7 +7,7 @@ from django.utils import timezone
 from setup.models import Supplier, Unit
 
 from .choices import Status
-from .models import CorrectiveAction, DispatchReading, ReceivingCheck, StorageReading
+from .models import DispatchReading, ReceivingCheck, StorageReading
 from .schedule import GRACE_PERIOD, slots_on
 
 MISSED_LOOKBACK_DAYS = 2    # today and yesterday
@@ -54,7 +54,6 @@ def out_of_limit_readings(now):
                 'recorded_at': reading.recorded_at,
                 'recorded_by': reading.recorded_by.name,
                 'action': reading.corrective_action.get_action_display(),
-                'signed_off': reading.corrective_action.signed_off_at is not None,
             })
     return sorted(found, key=lambda r: r['recorded_at'], reverse=True)
 
@@ -90,13 +89,11 @@ def build_dashboard(now=None):
     today = timezone.localtime(now).date()
     missed = missed_storage_slots(now)
     out_of_limit = out_of_limit_readings(now)
-    awaiting = CorrectiveAction.objects.live().filter(signed_off_at__isnull=True).count()
 
     return {
         'tiles': {
             'missed': len(missed),
             'out_of_limit': len(out_of_limit),
-            'awaiting_signoff': awaiting,
             'logged_today': logged_today(now),
         },
         'today': progress_today(today),

@@ -57,7 +57,7 @@ temp-logger/
     accounts/           User (role), login/logout/me
     setup/              Unit, Supplier, Run, SlotSchedule (admin-managed config)
     readings/           StorageReading, ReceivingCheck, DispatchReading, services.py (limits, due slots)
-    corrective/         CorrectiveAction, sign-off
+    corrective/         CorrectiveAction (action + required note)
     audit/              AuditLog, void/supersede logic
     reports/            PDF generation, CSV export
     requirements.txt
@@ -166,14 +166,7 @@ sequenceDiagram
 ```
 
 ### 5.5 Corrective action lifecycle
-```mermaid
-stateDiagram-v2
-    [*] --> Recorded: staff saves failing reading with action
-    Recorded --> SignedOff: admin signs off
-    Recorded --> Recorded: admin edits notes (audit-logged)
-    SignedOff --> [*]
-```
-Unsigned actions show in the dashboard "Waiting for sign-off" count.
+An out-of-limit reading is saved together with its corrective action: an action from the list and a note saying what was done (both required). There is no sign-off step; the action is shown with the reading on Records and in the PDF reports.
 
 ## 6. API surface
 
@@ -188,8 +181,6 @@ Unsigned actions show in the dashboard "Waiting for sign-off" count.
 | GET, POST, PATCH, DELETE `users/` | Admin | Manage logins, reset passwords, delete a login that has saved nothing (not your own) |
 | POST `storage-readings/`, `receiving-checks/`, `dispatch-readings/` | Anyone | Log a reading. Sending the same `id` again returns the saved entry |
 | GET the same three, plus `{id}/` | Anyone | Night: own entries from the last 2 days. Admin: everything, filter by `from`, `to`, `status`, `include_voided`, `unit` or `supplier` or `run` |
-| GET `corrective-actions/` (`?unsigned=1`) | Any login | Corrective actions with a one-line summary of each reading. Admin sees all; the night login sees only those waiting |
-| POST `corrective-actions/{id}/signoff/` | Any login | Sign off; body `{"staff": id, "note": "..."}`. `staff` must be an active manager (`can_sign_off`); `note` is required when that person also took the reading. Written to the audit log |
 | GET `dashboard/` | Admin | Counts, today progress (`today`), missed storage readings (today and yesterday, after a 2-hour grace period), out-of-limit readings from the last 7 days |
 | GET `day/?date=` | Anyone | What is due and already logged on a day: storage slots (done, due, missed, upcoming) per unit, receiving per supplier, dispatch per run |
 | POST `{storage-readings,receiving-checks,dispatch-readings}/{id}/void/` | Admin | Void an entry with a reason, optionally with a `replacement` (the correction). Undone entirely if the correction is refused. Written to the audit log |

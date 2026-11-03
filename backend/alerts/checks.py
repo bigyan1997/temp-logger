@@ -6,17 +6,19 @@ from datetime import timedelta
 
 from django.utils import timezone
 
-from readings.choices import Status
-from readings.dashboard import missed_storage_slots
-from readings.models import CorrectiveAction, DispatchReading, ReceivingCheck, StorageReading
-from readings.schedule import GRACE_PERIOD, slots_on
+from readings.models import StorageReading
+from readings.schedule import slots_on
 from setup.models import Unit
 
-REMIND_BEFORE = timedelta(minutes=15)   # "almost time to log"
-SIGN_OFF_AFTER = timedelta(hours=2)      # a corrective action nobody has approved yet
-LOOK_BACK = timedelta(hours=6)           # never email about things older than this (e.g. after the PC was off)
+# For each scheduled storage reading: a first reminder just before it, and a second one if it is still not logged.
+# 9 am: 8:30 am and 12 pm. 9 pm: 8:30 pm and 12 am. Friday 3 pm: 2:30 pm and 6 pm.
+FIRST_REMINDER_BEFORE = timedelta(minutes=30)
+SECOND_REMINDER_AFTER = timedelta(hours=3)
+SECOND_REMINDER_WINDOW = timedelta(hours=1)  # still sent if the 5-minute task was delayed, but not hours later
 
-Alert = namedtuple('Alert', 'kind key subject body')
+
+# lead: the sentence under the heading. items: units still to log. tone: reminder, reminder2 or ok (the email's colours).
+Alert = namedtuple('Alert', 'kind key subject body lead items tone', defaults=('', (), 'reminder'))
 
 
 def clock(moment):
@@ -28,70 +30,70 @@ def unlogged_units(slot):
     return list(Unit.objects.filter(active=True).exclude(pk__in=logged))
 
 
+def recent_slots(now):
+    """Scheduled reading times from yesterday and today (the midnight reminder is about last night's reading)."""
+    today = timezone.localtime(now).date()
+    return slots_on(today - timedelta(days=1)) + slots_on(today)
+
+
 def reminders(now):
-    """A storage reading is due within 15 minutes and some units are not logged yet."""
+    """A first reminder 30 minutes before a reading and a second 3 hours after it, while units are not logged."""
     found = []
-    for slot in slots_on(timezone.localtime(now).date()):
-        if slot - REMIND_BEFORE <= now < slot:
-            units = unlogged_units(slot)
-            if units:
-                names = ', '.join(unit.name for unit in units)
-                found.append(Alert(
-                    'reminder', slot.isoformat(), f'Storage temperatures due at {clock(slot)}',
-                    f'Storage temperatures are due at {clock(slot)} ({timezone.localtime(slot):%A}).\n'
-                    f'Still to log: {names}.',
-                ))
-    return found
+    for slot in recent_slots(now):
+        first_due = slot - FIRST_REMINDER_BEFORE <= now < slot
+        second_due = slot + SECOND_REMINDER_AFTER <= now < slot + SECOND_REMINDER_AFTER + SECOND_REMINDER_WINDOW
+        if not (first_due or second_due):
+            continue
+        units = unlogged_units(slot)
+        if not units:
+            continue
 
-
-def missed(now):
-    """A storage reading was not logged within the 2-hour grace period."""
-    by_slot = {}
-    for item in missed_storage_slots(now):
-        if now - item['slot'] <= GRACE_PERIOD + LOOK_BACK:
-            by_slot.setdefault(item['slot'], []).append(item['unit'].name)
-    return [
-        Alert(
-            'missed', slot.isoformat(), f'MISSED: storage temperatures due {clock(slot)}',
-            f'The {clock(slot)} storage temperatures ({timezone.localtime(slot):%A %d/%m}) were not logged.\n'
-            f'Missing: {", ".join(names)}.',
-        )
-        for slot, names in by_slot.items()
-    ]
-
-
-def out_of_limit(now):
-    """A reading was saved out of limit (it always comes with a corrective action)."""
-    found = []
-    models = [(StorageReading, 'storage'), (ReceivingCheck, 'receiving'), (DispatchReading, 'dispatch')]
-    for model, kind in models:
-        readings = model.objects.filter(
-            status=Status.OUT_OF_LIMIT, voided=False, recorded_at__gte=now - LOOK_BACK
-        ).select_related('recorded_by', 'corrective_action')
-        for reading in readings:
-            action = reading.corrective_action
-            notes = f'\nNotes: {action.notes}' if action.notes else ''
+        names = ', '.join(unit.name for unit in units)
+        when = f'{clock(slot)} ({timezone.localtime(slot):%A})'
+        if first_due:
             found.append(Alert(
-                'out_of_limit', f'{kind}-{reading.pk}', f'OUT OF LIMIT: {reading}',
-                f'{reading}\nLogged by {reading.recorded_by.name} at {clock(reading.recorded_at)}.\n'
-                f'Action taken: {action.get_action_display()}.{notes}',
+                'reminder', slot.isoformat(), f'Storage temperatures due at {clock(slot)}',
+                f'Storage temperatures are due at {when}.\nStill to log: {names}.',
+                lead=f'Storage temperatures are due at {when}.', items=tuple(unit.name for unit in units), tone='reminder',
+            ))
+        else:
+            found.append(Alert(
+                'reminder2', slot.isoformat(), f'STILL NOT LOGGED: storage temperatures due {clock(slot)}',
+                f'The {when} storage temperatures have still not been logged.\nMissing: {names}.',
+                lead=f'The {when} storage temperatures have still not been logged.',
+                items=tuple(unit.name for unit in units), tone='reminder2',
             ))
     return found
 
 
-def waiting_for_sign_off(now):
-    """A corrective action has had no manager sign-off for 2 hours."""
-    actions = CorrectiveAction.objects.live().filter(
-        signed_off_at__isnull=True, created_at__lte=now - SIGN_OFF_AFTER, created_at__gte=now - LOOK_BACK
-    )
+def sample_alerts():
+    """One example of every kind of alert, worded like the real ones, for checking that email works.
+
+    Made up: nothing is read from or saved to the records.
+    """
     return [
         Alert(
-            'sign_off', str(action.pk), f'Waiting for sign-off: {action.reading}',
-            f'{action.reading} has been waiting for a manager to sign it off since {clock(action.created_at)}.',
-        )
-        for action in actions
+            'sample', 'reminder', 'TEST - Storage temperatures due at 9:00 PM',
+            'Storage temperatures are due at 9:00 PM (Monday).\nStill to log: Coolroom, Freezer.',
+            lead='Storage temperatures are due at 9:00 PM (Monday).', items=('Coolroom', 'Freezer'), tone='reminder',
+        ),
+        Alert(
+            'sample', 'reminder2', 'TEST - STILL NOT LOGGED: storage temperatures due 9:00 PM',
+            'The 9:00 PM (Monday) storage temperatures have still not been logged.\n'
+            'Missing: Coolroom, Old Coolroom, Freezer.',
+            lead='The 9:00 PM (Monday) storage temperatures have still not been logged.',
+            items=('Coolroom', 'Old Coolroom', 'Freezer'), tone='reminder2',
+        ),
     ]
 
 
+def test_alert():
+    """The message for `send_alerts --test`: proves email is set up, and shows how the emails look."""
+    return Alert(
+        'test', '', 'Test alert', 'Alert emails are working.',
+        lead='Alert emails are working. Reminders for storage temperatures will arrive like this one.', tone='ok',
+    )
+
+
 def due_alerts(now):
-    return reminders(now) + missed(now) + out_of_limit(now) + waiting_for_sign_off(now)
+    return reminders(now)

@@ -22,7 +22,7 @@ export default function StatusBanner({ items, loggedToday }) {
       <div className="min-w-48 flex-1">
         <p className="text-xl font-semibold">{allClear ? 'All clear' : 'Needs attention'}</p>
         <p className="text-sm text-muted">
-          {allClear ? 'Every reading is logged and nothing is waiting for sign-off.' : 'Work through these below.'}
+          {allClear ? 'Every scheduled reading is logged.' : 'Work through these below.'}
         </p>
       </div>
 
