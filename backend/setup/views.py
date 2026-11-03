@@ -48,7 +48,7 @@ class ConfigViewSet(
 
 
 class StaffMemberViewSet(ConfigViewSet):
-    """Staff names. On the day (admin) login the name picker offers only managers; the other staff work nights.
+    """Staff names. The day (admin) login's name picker offers only staff ticked "both logins"; night offers all.
 
     Settings asks for ?all=1 and still sees everyone.
     """
@@ -61,7 +61,7 @@ class StaffMemberViewSet(ConfigViewSet):
         user = self.request.user
         picking_a_name = self.action == 'list' and self.request.query_params.get('all') != '1'
         if picking_a_name and user.is_authenticated and user.is_admin_role:
-            return names.filter(can_sign_off=True)
+            return names.filter(both_logins=True)
         return names
 
 

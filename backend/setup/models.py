@@ -11,8 +11,8 @@ class StaffMember(models.Model):
 
     name = models.CharField(max_length=80)
     active = models.BooleanField(default=True)
-    can_sign_off = models.BooleanField(
-        default=False, help_text='A manager who may approve corrective actions (day or night).'
+    both_logins = models.BooleanField(
+        default=False, help_text='Offered on the day login as well as the night login.'
     )
     created_at = models.DateTimeField(auto_now_add=True)
 

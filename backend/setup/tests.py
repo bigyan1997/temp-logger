@@ -38,8 +38,8 @@ class StaffApiTests(ApiTestCase):
         self.client.force_login(self.night)
         self.assertEqual(self.names('/api/staff/?all=1'), ['Sam'])
 
-    def test_the_day_login_picks_only_managers_but_night_sees_everyone(self):
-        StaffMember.objects.create(name='Jess', can_sign_off=True)
+    def test_the_day_login_picks_only_both_logins_staff_but_night_sees_everyone(self):
+        StaffMember.objects.create(name='Jess', both_logins=True)
         self.client.force_login(self.night)
         self.assertEqual(self.names(), ['Jess', 'Sam'])
         self.client.force_login(self.admin)
