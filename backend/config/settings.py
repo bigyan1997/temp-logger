@@ -147,6 +147,7 @@ GOOGLE_SERVICE_ACCOUNT_FILE = config('GOOGLE_SERVICE_ACCOUNT_FILE', default='') 
 
 # Alert emails (see docs/DEPLOYMENT.md). With no EMAIL_HOST they are only printed in the server window.
 APP_URL = config('APP_URL', default='')  # where staff open the app, for the button in alert emails (the address you type in the browser, with http://)
+APP_URL_TAILSCALE = config('APP_URL_TAILSCALE', default='')  # optional second link in alert emails, for staff away from the office
 EMAIL_HOST = config('EMAIL_HOST', default='')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')

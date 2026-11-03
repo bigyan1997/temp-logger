@@ -47,6 +47,13 @@ def render_html(subject, lead, items, tone):
         f'padding:12px 22px;border-radius:8px;display:inline-block;{FONT}">Open the Temperature Logger</a></p>'
         if app_url and items else ''
     )
+    # A second, smaller link for staff away from the office (the Tailscale address), when one is set.
+    remote_url = settings.APP_URL_TAILSCALE.rstrip('/')
+    remote_link = (
+        f'<p style="margin:10px 0 0;font-size:13px;color:{MUTED};{FONT}">Away from the office? '
+        f'<a href="{escape(remote_url)}/log/storage" style="color:{BRAND};font-weight:600;">Open it over Tailscale</a></p>'
+        if remote_url and items else ''
+    )
     return f"""<!doctype html>
 <html><body style="margin:0;padding:0;background:#f4f8f8;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f8f8;padding:24px 12px;">
@@ -66,6 +73,7 @@ def render_html(subject, lead, items, tone):
     <div style="font-size:16px;line-height:1.5;">{escape(lead)}</div>
     {unit_rows(items, accent) if items else ''}
     {button}
+    {remote_link}
   </td></tr>
   <tr><td style="padding:14px 24px;background:#f4f8f8;border-top:1px solid {LINE};font-size:12px;color:{MUTED};{FONT}">
     Sent automatically by the Temperature Logger. Once the temperatures are logged you won't get another reminder for them.

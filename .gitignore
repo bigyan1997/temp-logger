@@ -2,6 +2,7 @@
 .env
 backend/.env
 DEPLOYMENT_NOTES.md
+backups/
 
 # python
 backend/.venv/
