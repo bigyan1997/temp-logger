@@ -149,7 +149,7 @@ class AlertTests(ReadingTestCase):
 
     def test_test_email_command(self):
         call_command('send_alerts', test=True)
-        self.assertEqual(self.subjects(), ['[Temperature Logger] Test alert'])
+        self.assertEqual(self.subjects(), ['Temperature Logger: Test alert'])
         AlertRecipient.objects.update(active=False)
         with self.assertRaises(CommandError):
             call_command('send_alerts', test=True)

@@ -74,15 +74,15 @@ def sample_alerts():
     return [
         Alert(
             'sample', 'reminder', 'TEST - Storage temperatures due at 9:00 PM',
-            'Storage temperatures are due at 9:00 PM (Monday).\nStill to log: Coolroom, Freezer.',
-            lead='Storage temperatures are due at 9:00 PM (Monday).', items=('Coolroom', 'Freezer'), tone='reminder',
+            'Storage temperatures are due at 9:00 PM (Monday).\nStill to log: Coolroom, Freezer, Chest Freezer.',
+            lead='Storage temperatures are due at 9:00 PM (Monday).', items=('Coolroom', 'Freezer', 'Chest Freezer'), tone='reminder',
         ),
         Alert(
             'sample', 'reminder2', 'TEST - STILL NOT LOGGED: storage temperatures due 9:00 PM',
             'The 9:00 PM (Monday) storage temperatures have still not been logged.\n'
-            'Missing: Coolroom, Old Coolroom, Freezer.',
+            'Missing: Coolroom, Old Coolroom, Freezer, Chest Freezer.',
             lead='The 9:00 PM (Monday) storage temperatures have still not been logged.',
-            items=('Coolroom', 'Old Coolroom', 'Freezer'), tone='reminder2',
+            items=('Coolroom', 'Old Coolroom', 'Freezer', 'Chest Freezer'), tone='reminder2',
         ),
     ]
 

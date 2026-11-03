@@ -77,6 +77,6 @@ def render_html(subject, lead, items, tone):
 
 def send_alert_email(alert, to):
     """Send one Alert (see checks.py) to a list of addresses, as text and HTML."""
-    message = EmailMultiAlternatives(f'[Temperature Logger] {alert.subject}', alert.body, None, to)
+    message = EmailMultiAlternatives(f'Temperature Logger: {alert.subject}', alert.body, None, to)
     message.attach_alternative(render_html(alert.subject, alert.lead, alert.items, alert.tone), 'text/html')
     message.send()
