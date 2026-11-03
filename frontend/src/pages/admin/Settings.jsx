@@ -1,6 +1,7 @@
 import { Navigate, NavLink, useParams } from 'react-router-dom'
 import { useAuth } from '../../auth.jsx'
 import ResourcePage from '../../components/ResourcePage.jsx'
+import SentAlerts from '../../components/SentAlerts.jsx'
 import { sections } from './sections.js'
 
 const linkClass = ({ isActive }) =>
@@ -32,6 +33,7 @@ export default function Settings() {
 
       <div className="min-w-0 flex-1 lg:max-w-4xl">
         <ResourcePage key={section.path} section={section} />
+        {section.path === 'alerts' && <SentAlerts />}
       </div>
     </div>
   )

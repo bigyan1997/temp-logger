@@ -202,7 +202,7 @@ export default function Records() {
                 <td className="px-4 py-3 font-semibold tabular-nums">{config.temp(r)}</td>
                 <td className="px-4 py-3">{r.voided ? <span className="font-medium no-underline">Voided</span> : <StatusBadge status={r.status} />}</td>
                 <td className="px-4 py-3">{r.recorded_by_name}</td>
-                <td className="px-4 py-3 text-sm">{formatDateTime(r.recorded_at)}<br /><span className="text-muted">{r.entered_by_name}</span></td>
+                <td className="whitespace-nowrap px-4 py-3 text-sm">{formatDateTime(r.recorded_at)}<br /><span className="text-muted">{r.entered_by_name}</span></td>
                 <td className="px-4 py-3 text-sm">
                   {r.corrective_action && (
                     <p>
