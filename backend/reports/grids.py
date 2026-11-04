@@ -159,8 +159,24 @@ def dispatch_finished(day, now):
     return day < local.date() or (day == local.date() and local.time() >= DISPATCH_DONE_BY)
 
 
+def fold_sunday_into_monday(rows):
+    """Dispatch starts on Monday morning, so Sunday night has no row of its own: anything logged for the
+    Sunday goes on the Monday row (a Monday reading wins if a run has both), which is labelled for both."""
+    folded = []
+    for row in rows:
+        if row['day'] == 'Sunday':
+            sunday = row
+            continue
+        if row['day'] == 'Monday':
+            row['cells'] = [monday or sunday_cell for monday, sunday_cell in zip(row['cells'], sunday['cells'])]
+            row['day'] = 'Monday / Sunday night'
+            row['new_week'] = True
+        folded.append(row)
+    return folded
+
+
 def dispatch_grid(start, end, now=None):
-    """Table 11: a column per run, with a "Sunday" row.
+    """Table 11: a column per run. Monday morning starts the week; Sunday night is folded into the Monday row.
 
     A run with no reading on a day when other runs were logged, and the runs have all gone out, was not used
     that day, and says so. A day with nothing logged at all is left blank (it may simply not have happened).
@@ -176,7 +192,7 @@ def dispatch_grid(start, end, now=None):
     def text_for(reading):
         return starred(reading, f'{reading.temp}') if reading else ''
 
-    rows = weekly_rows(sundays, entries, runs, text_for, 'Sunday')
+    rows = fold_sunday_into_monday(weekly_rows(sundays, entries, runs, text_for, 'Sunday'))
     for row in rows:
         if dispatch_finished(row['date'], now) and any(row['cells']):
             row['cells'] = [cell or RUN_NOT_USED for cell in row['cells']]

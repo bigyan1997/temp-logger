@@ -5,7 +5,7 @@ import { todayInSydney } from '../../lib/format.js'
 const reports = [
   { kind: 'storage', title: 'Cold and frozen storage', table: 'Table 9', text: 'Four weeks per page, a column for each unit, like the paper sheet.' },
   { kind: 'receiving', title: 'Receiving stock', table: 'Table 10', text: 'A row for each day, starting with Sunday night, and a column for each supplier.' },
-  { kind: 'dispatch', title: 'Dispatch', table: 'Table 11', text: 'A row for each day, starting with Sunday, and a column for each run.' },
+  { kind: 'dispatch', title: 'Dispatch', table: 'Table 11', text: 'A row for each day, starting with Monday (Sunday night is on the Monday row), and a column for each run.' },
 ]
 
 const MAX_DAYS = 186 // keep in step with backend reports/grids.py

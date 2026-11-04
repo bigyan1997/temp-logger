@@ -8,6 +8,7 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import SimpleTestCase, TestCase
 
+from setup.models import Run
 from readings.tests.base import MONDAY_9AM, MONDAY_9PM, ReadingTestCase
 
 from .grids import clock_label, corrective_rows, dispatch_grid, receiving_grid, storage_sheets, week_sundays
@@ -107,8 +108,16 @@ class WeeklyGridTests(ReadingTestCase):
         self.assertEqual(grid['rows'][1]['date'], date(2026, 11, 2))
         self.assertIn('Posh Foods', grid['columns'])
 
-    def test_dispatch_calls_the_first_row_sunday(self):
-        self.assertEqual(dispatch_grid(START, END)['rows'][0]['day'], 'Sunday')
+    def test_dispatch_starts_on_monday_with_no_separate_sunday_row(self):
+        days = [r['day'] for r in dispatch_grid(START, END)['rows']]
+        self.assertEqual(days, ['Monday / Sunday night', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'])
+
+    def test_dispatch_logged_on_sunday_shows_on_the_monday_row(self):
+        self.dispatch('3.5', date='2026-11-01')
+        self.dispatch('4.0', date='2026-11-02', run=Run.objects.get(code='B'))
+        row = dispatch_grid(START, END)['rows'][0]
+        self.assertEqual(row['date'], date(2026, 11, 2))
+        self.assertEqual(row['cells'][:2], ['3.5', '4.0'])
 
     def test_receiving_marks_no_delivery_packaging_and_out_of_limit(self):
         self.receiving('4.0')
@@ -128,21 +137,21 @@ class WeeklyGridTests(ReadingTestCase):
     def test_a_run_with_no_reading_says_not_used_on_days_when_other_runs_went_out(self):
         self.dispatch('4.0', date='2026-11-03')  # Run A only, on the Tuesday
         rows = dispatch_grid(START, END, now=sydney(2026, 11, 10, 12))['rows']
-        tuesday = rows[2]['cells']
+        tuesday = rows[1]['cells']
         self.assertEqual(tuesday[0], '4.0')
         self.assertTrue(all(cell == 'Run not used' for cell in tuesday[1:]))
-        self.assertEqual(rows[3]['cells'], [''] * len(tuesday))  # nothing logged that day: left blank
+        self.assertEqual(rows[2]['cells'], [''] * len(tuesday))  # nothing logged that day: left blank
 
     def test_today_says_not_used_only_from_7_am_when_all_runs_have_left(self):
         self.dispatch('4.0', date='2026-11-03')
-        before = dispatch_grid(START, END, now=sydney(2026, 11, 3, 6, 59))['rows'][2]['cells']
-        after = dispatch_grid(START, END, now=sydney(2026, 11, 3, 7, 0))['rows'][2]['cells']
+        before = dispatch_grid(START, END, now=sydney(2026, 11, 3, 6, 59))['rows'][1]['cells']
+        after = dispatch_grid(START, END, now=sydney(2026, 11, 3, 7, 0))['rows'][1]['cells']
         self.assertEqual(before[1], '')
         self.assertEqual(after[1], 'Run not used')
 
     def test_nothing_says_not_used_for_the_future(self):
         self.dispatch('4.0', date='2026-11-03')
-        tuesday = dispatch_grid(START, END, now=sydney(2026, 11, 2, 12))['rows'][2]['cells']
+        tuesday = dispatch_grid(START, END, now=sydney(2026, 11, 2, 12))['rows'][1]['cells']
         self.assertEqual(tuesday[1], '')
 
     def test_sunday_night_entries_have_their_own_row(self):
@@ -162,7 +171,7 @@ class WeeklyGridTests(ReadingTestCase):
         self.dispatch('5.1', corrective={'action': 'rechecked', 'notes': 'Done'})
         grid = dispatch_grid(START, END)
         self.assertEqual(grid['columns'], [f'Run {c}' for c in 'ABCDEGHJKLM'])
-        self.assertEqual(grid['rows'][1]['cells'][0], '5.1*')  # the Monday row
+        self.assertEqual(grid['rows'][0]['cells'][0], '5.1*')  # the Monday row
 
     def test_corrective_actions_say_who_logged_them_and_on_which_login(self):
         self.dispatch('5.1', corrective={'action': 'rechecked', 'notes': 'Done'})  # entered by the night login, as Sam
@@ -180,7 +189,7 @@ class WeeklyGridTests(ReadingTestCase):
 
     def test_weeks_are_marked_so_the_pdf_can_draw_a_heavier_line(self):
         rows = dispatch_grid(date(2026, 11, 2), date(2026, 11, 10))['rows']
-        self.assertEqual([r['new_week'] for r in rows], [True, False, False, False, False, False] * 2)
+        self.assertEqual([r['new_week'] for r in rows], [True, False, False, False, False] * 2)
 
 
 class ReportApiTests(ReadingTestCase):
