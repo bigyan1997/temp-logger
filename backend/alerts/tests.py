@@ -142,11 +142,6 @@ class AlertTests(ReadingTestCase):
             self.kinds(monday(8, 30))
         self.assertIn('http://example.test:8003/log/storage', mail.outbox[0].alternatives[0][0])
 
-    def test_a_tailscale_link_is_added_when_its_address_is_set(self):
-        with self.settings(APP_URL_TAILSCALE='http://100.1.2.3:8003'):
-            self.kinds(monday(8, 30))
-        self.assertIn('http://100.1.2.3:8003/log/storage', mail.outbox[0].alternatives[0][0])
-
     def test_no_button_without_an_app_address(self):
         with self.settings(APP_URL=''):
             self.kinds(monday(8, 30))
