@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Link, Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from './auth.jsx'
 import AppLayout from './components/AppLayout.jsx'
 import AuditLog from './pages/admin/AuditLog.jsx'
@@ -12,10 +12,29 @@ import LogReceiving from './pages/LogReceiving.jsx'
 import LogStorage from './pages/LogStorage.jsx'
 import Login from './pages/Login.jsx'
 
+// Shown while the app checks that you are signed in. If the server is slow to answer, say so and offer the login page.
+function StartingUp({ trouble }) {
+  return (
+    <div className="grid min-h-screen place-items-center px-4 text-center">
+      {trouble ? (
+        <div role="status">
+          <p className="font-medium">Cannot reach the server yet. Still trying…</p>
+          <p className="mt-1 text-sm text-muted">If this carries on, check the computer is on and connected, or sign in again.</p>
+          <Link to="/login" className="mt-4 inline-block rounded-lg bg-brand px-5 py-3 font-semibold text-white hover:bg-brand-dark">
+            Sign in again
+          </Link>
+        </div>
+      ) : (
+        <p className="text-muted">Loading…</p>
+      )}
+    </div>
+  )
+}
+
 // Everything except the login page needs a signed-in user.
 function RequireAuth({ children }) {
-  const { user, loading } = useAuth()
-  if (loading) return <div className="grid min-h-screen place-items-center text-muted">Loading…</div>
+  const { user, loading, trouble } = useAuth()
+  if (loading) return <StartingUp trouble={trouble} />
   if (!user) return <Navigate to="/login" replace />
   return children
 }

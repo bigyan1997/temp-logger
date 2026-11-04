@@ -7,7 +7,7 @@ const inputClass =
   'mb-4 h-12 w-full rounded-lg border border-line px-3 text-base focus:border-brand focus:outline-2 focus:outline-brand'
 
 export default function Login() {
-  const { user, login } = useAuth()
+  const { user, login, notice } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -40,6 +40,12 @@ export default function Login() {
             <p className="text-sm text-muted">Achieve Cafe Provisions</p>
           </div>
         </div>
+
+        {notice && (
+          <p role="status" className="mb-4 rounded-lg bg-brand-soft px-3 py-2 text-sm">
+            {notice}
+          </p>
+        )}
 
         <label htmlFor="email" className="mb-1 block text-sm font-medium">Email</label>
         <input

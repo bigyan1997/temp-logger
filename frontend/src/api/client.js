@@ -43,6 +43,9 @@ export async function api(path, { method = 'GET', body } = {}) {
   })
 
   const data = response.status === 204 ? null : await response.json().catch(() => null)
+  if ((response.status === 401 || response.status === 403) && !path.startsWith('/auth/')) {
+    window.dispatchEvent(new Event('session-check')) // maybe the session ended; auth.jsx checks and signs out if so
+  }
   if (!response.ok) throw new ApiError(response.status, data)
   return data
 }
