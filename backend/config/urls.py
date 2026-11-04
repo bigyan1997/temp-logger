@@ -5,9 +5,12 @@ from django.views.generic import TemplateView
 
 from accounts.user_management import router as user_router
 
+from .version import app_version
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/health/', lambda request: JsonResponse({'status': 'ok'})),
+    path('api/version/', app_version),
     path('api/auth/', include('accounts.urls')),
     path('api/', include(user_router.urls)),
     path('api/', include('setup.urls')),

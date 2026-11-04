@@ -15,6 +15,7 @@ import {
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../auth.jsx'
 import { useStaffChoice } from './StaffPicker.jsx'
+import UpdateBanner from './UpdateBanner.jsx'
 
 const navClass = ({ isActive }) =>
   `flex h-10 shrink-0 items-center gap-3 whitespace-nowrap rounded-lg px-3 text-sm font-medium lg:w-full ${
@@ -121,6 +122,7 @@ export default function AppLayout() {
       </aside>
 
       <main className="min-w-0 flex-1 px-4 py-6 sm:px-8 sm:py-8">
+        <UpdateBanner />
         <Outlet />
       </main>
     </div>
