@@ -16,6 +16,7 @@ class AuditLog(models.Model):
         LOGIN_CREATED = 'login_created', 'Login created'
         LOGIN_CHANGED = 'login_changed', 'Login changed'
         DELETED = 'deleted', 'Item deleted'
+        CLOSED_DAY = 'closed_day', 'Closed day changed'
 
     at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='+')

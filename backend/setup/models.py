@@ -91,6 +91,24 @@ class AlertRecipient(models.Model):
         return self.email
 
 
+class ClosedDay(models.Model):
+    """A day with no readings to log, such as a public holiday. Admin-managed in Settings.
+
+    Its daytime storage readings and the evening before are not due (no reminders, shown as closed on the
+    screens and PDFs). Its own evening reading still is, because deliveries go out the next morning.
+    Receiving and Dispatch are skipped for the whole date. Readings can still be logged on a closed day."""
+
+    date = models.DateField(unique=True)
+    label = models.CharField(max_length=60, default='Public holiday')
+    active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['-date']
+
+    def __str__(self):
+        return f'{self.date:%d/%m/%Y} {self.label}'
+
+
 class Attributed(models.Model):
     """Shared fields for every reading/check: which login saved it and which
     person took it. Add this to StorageReading, ReceivingCheck, DispatchReading."""

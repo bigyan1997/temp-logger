@@ -1,6 +1,7 @@
 import { ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth.jsx'
+import ClosedNotice from '../components/ClosedNotice.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import { formatLongDate, formatTime, todayInSydney } from '../lib/format.js'
 import { useDay } from '../lib/useDay.js'
@@ -34,6 +35,11 @@ export default function Today() {
     <div className="max-w-5xl">
       <h1 className="text-2xl font-semibold">Hello, {user.display_name}</h1>
       <p className="text-muted">{formatLongDate()}</p>
+      {day?.closed && (
+        <div className="mt-4">
+          <ClosedNotice label={day.closed}>Receiving and dispatch are not needed today. The daytime storage readings are not due either; tonight&apos;s evening reading is.</ClosedNotice>
+        </div>
+      )}
 
       {!day ? (
         <p className="mt-6 text-muted">Loading…</p>
@@ -48,9 +54,13 @@ export default function Today() {
                     <span className="font-medium">{formatTime(slot.slot)}</span>
                     <span className="text-muted"> · {logged(slot.units, 'reading')} of {slot.units.length} units</span>
                   </span>
-                  <span title={stateText[slot.state]}>
-                    <StatusBadge status={stateStatus[slot.state]} />
-                  </span>
+                  {slot.state === 'closed' ? (
+                    <span className="text-sm text-muted">{slot.closed}</span>
+                  ) : (
+                    <span title={stateText[slot.state]}>
+                      <StatusBadge status={stateStatus[slot.state]} />
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>

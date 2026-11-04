@@ -1,3 +1,4 @@
+import ClosedNotice from '../components/ClosedNotice.jsx'
 import EntryRow from '../components/EntryRow.jsx'
 import EntryShell from '../components/EntryShell.jsx'
 import SaveAll from '../components/SaveAll.jsx'
@@ -48,6 +49,9 @@ function ReceivingScreen({ staffId, date }) {
 
   return (
     <>
+      {day.closed && (
+        <ClosedNotice label={day.closed}>No deliveries need checking today. You can still log one that arrives.</ClosedNotice>
+      )}
       <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
         {day.receiving.map((supplier, index) => {
           const key = String(supplier.supplier_id)

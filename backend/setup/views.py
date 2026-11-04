@@ -5,9 +5,9 @@ from accounts.permissions import IsAdminRole
 from audit.deletion import delete_unused
 from audit.models import AuditLog, record
 
-from .models import AlertRecipient, Run, StaffMember, Supplier, Unit
+from .models import AlertRecipient, ClosedDay, Run, StaffMember, Supplier, Unit
 from .serializers import (
-    AlertRecipientSerializer, RunSerializer, StaffMemberSerializer, SupplierSerializer, UnitSerializer,
+    AlertRecipientSerializer, ClosedDaySerializer, RunSerializer, StaffMemberSerializer, SupplierSerializer, UnitSerializer,
 )
 
 
@@ -87,6 +87,21 @@ class SupplierViewSet(ConfigViewSet):
 class RunViewSet(ConfigViewSet):
     queryset = Run.objects.all()
     serializer_class = RunSerializer
+
+
+class ClosedDayViewSet(ConfigViewSet):
+    """Public holidays and other days with nothing to log. Everyone signed in can read them (the screens show them)."""
+
+    queryset = ClosedDay.objects.all()
+    serializer_class = ClosedDaySerializer
+
+    def perform_create(self, serializer):
+        day = serializer.save()
+        record(self.request.user, AuditLog.Action.CLOSED_DAY, f'Closed day added: {day}')
+
+    def perform_update(self, serializer):
+        day = serializer.save()
+        record(self.request.user, AuditLog.Action.CLOSED_DAY, f'Closed day changed: {day}' + ('' if day.active else ' (deactivated)'))
 
 
 class AlertRecipientViewSet(ConfigViewSet):

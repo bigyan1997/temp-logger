@@ -121,6 +121,15 @@ def storage_table(sheet, width):
         else:
             cells = [row['label']] + [text for week_cells in row['cells'] for text in week_cells]
             style.append(('ALIGN', (0, row_number), (0, row_number), 'LEFT'))
+            for week, holiday in enumerate(row['closed']):
+                if holiday:  # one wide cell across this week's units
+                    first = 1 + week * unit_count
+                    cells[first] = holiday
+                    style += [
+                        ('SPAN', (first, row_number), (first + unit_count - 1, row_number)),
+                        ('TEXTCOLOR', (first, row_number), (first, row_number), QUIET),
+                        ('FONTSIZE', (first, row_number), (first, row_number), 6.5),
+                    ]
         data.append(cells)
 
     mark_special_cells(data, style, first_row=2)
@@ -150,7 +159,14 @@ def weekly_table(grid, width):
         ('ALIGN', (0, 1), (0, -1), 'LEFT'),
     ]
     for index, row in enumerate(grid['rows'], start=1):
-        data.append([row['day'], date_text(row['date']), *row['cells']])
+        if row['closed'] and grid['columns']:  # one wide cell across every column
+            data.append([row['day'], date_text(row['date']), row['closed'], *[''] * (column_count - 1)])
+            style += [
+                ('SPAN', (2, index), (-1, index)),
+                ('TEXTCOLOR', (2, index), (2, index), QUIET),
+            ]
+        else:
+            data.append([row['day'], date_text(row['date']), *row['cells']])
         style.append(('BACKGROUND', (0, index), (-1, index), BAND if index % 2 == 0 else colors.white))
         if row['new_week'] and index > 1:
             style.append(('LINEABOVE', (0, index), (-1, index), 1.5, INK))

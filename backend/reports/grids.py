@@ -16,7 +16,8 @@ from django.utils import timezone
 
 from readings.choices import Status
 from readings.models import CorrectiveAction, DispatchReading, ReceivingCheck, StorageReading
-from readings.schedule import STORAGE_SLOTS
+from readings.schedule import AFTERNOON, EVENING, STORAGE_SLOTS
+from setup.closed_days import afternoon_instead_of_evening, closed_labels, day_closure, storage_closure
 from setup.models import Run, Supplier, Unit
 
 MAX_DAYS = 186  # about 6 months
@@ -60,6 +61,18 @@ def columns(model, used_ids):
 
 # Table 9 -------------------------------------------------------------------
 
+def storage_cell(by_slot, unit, slot, afternoon, moved):
+    """The text for one unit at one reading time. A moved 3 pm reading is shown as "3.0 (3pm)"."""
+    reading = by_slot.get((unit.pk, slot))
+    if reading:
+        return storage_text(reading)
+    reading = by_slot.get((unit.pk, afternoon)) if moved else None
+    if not reading:
+        return ''
+    text = storage_text(reading)
+    return f'{text.rstrip("*")} (3pm)' + ('*' if text.endswith('*') else '')
+
+
 def storage_sheets(start, end):
     """A list of sheets, each holding up to four weeks. See the module note for the layout.
 
@@ -67,7 +80,8 @@ def storage_sheets(start, end):
         'units': [unit names],
         'weeks': [Sunday date or None] * 4,
         'rows':  [ {'kind': 'date', 'label': 'Monday / Date:', 'dates': [date or None] * 4},
-                   {'kind': 'time', 'label': '9.00 AM', 'cells': [[one text per unit] per week]}, ... ],
+                   {'kind': 'time', 'label': '9.00 AM', 'cells': [[one text per unit] per week],
+                  'closed': [public holiday label or None, per week]}, ... ],
     }
     """
     sundays = week_sundays(start, end)
@@ -76,6 +90,7 @@ def storage_sheets(start, end):
     )
     by_slot = {(r.unit_id, r.slot): r for r in readings}
     units = columns(Unit, {r.unit_id for r in readings})
+    closed = closed_labels()
 
     sheets = []
     for first in range(0, len(sundays), WEEKS_PER_STORAGE_SHEET):
@@ -91,16 +106,21 @@ def storage_sheets(start, end):
                 'dates': [week + timedelta(days=offset) if week else None for week in weeks],
             })
             for slot_time in STORAGE_SLOTS[weekday]:
-                cells = []
+                cells, holidays = [], []
                 for week in weeks:
                     if week is None:
                         cells.append([''] * len(units))
+                        holidays.append(None)
                         continue
-                    slot = timezone.make_aware(datetime.combine(week + timedelta(days=offset), slot_time))
-                    cells.append([
-                        storage_text(r) if (r := by_slot.get((unit.pk, slot))) else '' for unit in units
-                    ])
-                rows.append({'kind': 'time', 'label': clock_label(slot_time), 'cells': cells})
+                    day = week + timedelta(days=offset)
+                    slot = timezone.make_aware(datetime.combine(day, slot_time))
+                    # The day before a holiday has a 3 pm reading instead of 9 pm; it goes in the 9 PM row, tagged.
+                    moved = slot_time == EVENING and afternoon_instead_of_evening(day, closed)
+                    afternoon = timezone.make_aware(datetime.combine(day, AFTERNOON))
+                    cells.append([storage_cell(by_slot, unit, slot, afternoon, moved) for unit in units])
+                    # Say "Public holiday" only when nothing was logged anyway (and the 9 pm was not moved to 3 pm).
+                    holidays.append(None if any(cells[-1]) or moved else storage_closure(slot, closed))
+                rows.append({'kind': 'time', 'label': clock_label(slot_time), 'cells': cells, 'closed': holidays})
 
         sheets.append({'units': [unit.name for unit in units], 'weeks': weeks, 'rows': rows})
     return sheets
@@ -114,20 +134,23 @@ def weekly_rows(sundays, entries, items, text_for, sunday_label):
     `entries` maps (item id, date) to a reading. `sunday_label` is what the Day column says on Sunday.
     """
     rows = []
+    closed = closed_labels()
     for sunday in sundays:
         for offset in range(0, 6):  # Sunday, then Monday to Friday
             day = sunday + timedelta(days=offset)
+            cells = [text_for(entries.get((item.pk, day))) for item in items]
             rows.append({
                 'day': sunday_label if offset == 0 else DAY_NAMES[day.weekday()],
                 'date': day,
-                'cells': [text_for(entries.get((item.pk, day))) for item in items],
+                'cells': cells,
                 'new_week': offset == 0,
+                'closed': None if any(cells) else day_closure(day, closed),  # "Public holiday" if nothing was logged
             })
 
         saturday = sunday + timedelta(days=6)
         cells = [text_for(entries.get((item.pk, saturday))) for item in items]
         if any(cells):  # there is no Saturday row on paper, so only add one if something was logged
-            rows.append({'day': 'Saturday', 'date': saturday, 'cells': cells, 'new_week': False})
+            rows.append({'day': 'Saturday', 'date': saturday, 'cells': cells, 'new_week': False, 'closed': None})
     return rows
 
 
@@ -171,6 +194,8 @@ def fold_sunday_into_monday(rows):
             row['cells'] = [monday or sunday_cell for monday, sunday_cell in zip(row['cells'], sunday['cells'])]
             row['day'] = 'Monday / Sunday night'
             row['new_week'] = True
+            if any(row['cells']):
+                row['closed'] = None  # something was logged on the Sunday night after all
         folded.append(row)
     return folded
 

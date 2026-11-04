@@ -2,6 +2,7 @@
 
 from django.utils import timezone
 
+from setup.closed_days import closed_labels, day_closure, storage_closure
 from setup.models import Run, Supplier, Unit
 
 from .dashboard import missed_storage_slots
@@ -9,10 +10,12 @@ from .models import DispatchReading, ReceivingCheck, StorageReading
 from .schedule import GRACE_PERIOD, slots_on
 
 
-def slot_state(slot, now, all_done):
-    """done, upcoming (not due yet), due (inside the grace period) or missed."""
+def slot_state(slot, now, all_done, closed=None):
+    """done, closed (a public holiday), upcoming (not due yet), due (inside the grace period) or missed."""
     if all_done:
         return 'done'
+    if closed:
+        return 'closed'
     if now < slot:
         return 'upcoming'
     return 'due' if now < slot + GRACE_PERIOD else 'missed'
@@ -27,6 +30,7 @@ def storage_for_day(day, now):
     }
 
     result = []
+    labels = closed_labels()
     for slot in slots:
         rows = []
         for unit in units:
@@ -42,7 +46,8 @@ def storage_for_day(day, now):
                 if reading else None,
             })
         all_done = all(row['reading'] for row in rows)
-        result.append({'slot': slot, 'state': slot_state(slot, now, all_done), 'units': rows})
+        closed = storage_closure(slot, labels)
+        result.append({'slot': slot, 'state': slot_state(slot, now, all_done, closed), 'closed': closed, 'units': rows})
     return result
 
 
@@ -97,6 +102,7 @@ def build_day(day, now=None):
     now = now or timezone.now()
     return {
         'date': day,
+        'closed': day_closure(day),  # Receiving and Dispatch are skipped on this date
         'storage': storage_for_day(day, now),
         'receiving': receiving_for_day(day),
         'dispatch': dispatch_for_day(day),

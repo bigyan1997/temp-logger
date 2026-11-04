@@ -8,6 +8,7 @@ from django.utils import timezone
 
 from readings.models import StorageReading
 from readings.schedule import slots_on
+from setup.closed_days import closed_labels, storage_closure
 from setup.models import Unit
 
 # For each scheduled storage reading: a first reminder just before it, and a second one if it is still not logged.
@@ -39,7 +40,10 @@ def recent_slots(now):
 def reminders(now):
     """A first reminder 30 minutes before a reading and a second 3 hours after it, while units are not logged."""
     found = []
+    closed = closed_labels()
     for slot in recent_slots(now):
+        if storage_closure(slot, closed):
+            continue  # a public holiday: nothing to remind about
         first_due = slot - FIRST_REMINDER_BEFORE <= now < slot
         second_due = slot + SECOND_REMINDER_AFTER <= now < slot + SECOND_REMINDER_AFTER + SECOND_REMINDER_WINDOW
         if not (first_due or second_due):

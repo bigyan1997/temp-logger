@@ -1,6 +1,7 @@
-import { AlertTriangle, CheckCircle2, Clock, Circle } from 'lucide-react'
+import { AlertTriangle, CalendarOff, CheckCircle2, Clock, Circle } from 'lucide-react'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import ClosedNotice from '../components/ClosedNotice.jsx'
 import EntryRow from '../components/EntryRow.jsx'
 import EntryShell from '../components/EntryShell.jsx'
 import MissedReadings from '../components/MissedReadings.jsx'
@@ -14,6 +15,7 @@ const slotStates = {
   due: { label: 'Due now', Icon: Clock, className: 'text-near' },
   missed: { label: 'Missed', Icon: AlertTriangle, className: 'text-bad' },
   upcoming: { label: 'Not due yet', Icon: Circle, className: 'text-muted' },
+  closed: { label: 'Public holiday', Icon: CalendarOff, className: 'text-muted' },
 }
 
 // Pick the slot people most likely want: the first one still to do, else the next one coming.
@@ -77,7 +79,7 @@ function StorageScreen({ staffId, date, setDate }) {
             >
               <span className="block font-semibold">{formatTime(s.slot)}</span>
               <span className={`flex items-center gap-1 text-sm ${className}`}>
-                <Icon size={14} aria-hidden="true" /> {label}
+                <Icon size={14} aria-hidden="true" /> {s.state === 'closed' ? s.closed : label}
               </span>
             </button>
           )
@@ -85,6 +87,9 @@ function StorageScreen({ staffId, date, setDate }) {
       </div>
 
       <p className="mb-2 mt-4 text-muted">{formatDateTime(slot.slot)}</p>
+      {slot.state === 'closed' && (
+        <ClosedNotice label={slot.closed}>Nothing needs logging at this time. You can still log a reading if you took one.</ClosedNotice>
+      )}
       <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
         {slot.units.map((unit, index) => {
           const key = keyFor(unit)

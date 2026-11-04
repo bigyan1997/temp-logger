@@ -1,5 +1,6 @@
 import { Check, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import ClosedNotice from '../components/ClosedNotice.jsx'
 import EntryRow from '../components/EntryRow.jsx'
 import EntryShell from '../components/EntryShell.jsx'
 import SaveAll from '../components/SaveAll.jsx'
@@ -78,6 +79,9 @@ function DispatchScreen({ staffId, date }) {
 
   return (
     <>
+      {day.closed && (
+        <ClosedNotice label={day.closed}>No dispatch today. You can still log a run that goes out.</ClosedNotice>
+      )}
       <div className="flex flex-wrap items-end gap-4">
         <div>
           <label htmlFor="load-temp" className="mb-1 block text-sm font-medium">

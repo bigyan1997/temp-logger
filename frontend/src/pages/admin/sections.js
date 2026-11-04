@@ -6,6 +6,8 @@
 // field.createOnly: only asked when adding (cannot be changed later)
 // field.optionalOnEdit: left blank when editing means "keep what it is now"
 
+import { formatDay } from '../../lib/format.js'
+
 export const sections = [
   {
     path: 'staff',
@@ -90,6 +92,27 @@ export const sections = [
     activeKey: 'active',
     title: (item) => `Run ${item.code}`,
     fields: [{ name: 'code', label: 'Run letter', type: 'text', required: true }],
+  },
+  {
+    path: 'closed-days',
+    label: 'Public holidays',
+    endpoint: '/closed-days/',
+    intro:
+      'Days when nothing needs logging. On a closed day the daytime storage readings and the evening before are not due (no reminder emails, nothing shown as missed), and Receiving and Dispatch are skipped. That day\'s own evening storage reading is still due, because deliveries go out the next morning. say "Public holiday" instead of leaving a gap. Readings can still be logged on these days.',
+    addLabel: 'Add a public holiday',
+    empty: 'No public holidays yet.',
+    activeKey: 'active',
+    title: (item) => formatDay(item.date),
+    detail: (item) => item.label,
+    fields: [
+      { name: 'date', label: 'Date', type: 'date', required: true },
+      {
+        name: 'label',
+        label: 'Name',
+        type: 'text',
+        help: 'Shown on the reports. Leave blank for "Public holiday", or write for example "Public holiday - Christmas Day".',
+      },
+    ],
   },
   {
     path: 'alerts',

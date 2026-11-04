@@ -1,4 +1,5 @@
 import { CheckCircle2 } from 'lucide-react'
+import ClosedNotice from './ClosedNotice.jsx'
 
 // One bar: how much of today's logging is done. `total` is null when there is no fixed number (dispatch).
 function ProgressCard({ title, done, total, unit }) {
@@ -37,6 +38,9 @@ export default function TodayProgress({ today }) {
   return (
     <section aria-label="Today's logging">
       <h2 className="mb-2 font-semibold">Today so far</h2>
+      {today.closed && (
+        <ClosedNotice label={today.closed}>Receiving and dispatch are not needed today, and the daytime storage readings are not due.</ClosedNotice>
+      )}
       <div className="grid gap-4 sm:grid-cols-3">
         <ProgressCard title="Storage readings" done={today.storage.done} total={today.storage.total} unit="readings" />
         <ProgressCard title="Deliveries received" done={today.receiving.done} total={today.receiving.total} unit="suppliers" />

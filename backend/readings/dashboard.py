@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from django.utils import timezone
 
+from setup.closed_days import closed_labels, day_closure, storage_closure
 from setup.models import Supplier, Unit
 
 from .choices import Status
@@ -23,10 +24,14 @@ def missed_storage_slots(now):
     today = timezone.localtime(now).date()
     first_day = today - timedelta(days=MISSED_LOOKBACK_DAYS - 1)
 
+    closed = closed_labels()
     slots = []
     for offset in range(MISSED_LOOKBACK_DAYS):
         day = first_day + timedelta(days=offset)
-        slots += [slot for slot in slots_on(day) if now >= slot + GRACE_PERIOD]
+        slots += [
+            slot for slot in slots_on(day)
+            if now >= slot + GRACE_PERIOD and not storage_closure(slot, closed)
+        ]
 
     logged = set(
         StorageReading.objects.filter(slot__in=slots, voided=False).values_list('unit_id', 'slot')
@@ -69,16 +74,19 @@ def logged_today(now):
 
 def progress_today(today):
     """How much of today's logging is done: storage slots, suppliers checked, runs sent out."""
+    closed = closed_labels()
     slots = slots_on(today)
+    due_slots = [slot for slot in slots if not storage_closure(slot, closed)]
     units = Unit.objects.filter(active=True).count()
     return {
+        'closed': day_closure(today, closed),
         'storage': {
             'done': StorageReading.objects.filter(slot__in=slots, voided=False).count(),
-            'total': len(slots) * units,
+            'total': len(due_slots) * units,
         },
         'receiving': {
             'done': ReceivingCheck.objects.filter(date=today, voided=False).count(),
-            'total': Supplier.objects.filter(active=True).count(),
+            'total': 0 if day_closure(today, closed) else Supplier.objects.filter(active=True).count(),
         },
         'dispatch': {'done': DispatchReading.objects.filter(date=today, voided=False).count()},
     }

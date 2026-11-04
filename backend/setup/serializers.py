@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import AlertRecipient, Run, StaffMember, Supplier, Unit
+from .models import AlertRecipient, ClosedDay, Run, StaffMember, Supplier, Unit
 
 
 def tidy(text):
@@ -76,6 +76,19 @@ class AlertRecipientSerializer(UniqueNameMixin, serializers.ModelSerializer):
     class Meta:
         model = AlertRecipient
         fields = ['id', 'email', 'active']
+
+
+class ClosedDaySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClosedDay
+        fields = ['id', 'date', 'label', 'active']
+        extra_kwargs = {
+            'date': {'error_messages': {'unique': 'That day is already on the list.'}},
+            'label': {'required': False, 'allow_blank': True},
+        }
+
+    def validate_label(self, value):
+        return tidy(value) or 'Public holiday'
 
 
 class RecordedBySerializerMixin:
