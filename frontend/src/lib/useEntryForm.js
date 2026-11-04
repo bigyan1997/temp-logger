@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useRef, useState } from 'react'
 import { api, ApiError } from '../api/client.js'
 import { correctiveBody, emptyCorrective } from '../components/CorrectiveFields.jsx'
+import { newId } from './uuid.js'
 
 const blankEntry = () => ({
   temp: '',
@@ -44,7 +45,7 @@ export function useEntryForm({ endpoint, staffId, buildBody, startWith }) {
     const entry = { ...entryFor(key), ...overrides }
     if (!staffId) return update(key, { phase: 'error', message: 'Choose your name at the top first.' })
 
-    ids.current[key] ??= crypto.randomUUID()
+    ids.current[key] ??= newId()
     const body = {
       id: ids.current[key],
       recorded_by: staffId,
