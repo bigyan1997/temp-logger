@@ -8,14 +8,21 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    ensureCsrf()
-      .then(() => api('/auth/me/'))
-      .then(setUser)
-      .catch((err) => {
-        if (!(err instanceof ApiError)) console.error(err)
-        setUser(null)
-      })
-      .finally(() => setLoading(false))
+    // Only a 401/403 means "not signed in". A network blip or a 5xx (the server restarting
+    // during a deploy) must not look like a sign-out, so those are retried for a while.
+    async function checkSignedIn() {
+      for (let attempt = 0; attempt < 10; attempt++) {
+        try {
+          await ensureCsrf()
+          return await api('/auth/me/')
+        } catch (err) {
+          if (err instanceof ApiError && (err.status === 401 || err.status === 403)) return null
+          await new Promise((resolve) => setTimeout(resolve, 3000))
+        }
+      }
+      return null
+    }
+    checkSignedIn().then(setUser).finally(() => setLoading(false))
   }, [])
 
   const login = useCallback(async (email, password) => {
