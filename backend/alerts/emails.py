@@ -13,6 +13,7 @@ TONES = {
     'reminder': ('#a35a00', '#fff4e0', '⏰', 'DUE SOON'),
     'reminder2': ('#b4233c', '#fdecee', '⚠️', 'STILL NOT LOGGED'),
     'ok': ('#1b7f4b', '#e6f4ec', '✅', 'WORKING'),
+    'failed': ('#b4233c', '#fdecee', '⚠️', 'ACTION NEEDED'),
 }
 BRAND = '#0b7a75'
 INK = '#12262b'
@@ -68,7 +69,7 @@ def render_html(subject, lead, items, tone):
     {button}
   </td></tr>
   <tr><td style="padding:14px 24px;background:#f4f8f8;border-top:1px solid {LINE};font-size:12px;color:{MUTED};{FONT}">
-    Sent automatically by the Temperature Logger. Once the temperatures are logged you won't get another reminder for them.
+    Sent automatically by the Temperature Logger. You will not get this same alert again.
   </td></tr>
 </table>
 </td></tr></table>

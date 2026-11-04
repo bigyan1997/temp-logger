@@ -148,6 +148,10 @@ REPORTS_EXPORT_DIR = config('REPORTS_EXPORT_DIR', default='')  # a folder, e.g. 
 GOOGLE_DRIVE_FOLDER_ID = config('GOOGLE_DRIVE_FOLDER_ID', default='')  # upload straight to this Drive folder
 GOOGLE_SERVICE_ACCOUNT_FILE = config('GOOGLE_SERVICE_ACCOUNT_FILE', default='')  # the key file, kept outside the repo
 
+# The folder scripts/backup.ps1 writes the nightly database backup to. When set, an alert email is sent
+# if a day has no backup in it. Empty means the backup is not monitored.
+BACKUP_DIR = config('BACKUP_DIR', default='')
+
 # Alert emails (see docs/DEPLOYMENT.md). With no EMAIL_HOST they are only printed in the server window.
 APP_URL = config('APP_URL', default='')  # where staff open the app, for the button in alert emails (the address you type in the browser, with http://)
 EMAIL_HOST = config('EMAIL_HOST', default='')

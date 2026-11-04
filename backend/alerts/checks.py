@@ -96,4 +96,5 @@ def test_alert():
 
 
 def due_alerts(now):
-    return reminders(now)
+    from .backup_check import missed_backup  # imported here because backup_check imports Alert from this file
+    return reminders(now) + missed_backup(now)

@@ -8,10 +8,11 @@
 #   - the first backup of each month, forever
 #
 # Usage: backup.ps1 [-BackupDir D:\Backups\temp-logger]
-# Best practice: point -BackupDir at a different drive or a synced cloud folder.
+# Best practice: point the folder at a different drive. Set it as BACKUP_DIR in backend\.env (instead of
+# -BackupDir) so the app can email you when a night's backup is missing.
 
 param(
-    [string]$BackupDir = (Join-Path (Split-Path $PSScriptRoot -Parent) 'backups')
+    [string]$BackupDir
 )
 
 $root = Split-Path $PSScriptRoot -Parent
@@ -19,8 +20,6 @@ $envFile = Join-Path $root 'backend\.env'
 $logDir = Join-Path $root 'backend\logs'
 $log = Join-Path $logDir 'backup.log'
 $pgDump = Get-ChildItem 'C:\Program Files\PostgreSQL\*\bin\pg_dump.exe' | Sort-Object FullName -Descending | Select-Object -First 1
-
-New-Item -ItemType Directory -Force $logDir, $BackupDir | Out-Null
 
 function Write-Log($message) {
     Add-Content -Path $log -Value "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')  $message" -Encoding utf8
@@ -32,6 +31,13 @@ Get-Content $envFile | Where-Object { $_ -match '^\s*[A-Z_]+=' } | ForEach-Objec
     $key, $value = $_ -split '=', 2
     $settings[$key.Trim()] = $value.Trim()
 }
+
+# The folder comes from -BackupDir, else BACKUP_DIR in backend\.env (the app watches that same folder
+# and emails if a day has no backup in it), else the project's backups folder.
+if (-not $BackupDir) { $BackupDir = $settings['BACKUP_DIR'] }
+if (-not $BackupDir) { $BackupDir = Join-Path $root 'backups' }
+
+New-Item -ItemType Directory -Force $logDir, $BackupDir | Out-Null
 
 if (-not $pgDump) { Write-Log 'FAILED: pg_dump.exe not found.'; exit 1 }
 

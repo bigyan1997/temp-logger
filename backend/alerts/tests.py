@@ -1,9 +1,14 @@
+import os
+import shutil
+import tempfile
 from datetime import datetime, timedelta
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from django.core import mail
 from django.core.management import call_command
 from django.core.management.base import CommandError
+from django.test import override_settings
 
 from alerts.models import AlertSent
 from alerts.sender import send_due_alerts
@@ -112,8 +117,7 @@ class AlertTests(ReadingTestCase):
 
     def test_out_of_limit_readings_and_unsigned_actions_send_no_email(self):
         self.dispatch('7.5', corrective=FIX)
-        soon = datetime.now(SYDNEY) + timedelta(hours=3)
-        self.assertEqual(self.kinds(soon), [])
+        self.assertEqual(self.kinds(monday(10)), [])  # between the 8:30 and 12:00 reminders
 
     # The test commands ---------------------------------------------------------------------
 
@@ -165,3 +169,56 @@ class AlertRecipientApiTests(ReadingTestCase):
         again = self.client.post('/api/alert-recipients/', {'email': 'BOSS@example.com'}, format='json')
         self.assertEqual(again.status_code, 400)  # the same address, ignoring capitals
         self.assertEqual(len(self.client.get('/api/alert-recipients/').json()), 1)
+
+
+class BackupAlertTests(ReadingTestCase):
+    """The 'backup failed' email: sent from 6 am when today has no good backup in BACKUP_DIR."""
+
+    def setUp(self):
+        super().setUp()
+        AlertRecipient.objects.create(email='boss@example.com')
+        self.folder = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.folder, ignore_errors=True)
+        override = override_settings(BACKUP_DIR=str(self.folder))
+        override.enable()
+        self.addCleanup(override.disable)
+
+    def dump(self, day, size=5000):
+        path = self.folder / f'temp_logger_2026-11-{day:02d}.dump'
+        path.write_bytes(b'x' * size)
+        stamp = at(day, 2).timestamp()
+        os.utime(path, (stamp, stamp))
+
+    def kinds(self, now):
+        return [alert.kind for alert in send_due_alerts(now)]
+
+    def test_no_alert_when_todays_backup_exists(self):
+        self.dump(3)
+        self.assertEqual(self.kinds(at(3, 7)), [])
+
+    def test_alert_when_there_is_no_backup_today(self):
+        self.dump(2)
+        self.assertEqual(self.kinds(at(3, 7)), ['backup'])
+        self.assertIn('BACKUP FAILED', mail.outbox[0].subject)
+        self.assertIn('Monday 02 November 2026', mail.outbox[0].body)
+
+    def test_no_alert_before_6_am(self):
+        self.assertEqual(self.kinds(at(3, 5, 55)), [])
+
+    def test_a_tiny_dump_does_not_count(self):
+        self.dump(3, size=100)
+        self.assertEqual(self.kinds(at(3, 7)), ['backup'])
+
+    def test_alert_when_the_folder_is_missing(self):
+        shutil.rmtree(self.folder)
+        self.assertEqual(self.kinds(at(3, 7)), ['backup'])
+        self.assertIn('No backup has been found', mail.outbox[0].body)
+
+    def test_only_one_alert_per_day(self):
+        self.assertEqual(self.kinds(at(3, 7)), ['backup'])
+        self.assertEqual(self.kinds(at(3, 7, 5)), [])
+        self.assertEqual(self.kinds(at(4, 7)), ['backup'])
+
+    @override_settings(BACKUP_DIR='')
+    def test_not_checked_when_backup_dir_is_not_set(self):
+        self.assertEqual(self.kinds(at(3, 7)), [])
