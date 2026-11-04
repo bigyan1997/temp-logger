@@ -48,9 +48,27 @@ if ($LASTEXITCODE -ne 0 -or -not (Test-Path $target) -or (Get-Item $target).Leng
 Write-Log "Backup written: $target ($([math]::Round((Get-Item $target).Length / 1KB)) KB)"
 
 # Tidy up: keep daily backups for 30 days, and the first backup of every month forever.
-Get-ChildItem $BackupDir -Filter 'temp_logger_*.dump' | Where-Object {
-    $_.LastWriteTime -lt (Get-Date).AddDays(-30) -and $_.BaseName -notmatch 'temp_logger_\d{4}-\d{2}-01$'
-} | ForEach-Object {
-    Remove-Item $_.FullName
-    Write-Log "Removed old daily backup: $($_.Name)"
+function Remove-OldBackups($folder) {
+    Get-ChildItem $folder -Filter 'temp_logger_*.dump' | Where-Object {
+        $_.LastWriteTime -lt (Get-Date).AddDays(-30) -and $_.BaseName -notmatch 'temp_logger_\d{4}-\d{2}-01$'
+    } | ForEach-Object {
+        Remove-Item $_.FullName
+        Write-Log "Removed old daily backup: $($_.Name)"
+    }
+}
+Remove-OldBackups $BackupDir
+
+# Second copy in the Google Drive for desktop folder (BACKUP_DRIVE_DIR in backend\.env).
+# Drive uploads it by itself. A failure here is logged but does not fail the backup,
+# because the local copy above is already safe.
+$driveDir = $settings['BACKUP_DRIVE_DIR']
+if ($driveDir) {
+    try {
+        New-Item -ItemType Directory -Force $driveDir | Out-Null
+        Copy-Item $target $driveDir -Force -ErrorAction Stop
+        Write-Log "Copied to Google Drive folder: $driveDir"
+        Remove-OldBackups $driveDir
+    } catch {
+        Write-Log "WARNING: could not copy to Google Drive folder ($driveDir): $_"
+    }
 }
