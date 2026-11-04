@@ -62,6 +62,7 @@ export default function Records() {
   const [kind, setKind] = useState('storage')
   const thisMonth = todayInSydney().slice(0, 7)
   const [month, setMonth] = useState(thisMonth) // records are shown a month at a time
+  const [day, setDay] = useState('') // one day within the month (empty: the whole month)
   const [page, setPage] = useState(1)
   const [onlyProblems, setOnlyProblems] = useState(false)
   const [showVoided, setShowVoided] = useState(false)
@@ -75,12 +76,12 @@ export default function Records() {
     queryFn: () => api(`${config.filter.list}?all=1`),
   })
 
-  const { from, to } = monthRange(month)
+  const { from, to } = day ? { from: day, to: day } : monthRange(month)
   const query =
     `?from=${from}&to=${to}&page=${page}${onlyProblems ? '&status=out_of_limit' : ''}${showVoided ? '&include_voided=1' : ''}` +
     (itemId ? `&${config.filter.param}=${itemId}` : '')
   const { data, isLoading } = useQuery({
-    queryKey: ['records', kind, month, page, onlyProblems, showVoided, itemId],
+    queryKey: ['records', kind, month, day, page, onlyProblems, showVoided, itemId],
     queryFn: () => api(`${config.endpoint}${query}`),
   })
   const records = data?.results ?? []
@@ -130,6 +131,7 @@ export default function Records() {
           <button
             onClick={() => {
               setMonth(shiftMonth(month, -1))
+              setDay('')
               setPage(1)
             }}
             aria-label="Previous month"
@@ -145,6 +147,7 @@ export default function Records() {
             onChange={(e) => {
               if (e.target.value) {
                 setMonth(e.target.value)
+                setDay('')
                 setPage(1)
               }
             }}
@@ -153,6 +156,7 @@ export default function Records() {
           <button
             onClick={() => {
               setMonth(shiftMonth(month, 1))
+              setDay('')
               setPage(1)
             }}
             disabled={month >= thisMonth}
@@ -162,6 +166,31 @@ export default function Records() {
             <ChevronRight size={18} aria-hidden="true" />
           </button>
         </div>
+        <label className="text-sm">
+          Day
+          <input
+            type="date"
+            value={day}
+            max={todayInSydney()}
+            onChange={(e) => {
+              setDay(e.target.value)
+              if (e.target.value) setMonth(e.target.value.slice(0, 7))
+              setPage(1)
+            }}
+            className={`${inputClass} ml-1`}
+          />
+        </label>
+        {day && (
+          <button
+            onClick={() => {
+              setDay('')
+              setPage(1)
+            }}
+            className="h-10 rounded-lg border border-line bg-surface px-3 text-sm font-medium hover:bg-brand-soft"
+          >
+            Whole month
+          </button>
+        )}
         <label className="flex items-center gap-2 pb-2 text-sm">
           <input type="checkbox" checked={onlyProblems} onChange={(e) => {
               setOnlyProblems(e.target.checked)
@@ -233,7 +262,7 @@ export default function Records() {
       {data && (
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-muted">
           <p>
-            {data.count === 0 ? 'No records' : `${data.count} record${data.count === 1 ? '' : 's'}`} in {monthName.format(new Date(`${from}T00:00:00Z`))}
+            {data.count === 0 ? 'No records' : `${data.count} record${data.count === 1 ? '' : 's'}`} in {day ? formatDay(day) : monthName.format(new Date(`${from}T00:00:00Z`))}
           </p>
           {data.count > PAGE_SIZE && (
             <div className="flex items-center gap-2">
