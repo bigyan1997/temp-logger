@@ -68,6 +68,9 @@ class DashboardApiTests(ReadingTestCase):
         self.assertEqual(data['tiles']['out_of_limit'], 1)
         self.assertEqual(data['out_of_limit'][0]['kind'], 'storage')
         self.assertEqual(data['out_of_limit'][0]['recorded_by'], 'Sam')
+        # What the dashboard needs to link to the record.
+        self.assertIn('date', data['out_of_limit'][0])
+        self.assertIn('item', data['out_of_limit'][0])
 
     def test_progress_today(self):
         self.sign_in(self.night)

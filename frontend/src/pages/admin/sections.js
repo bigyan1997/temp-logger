@@ -98,7 +98,7 @@ export const sections = [
     label: 'Public holidays',
     endpoint: '/closed-days/',
     intro:
-      'Days when nothing needs logging. On a closed day the daytime storage readings and the evening before are not due (no reminder emails, nothing shown as missed), and Receiving and Dispatch are skipped. That day\'s own evening storage reading is still due, because deliveries go out the next morning. say "Public holiday" instead of leaving a gap. Readings can still be logged on these days.',
+      'Days when nothing needs logging. On a closed day the daytime storage readings and the evening before are not due (no reminder emails, nothing shown as missed), and Receiving and Dispatch are skipped. That day\'s own evening storage reading is still due, because deliveries go out the next morning. The reports say "Public holiday" instead of leaving a gap. Readings can still be logged on these days.',
     addLabel: 'Add a public holiday',
     empty: 'No public holidays yet.',
     activeKey: 'active',

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { CheckCircle2, ChevronRight, Clock } from 'lucide-react'
+import { ChevronRight, Clock } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { api } from '../../api/client.js'
 import { AllClear, Panel } from '../../components/Panel.jsx'
@@ -8,6 +8,9 @@ import TodayProgress from '../../components/TodayProgress.jsx'
 import { formatDateTime, formatLongDate } from '../../lib/format.js'
 
 const REFRESH_EVERY_MS = 60_000
+
+// Opens Records on the day of that reading, filtered to its unit, supplier or run.
+const recordLink = (r) => `/records?kind=${r.kind}&day=${r.date}&item=${r.item}`
 
 export default function Dashboard() {
   const { data, isError, error } = useQuery({
@@ -81,19 +84,19 @@ export default function Dashboard() {
                 </thead>
                 <tbody className="divide-y divide-line">
                   {data.out_of_limit.map((r) => (
-                    <tr key={`${r.kind}-${r.recorded_at}-${r.summary}`}>
-                      <td className="px-4 py-3 font-medium">{r.summary}</td>
+                    <tr key={`${r.kind}-${r.recorded_at}-${r.summary}`} className="hover:bg-brand-soft">
+                      <td className="px-4 py-3 font-medium">
+                        <Link to={recordLink(r)} className="text-brand-dark underline-offset-2 hover:underline">
+                          {r.summary}
+                        </Link>
+                      </td>
                       <td className="px-4 py-3">{r.action}</td>
                       <td className="px-4 py-3">{r.recorded_by}</td>
                       <td className="whitespace-nowrap px-4 py-3">{formatDateTime(r.recorded_at)}</td>
-                      <td className="whitespace-nowrap px-4 py-3">
-                        {r.signed_off ? (
-                          <span className="flex items-center gap-1 text-ok">
-                            <CheckCircle2 size={14} aria-hidden="true" /> Signed off
-                          </span>
-                        ) : (
-                          <span className="text-near">Waiting</span>
-                        )}
+                      <td className="whitespace-nowrap px-4 py-3 text-right">
+                        <Link to={recordLink(r)} className="inline-flex items-center font-medium text-brand-dark">
+                          View record <ChevronRight size={16} aria-hidden="true" />
+                        </Link>
                       </td>
                     </tr>
                   ))}

@@ -48,13 +48,21 @@ def out_of_limit_readings(now):
     """Out-of-limit readings from the last week, newest first, as simple dicts."""
     since = now - OUT_OF_LIMIT_LOOKBACK
     found = []
-    for model, kind in [(StorageReading, 'storage'), (ReceivingCheck, 'receiving'), (DispatchReading, 'dispatch')]:
+    for model, kind, item_field in [
+        (StorageReading, 'storage', 'unit_id'),
+        (ReceivingCheck, 'receiving', 'supplier_id'),
+        (DispatchReading, 'dispatch', 'run_id'),
+    ]:
         readings = model.objects.filter(
             status=Status.OUT_OF_LIMIT, voided=False, recorded_at__gte=since
         ).select_related('recorded_by', 'corrective_action')
         for reading in readings:
+            # Which day and unit/supplier/run it was for, so the dashboard can link to the record.
+            day = timezone.localtime(reading.slot).date() if kind == 'storage' else reading.date
             found.append({
                 'kind': kind,
+                'date': day,
+                'item': getattr(reading, item_field),
                 'summary': str(reading),
                 'recorded_at': reading.recorded_at,
                 'recorded_by': reading.recorded_by.name,

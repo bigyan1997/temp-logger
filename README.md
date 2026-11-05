@@ -5,6 +5,7 @@ Temperature logging for Achieve Cafe Provisions, replacing the paper HACCP logs 
 - Plan and spec: [PLAN.md](PLAN.md)
 - Architecture and data model: [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DESIGN.md)
 - Deploying to the orders PC: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
+- How to use the app (for new staff, with screenshots): [docs/USER_MANUAL.md](docs/USER_MANUAL.md)
 - Context for Claude sessions: [CLAUDE.md](CLAUDE.md)
 - Decisions and progress: [NOTES.md](NOTES.md)
 

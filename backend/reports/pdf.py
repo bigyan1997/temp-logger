@@ -144,7 +144,7 @@ def storage_table(sheet, width):
 
 def weekly_table(grid, width):
     """Tables 10 and 11: Day, Date, then a column per supplier or run, a row per day, grey bands."""
-    day_width, date_width = 26 * mm, 24 * mm
+    day_width, date_width = 38 * mm, 24 * mm  # wide enough for "Monday / Sunday night"
     column_count = max(len(grid['columns']), 1)
     column_width = min((width - day_width - date_width) / column_count, 30 * mm)
 

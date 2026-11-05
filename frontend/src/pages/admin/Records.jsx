@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { api } from '../../api/client.js'
 import StatusBadge from '../../components/StatusBadge.jsx'
 import VoidDialog from '../../components/VoidDialog.jsx'
@@ -59,15 +60,19 @@ const monthName = new Intl.DateTimeFormat('en-AU', { month: 'long', year: 'numer
 const inputClass = 'h-10 rounded-lg border border-line bg-surface px-3 focus:border-brand focus:outline-2 focus:outline-brand'
 
 export default function Records() {
-  const [kind, setKind] = useState('storage')
+  // The dashboard links here with ?kind=&day=&item= to open one record's day.
+  const [params] = useSearchParams()
+  const linkedKind = kinds[params.get('kind')] ? params.get('kind') : 'storage'
+  const linkedDay = /^\d{4}-\d{2}-\d{2}$/.test(params.get('day') ?? '') ? params.get('day') : ''
+  const [kind, setKind] = useState(linkedKind)
   const thisMonth = todayInSydney().slice(0, 7)
-  const [month, setMonth] = useState(thisMonth) // records are shown a month at a time
-  const [day, setDay] = useState('') // one day within the month (empty: the whole month)
+  const [month, setMonth] = useState(linkedDay ? linkedDay.slice(0, 7) : thisMonth) // records are shown a month at a time
+  const [day, setDay] = useState(linkedDay) // one day within the month (empty: the whole month)
   const [page, setPage] = useState(1)
   const [onlyProblems, setOnlyProblems] = useState(false)
   const [showVoided, setShowVoided] = useState(false)
   const [voiding, setVoiding] = useState(null)
-  const [itemId, setItemId] = useState('') // the unit, supplier or run to show (empty: all)
+  const [itemId, setItemId] = useState(linkedDay ? (params.get('item') ?? '') : '') // the unit, supplier or run to show (empty: all)
   const config = kinds[kind]
 
   // Every item of this kind, including deactivated ones, since they may still have records.
