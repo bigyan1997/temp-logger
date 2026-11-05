@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import PasswordInput from './PasswordInput.jsx'
 
 const inputClass =
   'h-12 w-full rounded-lg border border-line bg-surface px-3 text-base focus:border-brand focus:outline-2 focus:outline-brand'
@@ -64,13 +65,22 @@ export default function ItemForm({ fields, item, saving, error, onSave, onCancel
                     </option>
                   ))}
                 </select>
+              ) : field.type === 'password' ? (
+                <PasswordInput
+                  id={id}
+                  autoComplete="new-password"
+                  value={values[field.name]}
+                  onChange={(e) => setValues({ ...values, [field.name]: e.target.value })}
+                  required={required}
+                  className={inputClass}
+                />
               ) : (
                 <input
                   id={id}
                   type={field.type}
                   step={field.type === 'number' ? '0.1' : undefined}
                   inputMode={field.type === 'number' ? 'decimal' : undefined}
-                  autoComplete={field.type === 'password' ? 'new-password' : 'off'}
+                  autoComplete="off"
                   value={values[field.name]}
                   onChange={(e) => setValues({ ...values, [field.name]: e.target.value })}
                   required={required}

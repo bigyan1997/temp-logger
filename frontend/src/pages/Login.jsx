@@ -2,6 +2,7 @@ import { Thermometer } from 'lucide-react'
 import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../auth.jsx'
+import PasswordInput from '../components/PasswordInput.jsx'
 
 const inputClass =
   'mb-4 h-12 w-full rounded-lg border border-line px-3 text-base focus:border-brand focus:outline-2 focus:outline-brand'
@@ -60,13 +61,13 @@ export default function Login() {
         />
 
         <label htmlFor="password" className="mb-1 block text-sm font-medium">Password</label>
-        <input
+        <PasswordInput
           id="password"
-          type="password"
           autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className={inputClass}
+          wrapperClass="mb-4"
+          className={inputClass.replace('mb-4 ', '')}
           required
         />
 
