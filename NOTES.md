@@ -41,9 +41,11 @@ Full detail is in docs/DEPLOYMENT.md. In short:
 5. Alert emails (step 11): put `EMAIL_*` in `backend\.env`, add an address under Settings, Alert emails, then `python manage.py send_alerts --demo`. Reminders go at 30 minutes before and 3 hours after each reading (8:30 am/12 pm, 8:30 pm/12 am, Fri 2:30 pm/6 pm).
 6. Reports to Google Drive (step 12) is optional and can wait; the first 4-week PDFs are due 29 Nov 2026.
 7. Open `http://localhost:8003`, log in as both accounts, log a test reading and void it, then confirm another PC on the LAN and Tailscale can reach it. Restart the PC once to confirm it comes back by itself.
-8. Do not run a plain `npx vite build` on the live folder. Keep real hostnames, IPs and passwords in the gitignored `DEPLOYMENT_NOTES.md`.
+8. New in 2026-11: the Calibration module and the all-records page. `migrate` picks up `calibration` 0001/0002 and `audit` 0006. Log in as the day login and check the front page shows Temperature Logger, Calibration and Records cards, then open Records and click each tab. Calibration PDF copies go to `report_exports/calibration/` plus the Drive folder if `GOOGLE_DRIVE_FOLDER_ID` is set; the calibration due emails use the same alert addresses as the reminders.
+9. Do not run a plain `npx vite build` on the live folder. Keep real hostnames, IPs and passwords in the gitignored `DEPLOYMENT_NOTES.md`.
 
 ## Progress log
+- 2026-11-10: Pushed to GitHub (`85c6e1c`): Calibration module, all-records page, per-module audit log. `docs/USER_MANUAL.pdf` regenerated from the Markdown (Markdown to HTML with the `markdown` package, then headless Chrome; the new Records and Calibration sections have no screenshots yet).
 - 2026-10-29: Plan written (PLAN.md), project context written (CLAUDE.md). No code yet.
 - 2026-10-29: SMS/email put on hold until later. Design and usability plan added (PLAN.md section 10).
 - 2026-10-29: Old Coolroom confirmed (same as Coolroom). Highlighter question postponed by owner.
