@@ -1,6 +1,11 @@
 import { Link, Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from './auth.jsx'
 import AppLayout from './components/AppLayout.jsx'
+import { calibrationMenu, recordsMenu, temperatureMenu } from './lib/menus.js'
+import CalibrationHome from './pages/calibration/CalibrationHome.jsx'
+import CalibrationRecords from './pages/calibration/CalibrationRecords.jsx'
+import NewCalibration from './pages/calibration/NewCalibration.jsx'
+import AllRecords from './pages/AllRecords.jsx'
 import AppHome from './pages/AppHome.jsx'
 import AuditLog from './pages/admin/AuditLog.jsx'
 import Records from './pages/admin/Records.jsx'
@@ -64,7 +69,7 @@ export default function App() {
       <Route
         element={
           <RequireAuth>
-            <AppLayout />
+            <AppLayout menu={temperatureMenu} />
           </RequireAuth>
         }
       >
@@ -78,6 +83,30 @@ export default function App() {
         <Route path="/reports" element={adminPage(<Reports />)} />
         <Route path="/audit" element={adminPage(<AuditLog />)} />
         <Route path="/settings/:section?" element={adminPage(<Settings />)} />
+      </Route>
+
+      {/* The Calibration module (Table 14): day staff only. */}
+      <Route
+        element={
+          <RequireAuth>
+            <AppLayout menu={calibrationMenu} />
+          </RequireAuth>
+        }
+      >
+        <Route path="/calibration" element={adminPage(<CalibrationHome />)} />
+        <Route path="/calibration/new" element={adminPage(<NewCalibration />)} />
+        <Route path="/calibration/records" element={adminPage(<CalibrationRecords />)} />
+        <Route path="/calibration/audit" element={adminPage(<AuditLog module="calibration" />)} />
+      </Route>
+      {/* All records of every module, in tabs. Day staff only. */}
+      <Route
+        element={
+          <RequireAuth>
+            <AppLayout menu={recordsMenu} />
+          </RequireAuth>
+        }
+      >
+        <Route path="/all-records" element={adminPage(<AllRecords />)} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

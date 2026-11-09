@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'audit',
     'reports',
     'alerts',
+    'calibration',
 ]
 
 MIDDLEWARE = [

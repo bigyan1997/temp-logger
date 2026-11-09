@@ -1,18 +1,4 @@
-import {
-  BarChart3,
-  ClipboardList,
-  FileText,
-  History,
-  Home,
-  LayoutGrid,
-  LogOut,
-  PackageCheck,
-  Settings,
-  Snowflake,
-  Thermometer,
-  Truck,
-  UserRound,
-} from 'lucide-react'
+import { LayoutGrid, LogOut, UserRound } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../auth.jsx'
 import { modulesFor } from '../lib/modules.js'
@@ -24,22 +10,6 @@ const navClass = ({ isActive }) =>
     isActive ? 'bg-brand-soft text-brand-dark' : 'text-muted hover:bg-brand-soft hover:text-ink'
   }`
 
-// What everyone uses to log readings.
-const loggingLinks = [
-  { to: '/log/storage', label: 'Storage', Icon: Snowflake },
-  { to: '/log/receiving', label: 'Receiving', Icon: PackageCheck },
-  { to: '/log/dispatch', label: 'Dispatch', Icon: Truck },
-]
-
-// Admin only: look at records, trends and reports, and manage settings.
-const adminLinks = [
-  { to: '/records', label: 'Records', Icon: ClipboardList },
-  { to: '/trends', label: 'Trends', Icon: BarChart3 },
-  { to: '/reports', label: 'Reports', Icon: FileText },
-  { to: '/audit', label: 'Audit log', Icon: History },
-  { to: '/settings', label: 'Settings', Icon: Settings },
-]
-
 // A small heading above a group of links. Only shown in the side menu (wide screens).
 function GroupLabel({ children }) {
   return (
@@ -49,7 +19,8 @@ function GroupLabel({ children }) {
 
 // The frame around every signed-in page: a menu down the left side and the page on the right.
 // On narrow screens the menu becomes a bar across the top, with the links in one swipeable row.
-export default function AppLayout() {
+// `menu` says which module this is and what is in its menu (see lib/menus.js).
+export default function AppLayout({ menu }) {
   const { logout, isAdmin } = useAuth()
   const { staff, staffId, setStaffId } = useStaffChoice()
   const person = staff.find((s) => String(s.id) === String(staffId))
@@ -62,10 +33,10 @@ export default function AppLayout() {
         <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 lg:px-5 lg:py-5">
           <div className="flex items-center gap-3">
             <span className="grid size-9 place-items-center rounded-lg bg-brand text-white">
-              <Thermometer size={20} aria-hidden="true" />
+              <menu.Icon size={20} aria-hidden="true" />
             </span>
             <div className="leading-tight">
-              <span className="block font-semibold">Temperature Logger</span>
+              <span className="block font-semibold">{menu.name}</span>
               <span className="block text-xs text-muted">Achieve HACCP</span>
             </div>
           </div>
@@ -77,27 +48,22 @@ export default function AppLayout() {
               <LayoutGrid size={18} aria-hidden="true" /> All modules
             </NavLink>
           )}
-          <NavLink to="/temperature" end className={navClass}>
-            <Home size={18} aria-hidden="true" /> Home
+          <NavLink to={menu.home.to} end className={navClass}>
+            <menu.home.Icon size={18} aria-hidden="true" /> {menu.home.label}
           </NavLink>
 
-          <GroupLabel>Log</GroupLabel>
-          {loggingLinks.map(({ to, label, Icon }) => (
-            <NavLink key={to} to={to} className={navClass}>
-              <Icon size={18} aria-hidden="true" /> {label}
-            </NavLink>
-          ))}
-
-          {isAdmin && (
-            <>
-              <GroupLabel>Admin</GroupLabel>
-              {adminLinks.map(({ to, label, Icon }) => (
-                <NavLink key={to} to={to} className={navClass}>
-                  <Icon size={18} aria-hidden="true" /> {label}
-                </NavLink>
-              ))}
-            </>
-          )}
+          {menu.groups
+            .filter((group) => isAdmin || !group.adminOnly)
+            .map((group) => (
+              <div key={group.label} className="contents">
+                <GroupLabel>{group.label}</GroupLabel>
+                {group.links.map(({ to, label, Icon }) => (
+                  <NavLink key={to} to={to} className={navClass}>
+                    <Icon size={18} aria-hidden="true" /> {label}
+                  </NavLink>
+                ))}
+              </div>
+            ))}
         </nav>
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3 lg:flex-col lg:items-stretch lg:p-4">

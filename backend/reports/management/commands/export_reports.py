@@ -13,7 +13,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
-from reports.destinations import GoogleDrive, LocalFolder
+from reports.destinations import GoogleDrive, LocalFolder, extra_destinations
 from reports.grids import REPORTS, corrective_rows
 from reports.pdf import render_report
 
@@ -48,14 +48,8 @@ class Command(BaseCommand):
     def destinations(self, folder):
         if folder:
             return [LocalFolder(folder)]
-        found = [LocalFolder(settings.REPORTS_LOCAL_DIR, create=True)]  # the permanent copy, inside the project
-        if settings.GOOGLE_DRIVE_FOLDER_ID:
-            if not settings.GOOGLE_SERVICE_ACCOUNT_FILE:
-                raise CommandError('GOOGLE_SERVICE_ACCOUNT_FILE is not set in backend\.env.')
-            found.append(GoogleDrive(settings.GOOGLE_DRIVE_FOLDER_ID, settings.GOOGLE_SERVICE_ACCOUNT_FILE))
-        if settings.REPORTS_EXPORT_DIR:
-            found.append(LocalFolder(settings.REPORTS_EXPORT_DIR))
-        return found
+        # The first is the permanent copy, inside the project.
+        return [LocalFolder(settings.REPORTS_LOCAL_DIR, create=True), *extra_destinations()]
 
     def handle(self, folder, include_current, check, today, **options):
         places = self.destinations(folder)

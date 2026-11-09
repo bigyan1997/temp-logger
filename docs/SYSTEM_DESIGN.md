@@ -58,7 +58,8 @@ temp-logger/
     setup/              Unit, Supplier, Run, SlotSchedule (admin-managed config)
     readings/           StorageReading, ReceivingCheck, DispatchReading, services.py (limits, due slots)
     corrective/         CorrectiveAction (action + required note)
-    audit/              AuditLog, void/supersede logic
+    audit/              AuditLog (one `module` per line: temperature or calibration), void/supersede logic
+    calibration/        Calibration + GaugeCheck (Table 14), PDF, due date rules, voids
     reports/            PDF generation, CSV export
     requirements.txt
   frontend/
@@ -67,6 +68,8 @@ temp-logger/
       components/       Button, NumberPad, StatusBadge, ReadingCard, DataTable, Modal
       pages/night/      Today, Storage, Receiving, Dispatch, Mine
       pages/admin/      Dashboard, Records, Trends, Actions, Reports, Settings
+      pages/calibration/ Home, Records, New calibration
+      pages/AllRecords.jsx  every record of every module, in tabs (day staff)
       theme/            Tailwind tokens
   scripts/              run_server.bat, keep_alive.ps1, auto_deploy.ps1, backup.ps1 (modelled on npd-tracker-v2)
 ```
@@ -184,7 +187,8 @@ An out-of-limit reading is saved together with its corrective action: an action 
 | GET `dashboard/` | Admin | Counts, today progress (`today`), missed storage readings (today and yesterday, after a 2-hour grace period), out-of-limit readings from the last 7 days |
 | GET `day/?date=` | Anyone | What is due and already logged on a day: storage slots (done, due, missed, upcoming) per unit, receiving per supplier, dispatch per run |
 | POST `{storage-readings,receiving-checks,dispatch-readings}/{id}/void/` | Admin | Void an entry with a reason, optionally with a `replacement` (the correction). Undone entirely if the correction is refused. Written to the audit log |
-| GET `audit-log/` | Admin | The audit log (voids, limit changes, login changes) |
+| GET `audit-log/?module=` | Admin | The audit log of one module (`temperature`, the default, or `calibration`): voids, limit changes, login changes |
+| GET, POST `calibrations/`; GET `calibrations/{id}/`, `{id}/pdf/`, `due/`; POST `{id}/void/` | Admin | The Calibration module (Table 14). Never edited or deleted; a mistake is voided with a reason (written to the calibration audit log) |
 | GET `trends/?unit=&from=&to=` | Admin | One unit's temperatures over time |
 | GET `reports/{storage,receiving,dispatch}.pdf?from=&to=` | Admin | PDF copying paper Tables 9, 10 and 11 (up to 186 days (about 6 months); whole Sunday-to-Friday weeks; Table 9 has 4 weeks per page with rotated unit names, Tables 10 and 11 have a row per day, starting with a Sunday night row) |
 | GET `reading-options/` | Anyone | Limits, corrective-action choices per kind of check, product types, storage slot times |
@@ -195,7 +199,7 @@ How saving a reading answers:
 - `422` with `code: needs_confirmation` and `warnings`: the value looks odd, resend with `confirm_unusual: true`.
 - `422` with `code: corrective_required`: resend with `corrective: {action, notes, hours_above_limit}`.
 
-**Everything in the plan is built.** Possible later additions: email and SMS alerts, thermometer calibration records (Table 14), the monthly review checklist (Table 15), a non-conformance report (Table 5).
+**Everything in the plan is built.** Possible later additions: email and SMS alerts, the monthly review checklist (Table 15), a non-conformance report (Table 5).
 
 ## 7. Security
 

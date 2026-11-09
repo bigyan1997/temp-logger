@@ -18,6 +18,12 @@ class AuditLog(models.Model):
         DELETED = 'deleted', 'Item deleted'
         CLOSED_DAY = 'closed_day', 'Closed day changed'
 
+    class Module(models.TextChoices):
+        TEMPERATURE = 'temperature', 'Temperature Logger'
+        CALIBRATION = 'calibration', 'Calibration'
+
+    # Each module reads only its own lines, so the records and voids of one never show in another.
+    module = models.CharField(max_length=20, choices=Module.choices, default=Module.TEMPERATURE)
     at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='+')
     action = models.CharField(max_length=20, choices=Action.choices)
@@ -31,6 +37,6 @@ class AuditLog(models.Model):
         return f'{self.at:%d/%m/%Y %H:%M} {self.summary}'
 
 
-def record(user, action, summary, reason=''):
+def record(user, action, summary, reason='', module=AuditLog.Module.TEMPERATURE):
     """Add one line to the audit log."""
-    return AuditLog.objects.create(user=user, action=action, summary=summary[:300], reason=reason[:300])
+    return AuditLog.objects.create(user=user, action=action, summary=summary[:300], reason=reason[:300], module=module)

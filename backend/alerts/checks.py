@@ -100,5 +100,7 @@ def test_alert():
 
 
 def due_alerts(now):
-    from .backup_check import missed_backup  # imported here because backup_check imports Alert from this file
-    return reminders(now) + missed_backup(now)
+    # Imported here because these files import Alert from this one.
+    from .backup_check import missed_backup
+    from .calibration_check import calibration_alerts
+    return reminders(now) + missed_backup(now) + calibration_alerts(now)

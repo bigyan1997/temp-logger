@@ -68,11 +68,19 @@ Click **Sign out** at the bottom of the left-hand menu when you finish, especial
 
 ### The front page (day login only)
 
-After signing in, **day staff** see the Achieve HACCP front page, with a card for each part of the app. For now there is one card, **Temperature Logger**. Click it to open it. The **All modules** link at the top of the left-hand menu brings you back to this page.
+After signing in, **day staff** see the Achieve HACCP front page, with a card for each part of the app. There are three cards: **Temperature Logger**, **Calibration** (the 6-monthly thermometer check, Table 14) and **Records** (every saved record in one place). Click one to open it. The **All modules** link at the top of the left-hand menu brings you back to this page.
 
 ![The Achieve HACCP front page](manual/01b-front-page.png)
 
-**Night staff** go straight into the Temperature Logger and never see this page.
+**Night staff** go straight into the Temperature Logger and never see this page. Calibration and Records are for day staff only.
+
+### Records (day staff)
+
+The **Records** card opens one page with a tab for each kind of record: **Coolrooms & freezers**, **Receiving**, **Dispatch** and **Calibration**. Each tab has the same filters (month, day, unit, supplier or run, out of limit only, show voided) and the same **Void / correct** button. The Temperature Logger and Calibration menus also have their own **Records** page that shows only their own records, for quick access.
+
+### Calibration (day staff)
+
+The home page shows when the next 6-monthly thermometer calibration is due (a notice appears 15 days before). **New calibration** opens the Table 14 form: the probe in iced water must read 0 °C give or take 1 °C, and you can also compare each coolroom or freezer gauge with the probe. A reading outside the margin needs an action (replaced or repaired) and a note. On Save a PDF copy is made and copied to Drive. **Records** lists every calibration with its PDF and a **Void** button (a reason is required). Calibration has its **own Audit log**; its voids do not appear in the Temperature Logger's.
 
 ### Inside the Temperature Logger
 

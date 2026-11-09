@@ -14,7 +14,11 @@ class AuditPagination(PageNumberPagination):
 class AuditLogViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     """Admin can read the audit log. Nobody can change it."""
 
-    queryset = AuditLog.objects.select_related('user')
     serializer_class = AuditLogSerializer
     permission_classes = [IsAdminRole]
     pagination_class = AuditPagination
+
+    def get_queryset(self):
+        # ?module=calibration for the Calibration module; the Temperature Logger is the default.
+        module = self.request.query_params.get('module', AuditLog.Module.TEMPERATURE)
+        return AuditLog.objects.select_related('user').filter(module=module)

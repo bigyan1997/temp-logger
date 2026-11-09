@@ -5,12 +5,12 @@ import { formatDateTime } from '../../lib/format.js'
 
 const PAGE_SIZE = 50
 
-// A permanent list of corrections and important changes. Nobody can edit or delete it.
-export default function AuditLog() {
+// A permanent list of corrections and important changes for one module. Nobody can edit or delete it.
+export default function AuditLog({ module = 'temperature' }) {
   const [page, setPage] = useState(1)
   const { data, isLoading } = useQuery({
-    queryKey: ['audit-log', page],
-    queryFn: () => api(`/audit-log/?page=${page}`),
+    queryKey: ['audit-log', module, page],
+    queryFn: () => api(`/audit-log/?module=${module}&page=${page}`),
   })
   const entries = data?.results ?? []
   const pages = Math.max(1, Math.ceil((data?.count ?? 0) / PAGE_SIZE))

@@ -1,6 +1,7 @@
 import { ChevronRight, LogOut, ShieldCheck } from 'lucide-react'
 import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../auth.jsx'
+import CalibrationStatus, { useCalibrationDue } from '../components/CalibrationStatus.jsx'
 import { modulesFor } from '../lib/modules.js'
 
 // The front page of Achieve HACCP: one card for each module.
@@ -8,6 +9,7 @@ import { modulesFor } from '../lib/modules.js'
 export default function AppHome() {
   const { logout, isAdmin } = useAuth()
   const modules = modulesFor(isAdmin)
+  const { data: calibrationDue } = useCalibrationDue(isAdmin)
   if (!isAdmin && modules.length === 1) return <Navigate to={modules[0].to} replace />
 
   return (
@@ -29,6 +31,16 @@ export default function AppHome() {
           <LogOut size={16} aria-hidden="true" /> Sign out
         </button>
       </header>
+
+      {isAdmin && ['due_soon', 'overdue'].includes(calibrationDue?.state) && (
+        <div className="mt-8">
+          <CalibrationStatus>
+            <Link to="/calibration/new" className="inline-flex h-10 items-center rounded-lg bg-brand px-4 font-semibold text-white hover:bg-brand-dark">
+              Do the calibration
+            </Link>
+          </CalibrationStatus>
+        </div>
+      )}
 
       <h2 className="mb-3 mt-10 text-sm font-medium uppercase tracking-wide text-muted">Choose what to open</h2>
       <ul className="grid gap-4 sm:grid-cols-2">

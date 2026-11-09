@@ -59,10 +59,11 @@ const monthName = new Intl.DateTimeFormat('en-AU', { month: 'long', year: 'numer
 
 const inputClass = 'h-10 rounded-lg border border-line bg-surface px-3 focus:border-brand focus:outline-2 focus:outline-brand'
 
-export default function Records() {
+// `kind` (optional) fixes the record type and hides this page's own heading and tabs: the all-records page supplies those.
+export default function Records({ kind: fixedKind }) {
   // The dashboard links here with ?kind=&day=&item= to open one record's day.
   const [params] = useSearchParams()
-  const linkedKind = kinds[params.get('kind')] ? params.get('kind') : 'storage'
+  const linkedKind = fixedKind ?? (kinds[params.get('kind')] ? params.get('kind') : 'storage')
   const linkedDay = /^\d{4}-\d{2}-\d{2}$/.test(params.get('day') ?? '') ? params.get('day') : ''
   const [kind, setKind] = useState(linkedKind)
   const thisMonth = todayInSydney().slice(0, 7)
@@ -93,26 +94,28 @@ export default function Records() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Records</h1>
+      {!fixedKind && <h1 className="text-2xl font-semibold">Records</h1>}
 
       <div className="mt-4 flex flex-wrap items-end gap-4">
-        <div role="tablist" aria-label="Kind of record" className="flex gap-1">
-          {Object.entries(kinds).map(([key, k]) => (
-            <button
-              key={key}
-              role="tab"
-              aria-selected={kind === key}
-              onClick={() => {
-                setKind(key)
-                setItemId('')
-                setPage(1)
-              }}
-              className={`h-10 rounded-lg px-4 font-medium ${kind === key ? 'bg-brand text-white' : 'border border-line bg-surface hover:bg-brand-soft'}`}
-            >
-              {k.label}
-            </button>
-          ))}
-        </div>
+        {!fixedKind && (
+          <div role="tablist" aria-label="Kind of record" className="flex gap-1">
+            {Object.entries(kinds).map(([key, k]) => (
+              <button
+                key={key}
+                role="tab"
+                aria-selected={kind === key}
+                onClick={() => {
+                  setKind(key)
+                  setItemId('')
+                  setPage(1)
+                }}
+                className={`h-10 rounded-lg px-4 font-medium ${kind === key ? 'bg-brand text-white' : 'border border-line bg-surface hover:bg-brand-soft'}`}
+              >
+                {k.label}
+              </button>
+            ))}
+          </div>
+        )}
         <label className="text-sm">
           Show
           <select

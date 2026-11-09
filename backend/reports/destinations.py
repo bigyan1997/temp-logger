@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+from django.conf import settings
 from django.core.management.base import CommandError
 
 DRIVE_FILES = 'https://www.googleapis.com/drive/v3/files'
@@ -86,3 +87,15 @@ class GoogleDrive:
             data=body, headers={'Content-Type': f'multipart/related; boundary={BOUNDARY}'},
         )
         self.check(response)
+
+
+def extra_destinations():
+    """The optional extra copies named in settings (backend\\.env): a Google Drive folder and/or a synced folder."""
+    found = []
+    if settings.GOOGLE_DRIVE_FOLDER_ID:
+        if not settings.GOOGLE_SERVICE_ACCOUNT_FILE:
+            raise CommandError('GOOGLE_SERVICE_ACCOUNT_FILE is not set in backend\\.env.')
+        found.append(GoogleDrive(settings.GOOGLE_DRIVE_FOLDER_ID, settings.GOOGLE_SERVICE_ACCOUNT_FILE))
+    if settings.REPORTS_EXPORT_DIR:
+        found.append(LocalFolder(settings.REPORTS_EXPORT_DIR))
+    return found
