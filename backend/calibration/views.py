@@ -31,7 +31,8 @@ class CalibrationViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.
 
     def get_queryset(self):
         calibrations = Calibration.objects.select_related('recorded_by', 'entered_by').prefetch_related('gauges__unit')
-        if self.request.query_params.get('include_voided') != '1':
+        # Only the list hides voided ones: a voided calibration's PDF must still open (it stays on record).
+        if self.action == 'list' and self.request.query_params.get('include_voided') != '1':
             calibrations = calibrations.filter(voided=False)
         return calibrations
 
@@ -53,6 +54,8 @@ class CalibrationViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.
     @action(detail=True, methods=['post'])
     def void(self, request, pk=None):
         calibration = self.get_object()
+        if calibration.voided:
+            return Response({'detail': 'This calibration is already voided.'}, status=status.HTTP_400_BAD_REQUEST)
         reason = str(request.data.get('reason', '')).strip()
         if len(reason) < 3:
             return Response({'reason': 'Say why this calibration is being voided.'}, status=status.HTTP_400_BAD_REQUEST)

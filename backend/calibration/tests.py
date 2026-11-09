@@ -146,6 +146,12 @@ class CalibrationApiTests(ReadingTestCase):
         self.assertEqual(self.client.get('/api/calibrations/').json()['count'], 0)
         self.assertEqual(self.client.get('/api/calibrations/?include_voided=1').json()['count'], 1)
 
+    def test_a_voided_calibration_pdf_still_opens_and_cannot_be_voided_twice(self):
+        entry = self.calibrate().json()
+        self.client.post(f'/api/calibrations/{entry["id"]}/void/', {'reason': 'Wrong day'}, format='json')
+        self.assertEqual(self.client.get(f'/api/calibrations/{entry["id"]}/pdf/').status_code, 200)
+        self.assertEqual(self.client.post(f'/api/calibrations/{entry["id"]}/void/', {'reason': 'Again'}, format='json').status_code, 400)
+
     # When it is next due --------------------------------------------------------
 
     def due(self):
