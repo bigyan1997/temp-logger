@@ -4,6 +4,7 @@ import {
   FileText,
   History,
   Home,
+  LayoutGrid,
   LogOut,
   PackageCheck,
   Settings,
@@ -14,6 +15,7 @@ import {
 } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../auth.jsx'
+import { modulesFor } from '../lib/modules.js'
 import { useStaffChoice } from './StaffPicker.jsx'
 import UpdateBanner from './UpdateBanner.jsx'
 
@@ -51,6 +53,8 @@ export default function AppLayout() {
   const { logout, isAdmin } = useAuth()
   const { staff, staffId, setStaffId } = useStaffChoice()
   const person = staff.find((s) => String(s.id) === String(staffId))
+  // The night login has a single module, so it has no front page to go back to. Admin always has one.
+  const hasSeveralModules = isAdmin || modulesFor(false).length > 1
 
   return (
     <div className="min-h-screen lg:flex">
@@ -60,12 +64,20 @@ export default function AppLayout() {
             <span className="grid size-9 place-items-center rounded-lg bg-brand text-white">
               <Thermometer size={20} aria-hidden="true" />
             </span>
-            <span className="font-semibold">Temperature Logger</span>
+            <div className="leading-tight">
+              <span className="block font-semibold">Temperature Logger</span>
+              <span className="block text-xs text-muted">Achieve HACCP</span>
+            </div>
           </div>
         </div>
 
         <nav aria-label="Main" className="flex gap-1 overflow-x-auto px-4 pb-3 lg:flex-1 lg:flex-col lg:gap-0 lg:overflow-y-auto lg:px-3 lg:pb-0">
-          <NavLink to="/" end className={navClass}>
+          {hasSeveralModules && (
+            <NavLink to="/" end className={navClass}>
+              <LayoutGrid size={18} aria-hidden="true" /> All modules
+            </NavLink>
+          )}
+          <NavLink to="/temperature" end className={navClass}>
             <Home size={18} aria-hidden="true" /> Home
           </NavLink>
 

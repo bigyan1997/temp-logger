@@ -1,9 +1,9 @@
-# Achieve Temperature Logger — context for Claude
+# Achieve HACCP (Temperature Logger module) — context for Claude
 
 Read this first, then [PLAN.md](PLAN.md) (full spec), [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DESIGN.md) (architecture, data model, flows) and [NOTES.md](NOTES.md) (decisions and progress log).
 
 ## What this is
-A temperature logger for **Achieve Cafe Provisions** (food distributor, Marrickville NSW) replacing paper logs from HACCP Plan v1.6: Table 9 (cold/frozen storage), Table 10 (receiving), Table 11 (dispatch). Purpose is HACCP compliance and auditor-ready records.
+The app is **Achieve HACCP**: a front page of modules (`frontend/src/lib/modules.js`, `pages/AppHome.jsx`; the night login skips it and goes straight to the Temperature Logger). The only module so far is the **Temperature Logger**, a temperature logger for **Achieve Cafe Provisions** (food distributor, Marrickville NSW) replacing paper logs from HACCP Plan v1.6: Table 9 (cold/frozen storage), Table 10 (receiving), Table 11 (dispatch). Purpose is HACCP compliance and auditor-ready records.
 
 ## Stack
 Django + DRF, Postgres, React + Vite + Tailwind (plain JavaScript, no TypeScript). Same pattern as the owner's other apps `npd-tracker-v2` and `fleet-maintenance` (look at `C:\Users\fleet\npd-tracker-v2` for deploy scripts: `run_server.bat`, `auto_deploy.ps1`, `keep_alive.ps1`).

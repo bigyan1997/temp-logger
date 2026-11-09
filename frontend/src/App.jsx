@@ -1,6 +1,7 @@
 import { Link, Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from './auth.jsx'
 import AppLayout from './components/AppLayout.jsx'
+import AppHome from './pages/AppHome.jsx'
 import AuditLog from './pages/admin/AuditLog.jsx'
 import Records from './pages/admin/Records.jsx'
 import Reports from './pages/admin/Reports.jsx'
@@ -42,7 +43,7 @@ function RequireAuth({ children }) {
 // Pages only the day (admin) login may open.
 function AdminOnly({ children }) {
   const { isAdmin } = useAuth()
-  return isAdmin ? children : <Navigate to="/" replace />
+  return isAdmin ? children : <Navigate to="/temperature" replace />
 }
 
 const adminPage = (page) => <AdminOnly>{page}</AdminOnly>
@@ -52,13 +53,22 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route
+        path="/"
+        element={
+          <RequireAuth>
+            <AppHome />
+          </RequireAuth>
+        }
+      />
+      {/* The Temperature Logger module. Its pages keep their own short paths. */}
+      <Route
         element={
           <RequireAuth>
             <AppLayout />
           </RequireAuth>
         }
       >
-        <Route path="/" element={<Home />} />
+        <Route path="/temperature" element={<Home />} />
         <Route path="/log/storage" element={<LogStorage />} />
         <Route path="/log/receiving" element={<LogReceiving />} />
         <Route path="/log/dispatch" element={<LogDispatch />} />

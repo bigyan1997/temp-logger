@@ -18,7 +18,7 @@ export default function UpdateBanner() {
   if (!current || current === loaded) return null
   return (
     <div role="status" className="mb-4 flex flex-wrap items-center gap-3 rounded-lg border border-brand bg-brand-soft px-4 py-3 text-sm">
-      <RefreshCw size={16} aria-hidden="true" />A new version of the Temperature Logger is ready.
+      <RefreshCw size={16} aria-hidden="true" />A new version of Achieve HACCP is ready.
       <button onClick={() => window.location.reload()} className="h-9 rounded-lg bg-brand px-3 font-medium text-white hover:bg-brand-dark">
         Refresh now
       </button>

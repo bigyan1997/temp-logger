@@ -37,7 +37,7 @@ export default function Login() {
             <Thermometer aria-hidden="true" />
           </span>
           <div>
-            <h1 className="text-lg font-semibold leading-tight">Temperature Logger</h1>
+            <h1 className="text-lg font-semibold leading-tight">Achieve HACCP</h1>
             <p className="text-sm text-muted">Achieve Cafe Provisions</p>
           </div>
         </div>

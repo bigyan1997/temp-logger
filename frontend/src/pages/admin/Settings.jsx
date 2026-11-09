@@ -15,7 +15,7 @@ export default function Settings() {
   const { section: path } = useParams()
   const section = sections.find((s) => s.path === path)
 
-  if (!isAdmin) return <Navigate to="/" replace />
+  if (!isAdmin) return <Navigate to="/temperature" replace />
   if (!section) return <Navigate to={`/settings/${sections[0].path}`} replace />
 
   return (

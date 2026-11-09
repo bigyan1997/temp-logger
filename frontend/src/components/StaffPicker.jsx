@@ -6,8 +6,11 @@ import { api } from '../api/client.js'
 const KEY = 'tl.staffId'
 const CHANGED = 'tl:staff-changed'
 
+// Night-only staff first, then the people on both logins (day staff) at the bottom. Each group stays A to Z.
+const nightStaffFirst = (staff) => [...staff].sort((a, b) => a.both_logins - b.both_logins)
+
 export function useStaffList() {
-  return useQuery({ queryKey: ['staff'], queryFn: () => api('/staff/') })
+  return useQuery({ queryKey: ['staff'], queryFn: () => api('/staff/'), select: nightStaffFirst })
 }
 
 // The chosen person is kept here (and in localStorage) so the top bar and the entry screens always agree.

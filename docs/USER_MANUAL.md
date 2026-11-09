@@ -1,6 +1,6 @@
-# Temperature Logger: User Manual
+# Achieve HACCP: Temperature Logger User Manual
 
-For the staff of Achieve Cafe Provisions. It replaces the paper temperature sheets (HACCP Plan v1.6, Tables 9, 10 and 11). The screenshots use made-up names and temperatures.
+For the staff of Achieve Cafe Provisions. **Achieve HACCP** is the company's HACCP app. The **Temperature Logger** is the part of it described here, and it replaces the paper temperature sheets (HACCP Plan v1.6, Tables 9, 10 and 11). The screenshots use sample temperatures, not real records.
 
 **Contents**
 
@@ -48,13 +48,13 @@ There are two shared logins on the office computer and on any other computer tha
 | **Night** | Night staff | Log storage, receiving and dispatch |
 | **Admin (day)** | Day staff | Everything the night login can, plus Records, Trends, Reports, Audit log and Settings |
 
-Open the app in your browser, type the email and password you were given, and click **Sign in**.
+Open the app in your browser, type the email and password you were given, and click **Sign in**. Click the **eye** at the end of the password box to see what you typed, and click it again to hide it.
 
 ![The sign-in page](manual/01-login.png)
 
 ### "Your name"
 
-Because the login is shared, the app also asks **who you are** before you save anything. Pick your name from **Your name** at the top of each logging screen. The app remembers it on that computer, so you only have to pick it again if someone else uses the computer.
+Because the login is shared, the app also asks **who you are** before you save anything. Pick your name from **Your name** at the top of each logging screen, or from **Who is using this?** at the bottom of the left-hand menu (they are the same choice). The night staff names are listed first, and the day staff at the bottom. The app remembers your name on that computer, so you only have to pick it again if someone else uses the computer.
 
 If your name is not in the list, ask day staff to add it (see [Staff names](#staff-names)).
 
@@ -66,7 +66,17 @@ Click **Sign out** at the bottom of the left-hand menu when you finish, especial
 
 ## 3. Finding your way around
 
-The menu is down the left side. **Home** is the first thing you see after signing in.
+### The front page (day login only)
+
+After signing in, **day staff** see the Achieve HACCP front page, with a card for each part of the app. For now there is one card, **Temperature Logger**. Click it to open it. The **All modules** link at the top of the left-hand menu brings you back to this page.
+
+![The Achieve HACCP front page](manual/01b-front-page.png)
+
+**Night staff** go straight into the Temperature Logger and never see this page.
+
+### Inside the Temperature Logger
+
+The menu is down the left side. **Home** is the first thing you see once you are in.
 
 ![Home page for the night login, showing what is due today](manual/02-night-home.png)
 
