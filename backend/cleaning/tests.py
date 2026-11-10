@@ -121,3 +121,10 @@ class CleaningApiTests(ReadingTestCase):
         self.post('/api/cleaning-checks/', date=MONDAY, ticks=[{'task': self.bathroom.pk, 'note': 'Soap refilled' + chr(10) + 'Towels low'}])
         self.assertEqual(CleaningCheck.objects.get().note, 'Soap refilled' + chr(10) + 'Towels low')
         self.assertEqual(self.client.get('/api/cleaning-checks/pdf/?from=2026-11-02&to=2026-11-06').status_code, 200)
+
+    def test_a_void_reason_can_have_several_lines(self):
+        self.tick(self.bathroom)
+        check = CleaningCheck.objects.get()
+        reason = 'Wrong day' + chr(10) + 'Done on Tuesday'
+        self.assertEqual(self.client.post(f'/api/cleaning-checks/{check.pk}/void/', {'reason': reason}, format='json').status_code, 200)
+        self.assertEqual(self.client.get('/api/cleaning-checks/pdf/?from=2026-11-02&to=2026-11-06').status_code, 200)

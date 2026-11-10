@@ -28,14 +28,24 @@ export default function VoidReasonDialog({ heading, title, endpoint, onClose }) 
         <p className="mt-1 text-muted">{title}</p>
         <p className="mt-1 text-sm text-muted">It stays in the list, marked void, and the change is written to the audit log.</p>
         <label htmlFor="void-reason" className="mb-1 mt-4 block text-sm font-medium">Why is it being voided? (required)</label>
-        <input
+        <textarea
           id="void-reason"
           value={reason}
           onChange={(e) => setReason(e.target.value)}
-          className="h-11 w-full rounded-lg border border-line bg-surface px-3 text-base focus:border-brand focus:outline-2 focus:outline-brand"
+          onKeyDown={(e) => {
+            // Enter starts a new line; Ctrl+Enter voids.
+            if (e.key === 'Enter' && e.ctrlKey) {
+              e.preventDefault()
+              e.currentTarget.form.requestSubmit()
+            }
+          }}
+          rows={3}
+          maxLength={300}
+          className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-base focus:border-brand focus:outline-2 focus:outline-brand"
           required
           autoFocus
         />
+        <p className="mt-1 text-xs text-muted">Enter starts a new line. Ctrl+Enter voids.</p>
         {submit.error && <p role="alert" className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-bad">{submit.error.message}</p>}
         <div className="mt-5 flex gap-2">
           <button type="submit" disabled={submit.isPending} className="h-11 rounded-lg bg-brand px-5 font-semibold text-white hover:bg-brand-dark disabled:opacity-60">

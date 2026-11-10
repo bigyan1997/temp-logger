@@ -97,7 +97,7 @@ export default function CleaningRecords({ embedded = false }) {
                 <td className="whitespace-nowrap px-4 py-3 text-sm">{formatDateTime(r.recorded_at)}<br /><span className="text-muted">{r.entered_by_name}</span></td>
                 <td className="px-4 py-3 text-sm">
                   <span className="whitespace-pre-line">{r.note}</span>
-                  {r.voided && <p className="font-medium no-underline">Voided: {r.void_reason}</p>}
+                  {r.voided && <p className="whitespace-pre-line font-medium no-underline">Voided: {r.void_reason}</p>}
                 </td>
                 <td className="px-4 py-3 text-right no-underline">
                   {!r.voided && (

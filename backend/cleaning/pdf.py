@@ -81,7 +81,7 @@ def render_cleaning(start, end):
         story += [Paragraph(f'{check.date:%d/%m/%y} {escape(check.task.name)}: {lines(check.note)}', NOTE) for check in notes]
     if voided:
         story.append(Paragraph('<b>Voided entries (not counted above)</b>', NOTE))
-        story += [Paragraph(f'{check.date:%d/%m/%y} {escape(check.task.name)}: {escape(check.void_reason)}', NOTE) for check in voided]
+        story += [Paragraph(f'{check.date:%d/%m/%y} {escape(check.task.name)}: {lines(check.void_reason)}', NOTE) for check in voided]
 
     buffer = BytesIO()
     document.filename = buffer
