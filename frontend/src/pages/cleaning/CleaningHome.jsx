@@ -15,7 +15,7 @@ export default function CleaningHome() {
   return (
     <EntryShell
       title="Cleaning & maintenance"
-      intro="HACCP Table 8. Tick each task that was done, then press Save. With the keyboard, press Enter to tick a task and move to the next one (Space ticks or unticks, Tab moves without ticking); after the last task, Enter lands on Save. A task that is already ticked for the day is locked; if one was ticked by mistake, void it on the Records page."
+      intro="HACCP Table 8. Tick each task that was done, then press Save. With the keyboard, press Enter to tick a task and move to the next one (Space ticks or unticks, Tab moves without ticking); after the last task, Enter lands on Save. In a note, Enter starts a new line and Ctrl+Enter moves on. A task that is already ticked for the day is locked; if one was ticked by mistake, void it on the Records page."
     >
       {({ staffId, date }) => <TaskList key={date} staffId={staffId} date={date} />}
     </EntryShell>
@@ -65,9 +65,9 @@ function TaskList({ staffId, date }) {
     setTicked({ ...ticked, [task.id]: true })
     if (!focusNext(event.currentTarget, NEXT_TASK)) saveButton.current?.focus()
   }
-  // Enter in a note moves on to the next task (the note does not save the day).
+  // A note can have several lines, so Enter starts a new line. Ctrl+Enter (or Tab) moves on to the next task.
   const enterInNote = (event) => {
-    if (event.key !== 'Enter') return
+    if (event.key !== 'Enter' || !event.ctrlKey) return
     event.preventDefault()
     const box = event.currentTarget.closest('li').querySelector('input[data-task]')
     if (!focusNext(box, NEXT_TASK)) saveButton.current?.focus()
@@ -107,16 +107,17 @@ function TaskList({ staffId, date }) {
               {task.frequency !== 'daily' && <span className="mr-2 rounded bg-brand-soft px-1.5 py-0.5 text-xs text-brand-dark">{task.frequency_label}</span>}
               {statusText(task, data.working_day)}
             </span>
-            {task.done && task.note && <span className="text-sm text-muted">Note: {task.note}</span>}
+            {task.done && task.note && <span className="whitespace-pre-line text-sm text-muted">Note: {task.note}</span>}
             {ticked[task.id] && (
-              <input
+              <textarea
                 value={notes[task.id] ?? ''}
                 onChange={(e) => setNotes({ ...notes, [task.id]: e.target.value })}
-                placeholder="Note (optional)"
+                placeholder="Note (optional). Enter starts a new line; Ctrl+Enter moves on."
                 aria-label={`Note for ${task.name}`}
                 maxLength={300}
+                rows={2}
                 onKeyDown={enterInNote}
-                className={`${inputClass} sm:w-72`}
+                className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-base focus:border-brand focus:outline-2 focus:outline-brand sm:w-96"
               />
             )}
           </li>

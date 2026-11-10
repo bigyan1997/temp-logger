@@ -23,6 +23,11 @@ GREY = colors.HexColor('#e6e6e6')
 TICK = '<font name="ZapfDingbats">4</font>'  # a check mark, which the normal fonts do not have
 
 
+def lines(text):
+    """Safe to put in a Paragraph, keeping the line breaks of a note."""
+    return escape(text).replace('\r', '').replace('\n', '<br/>')
+
+
 def days_shown(start, end, checked_days):
     """Every working day in the period, plus any weekend day that has something ticked."""
     days, day = [], start
@@ -73,7 +78,7 @@ def render_cleaning(start, end):
     notes = [check for check in live if check.note]
     if notes:
         story.append(Paragraph('<b>Notes</b>', NOTE))
-        story += [Paragraph(f'{check.date:%d/%m/%y} {escape(check.task.name)}: {escape(check.note)}', NOTE) for check in notes]
+        story += [Paragraph(f'{check.date:%d/%m/%y} {escape(check.task.name)}: {lines(check.note)}', NOTE) for check in notes]
     if voided:
         story.append(Paragraph('<b>Voided entries (not counted above)</b>', NOTE))
         story += [Paragraph(f'{check.date:%d/%m/%y} {escape(check.task.name)}: {escape(check.void_reason)}', NOTE) for check in voided]

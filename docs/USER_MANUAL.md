@@ -84,6 +84,7 @@ This is the paper Table 8. **Tick tasks** (the home page) shows every task for o
 
 - **Every working day** tasks (bathroom check, warehouse cleans, van cleans and so on) are due Monday to Friday.
 - **Monthly** and **quarterly** tasks (forklift recharge, pest spray, bait change) say "Due" until they have been ticked in that month or quarter, then show the date they were done.
+- A **note** can have several lines: press **Enter** in it to start a new line, and **Ctrl+Enter** (or Tab) to move on to the next task. Records and the PDF keep the line breaks.
 - If a tick was made by mistake, open **Records**, press **Void** and give a reason. The task can then be ticked again. Nothing is ever deleted.
 - **Records** also has the **Table 8 PDF** for the dates you choose, laid out like the paper table with a "Done by" column.
 - **Tasks** is where you add a new van, rename a task, change how often it is due, or deactivate one that is no longer done.
@@ -436,7 +437,7 @@ If the **nightly database backup** does not happen, the same people get a **DATA
 
 | Key | What it does |
 |---|---|
-| **Enter** | Storage: save the reading you just typed and move to the next unit. Receiving and Dispatch: move to the next row's temperature box; on the last row, save everything. Cleaning: tick the task and move to the next. Forms (Calibration, Settings): move to the next box; after the last box Enter lands on Save, and a second Enter saves |
+| **Enter** | Storage: save the reading you just typed and move to the next unit. Receiving and Dispatch: move to the next row's temperature box; on the last row, save everything. Cleaning: tick the task and move to the next (in a Cleaning note, Enter starts a new line and Ctrl+Enter moves on). Forms (Calibration, Settings): move to the next box; after the last box Enter lands on Save, and a second Enter saves |
 | **Tab** | Move to the next box |
 | **A, B, C… (Dispatch)** | Tap that run |
 

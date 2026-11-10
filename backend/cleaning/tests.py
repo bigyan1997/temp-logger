@@ -116,3 +116,8 @@ class CleaningApiTests(ReadingTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.content.startswith(b'%PDF'))
         self.assertEqual(self.client.get('/api/cleaning-checks/pdf/?from=2026-11-06&to=2026-11-02').status_code, 400)
+
+    def test_a_note_can_have_several_lines_and_the_pdf_keeps_them(self):
+        self.post('/api/cleaning-checks/', date=MONDAY, ticks=[{'task': self.bathroom.pk, 'note': 'Soap refilled' + chr(10) + 'Towels low'}])
+        self.assertEqual(CleaningCheck.objects.get().note, 'Soap refilled' + chr(10) + 'Towels low')
+        self.assertEqual(self.client.get('/api/cleaning-checks/pdf/?from=2026-11-02&to=2026-11-06').status_code, 200)
