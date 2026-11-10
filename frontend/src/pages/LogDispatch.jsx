@@ -184,6 +184,7 @@ function DispatchScreen({ staffId, date }) {
                 onSave={() => form.save(key)}
                 onConfirm={() => form.confirm(key)}
                 onEnter={saveAll}
+                moveOnEnter
                 saveButton={false}
                 autoFocus={own && entry.phase === 'idle'}
               />
@@ -222,7 +223,7 @@ export default function LogDispatch() {
   return (
     <EntryShell
       title="Log dispatch temperatures"
-      intro="Type the load temperature, tap the runs that went out, then Save. Runs you don't tap show as Run not used on the sheet."
+      intro="Type the load temperature, tap the runs that went out, then Save. Runs you don't tap show as Run not used on the sheet. Enter moves to the next run; Enter on the last one saves."
     >
       {(props) => <DispatchScreen key={props.date} {...props} />}
     </EntryShell>

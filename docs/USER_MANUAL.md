@@ -202,7 +202,7 @@ Use this each time a delivery arrives.
 4. Type the temperature. Do this for each supplier that delivered.
 5. If the packaging was damaged or unclean, **untick Packaging OK**. You will be asked for a corrective action, the same as for a temperature that is too warm.
 6. If nothing came from a supplier today, you can tick **No delivery** for them, or simply leave that row empty.
-7. Click **Save** at the bottom (or press **Enter**). Every row you filled in is saved together.
+7. Type a temperature and press **Enter** to jump to the next supplier's temperature box (Enter in a Note box does the same), so many deliveries can be typed without touching the mouse. Pressing **Enter** on the last supplier, or clicking **Save** at the bottom, saves every row you filled in together.
 
 ![The receiving screen: one row for each supplier](manual/06-receiving.png)
 
@@ -436,7 +436,7 @@ If the **nightly database backup** does not happen, the same people get a **DATA
 
 | Key | What it does |
 |---|---|
-| **Enter** | Save the reading you just typed |
+| **Enter** | Storage: save the reading you just typed. Receiving and Dispatch: move to the next row's temperature box; on the last row, save everything |
 | **Tab** | Move to the next box |
 | **A, B, C… (Dispatch)** | Tap that run |
 

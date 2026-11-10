@@ -74,6 +74,7 @@ function ReceivingScreen({ staffId, date }) {
               onSave={() => form.save(key)}
               onConfirm={() => form.confirm(key)}
               onEnter={saveAll}
+              moveOnEnter
               saveButton={false}
               autoFocus={index === firstOpen}
             />
@@ -89,7 +90,7 @@ export default function LogReceiving() {
   return (
     <EntryShell
       title="Log deliveries received"
-      intro="Type the temperature of each delivery (chilled 5 °C or colder, frozen -15 °C or colder). Tick No delivery if nothing came."
+      intro="Type the temperature of each delivery (chilled 5 °C or colder, frozen -15 °C or colder). Tick No delivery if nothing came. Press Enter to move to the next supplier; Enter on the last one saves."
     >
       {(props) => <ReceivingScreen key={props.date} {...props} />}
     </EntryShell>
