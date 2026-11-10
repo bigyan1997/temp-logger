@@ -110,6 +110,7 @@ function StorageScreen({ staffId, date, setDate }) {
               entry={entry}
               onChange={(patch) => form.setField(key, patch)}
               onSave={() => form.save(key)}
+              enterMode="save-and-next"
               onConfirm={() => form.confirm(key)}
               autoFocus={index === slot.units.findIndex((u) => !u.reading)}
             />

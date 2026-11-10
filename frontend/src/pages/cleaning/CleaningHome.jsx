@@ -1,8 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { api } from '../../api/client.js'
 import EntryShell from '../../components/EntryShell.jsx'
 import { formatDay } from '../../lib/format.js'
+import { focusNext } from '../../lib/focusNext.js'
+
+const NEXT_TASK = 'input[data-task]:not(:disabled)' // the tick boxes that can still be ticked
 
 const inputClass =
   'h-10 w-full rounded-lg border border-line bg-surface px-3 text-base focus:border-brand focus:outline-2 focus:outline-brand'
@@ -12,7 +15,7 @@ export default function CleaningHome() {
   return (
     <EntryShell
       title="Cleaning & maintenance"
-      intro="HACCP Table 8. Tick each task that was done, then press Save. A task that is already ticked for the day is locked; if one was ticked by mistake, void it on the Records page."
+      intro="HACCP Table 8. Tick each task that was done, then press Save. With the keyboard, press Enter to tick a task and move to the next one (Space ticks or unticks, Tab moves without ticking); after the last task, Enter lands on Save. A task that is already ticked for the day is locked; if one was ticked by mistake, void it on the Records page."
     >
       {({ staffId, date }) => <TaskList key={date} staffId={staffId} date={date} />}
     </EntryShell>
@@ -31,6 +34,7 @@ function TaskList({ staffId, date }) {
   const queryClient = useQueryClient()
   const [ticked, setTicked] = useState({}) // task id -> true
   const [notes, setNotes] = useState({}) // task id -> note
+  const saveButton = useRef(null)
 
   const { data, isLoading } = useQuery({
     queryKey: ['cleaning-day', date],
@@ -54,8 +58,24 @@ function TaskList({ staffId, date }) {
     },
   })
 
+  // Enter ticks the task and moves on to the next one; after the last task it moves to the Save button.
+  const enterOnTask = (event, task) => {
+    if (event.key !== 'Enter') return
+    event.preventDefault()
+    setTicked({ ...ticked, [task.id]: true })
+    if (!focusNext(event.currentTarget, NEXT_TASK)) saveButton.current?.focus()
+  }
+  // Enter in a note moves on to the next task (the note does not save the day).
+  const enterInNote = (event) => {
+    if (event.key !== 'Enter') return
+    event.preventDefault()
+    const box = event.currentTarget.closest('li').querySelector('input[data-task]')
+    if (!focusNext(box, NEXT_TASK)) saveButton.current?.focus()
+  }
+
   if (isLoading || !data) return <p className="text-muted">Loading…</p>
 
+  const firstOpenId = data.tasks.find((task) => !task.done)?.id // the cursor starts here, ready for Enter
   const count = Object.values(ticked).filter(Boolean).length
   const problem = !staffId ? 'Pick your name first.' : count === 0 ? 'Tick at least one task.' : null
 
@@ -75,6 +95,9 @@ function TaskList({ staffId, date }) {
                 type="checkbox"
                 checked={task.done || Boolean(ticked[task.id])}
                 disabled={task.done}
+                data-task
+                autoFocus={task.id === firstOpenId}
+                onKeyDown={(e) => enterOnTask(e, task)}
                 onChange={(e) => setTicked({ ...ticked, [task.id]: e.target.checked })}
                 className="size-6 accent-brand"
               />
@@ -92,6 +115,7 @@ function TaskList({ staffId, date }) {
                 placeholder="Note (optional)"
                 aria-label={`Note for ${task.name}`}
                 maxLength={300}
+                onKeyDown={enterInNote}
                 className={`${inputClass} sm:w-72`}
               />
             )}
@@ -104,6 +128,7 @@ function TaskList({ staffId, date }) {
       <div className="mt-4 flex items-center gap-4">
         <button
           type="submit"
+          ref={saveButton}
           disabled={Boolean(problem) || save.isPending}
           className="h-12 rounded-lg bg-brand px-6 font-semibold text-white hover:bg-brand-dark disabled:opacity-50"
         >

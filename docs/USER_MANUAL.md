@@ -103,7 +103,7 @@ On the night login, Home shows **today's checklist**: each storage time with how
 
 Day staff see the **Dashboard** instead (see [section 9](#9-for-day-staff-checking-correcting-and-reporting)).
 
-**Using the keyboard.** The app is made for desktop computers and laptops. You can type a temperature, press **Enter** to save it, and use **Tab** to move to the next box.
+**Using the keyboard.** The app is made for desktop computers and laptops. You can type a temperature, press **Enter** to save it, and use **Tab** to move to the next box. On every screen **Enter** also moves you on to the next box, so you can work without the mouse (the Quick reference at the end lists what Enter does on each screen).
 
 ---
 
@@ -436,7 +436,7 @@ If the **nightly database backup** does not happen, the same people get a **DATA
 
 | Key | What it does |
 |---|---|
-| **Enter** | Storage: save the reading you just typed. Receiving and Dispatch: move to the next row's temperature box; on the last row, save everything |
+| **Enter** | Storage: save the reading you just typed and move to the next unit. Receiving and Dispatch: move to the next row's temperature box; on the last row, save everything. Cleaning: tick the task and move to the next. Forms (Calibration, Settings): move to the next box; after the last box Enter lands on Save, and a second Enter saves |
 | **Tab** | Move to the next box |
 | **A, B, C… (Dispatch)** | Tap that run |
 

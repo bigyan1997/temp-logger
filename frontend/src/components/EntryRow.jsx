@@ -16,13 +16,14 @@ const inputClass =
 //   entry, onChange the row's form state from useEntryForm
 //   onSave, onConfirm
 //   onEnter         what the Enter key does (default: save this row)
-//   moveOnEnter     Enter jumps to the next row's temperature box; on the last row it does onEnter (for long lists)
+//   enterMode       what Enter does: 'save' (save this row), 'next' (jump to the next row's temperature box, and on the
+//                   last row do onEnter) or 'save-and-next' (save this row, then jump on)
 //   saveButton      false when the screen has one Save button for all its rows
 //   kind            storage | receiving | dispatch
 //   receiving       true to show the product type, packaging and "no delivery" fields
 //   skipLabel       text of a tick box meaning "nothing to measure" (storage: "Not used"); receiving has "No delivery"
 //   autoFocus       focus the temperature box when the screen opens
-export default function EntryRow({ label, hint, done, limit, entry, onChange, onSave, onConfirm, onEnter = onSave, moveOnEnter = false, saveButton = true, kind, receiving, skipLabel, autoFocus }) {
+export default function EntryRow({ label, hint, done, limit, entry, onChange, onSave, onConfirm, onEnter = onSave, enterMode = 'save', saveButton = true, kind, receiving, skipLabel, autoFocus }) {
   const value = parseTemp(entry.temp)
   const liveStatus = value !== null && limit !== null ? statusFor(value, limit) : 'none'
   const busy = entry.phase === 'saving'
@@ -56,7 +57,8 @@ export default function EntryRow({ label, hint, done, limit, entry, onChange, on
   const submitOnEnter = (event) => {
     if (event.key === 'Enter') {
       event.preventDefault()
-      if (moveOnEnter && focusNextTemperature(tempBox.current)) return
+      if (enterMode === 'next' && focusNextTemperature(tempBox.current)) return
+      if (enterMode === 'save-and-next') focusNextTemperature(tempBox.current) // move on first, while this row is still on screen
       onEnter()
     }
   }

@@ -184,7 +184,7 @@ function DispatchScreen({ staffId, date }) {
                 onSave={() => form.save(key)}
                 onConfirm={() => form.confirm(key)}
                 onEnter={saveAll}
-                moveOnEnter
+                enterMode="next"
                 saveButton={false}
                 autoFocus={own && entry.phase === 'idle'}
               />

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { enterMovesOn } from '../lib/focusNext.js'
 import PasswordInput from './PasswordInput.jsx'
 
 const inputClass =
@@ -29,7 +30,7 @@ export default function ItemForm({ fields, item, saving, error, onSave, onCancel
   }
 
   return (
-    <form onSubmit={submit} className="rounded-xl border border-line bg-surface p-4">
+    <form onSubmit={submit} onKeyDown={enterMovesOn} className="rounded-xl border border-line bg-surface p-4">
       <div className="grid gap-4">
         {shown.map((field) => {
           const id = `field-${field.name}`

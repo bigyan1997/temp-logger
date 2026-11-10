@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../../api/client.js'
 import EntryShell from '../../components/EntryShell.jsx'
+import { enterMovesOn } from '../../lib/focusNext.js'
 import { useActiveList } from '../../lib/useActiveList.js'
 import { newId } from '../../lib/uuid.js'
 
@@ -89,6 +90,7 @@ function CalibrationForm({ staffId, date }) {
 
   return (
     <form
+      onKeyDown={enterMovesOn}
       onSubmit={(e) => {
         e.preventDefault()
         save.mutate()
