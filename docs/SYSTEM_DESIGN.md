@@ -57,7 +57,7 @@ temp-logger/
     accounts/           User (role), login/logout/me
     setup/              Unit, Supplier, Run, SlotSchedule (admin-managed config)
     readings/           StorageReading, ReceivingCheck, DispatchReading, services.py (limits, due slots)
-    corrective/         CorrectiveAction (action + required note)
+    corrective/         CorrectiveAction (action required, note optional)
     audit/              AuditLog (one `module` per line: temperature or calibration), void/supersede logic
     calibration/        Calibration + GaugeCheck (Table 14), PDF, due date rules, voids
     reports/            PDF generation, CSV export
@@ -169,7 +169,7 @@ sequenceDiagram
 ```
 
 ### 5.5 Corrective action lifecycle
-An out-of-limit reading is saved together with its corrective action: an action from the list and a note saying what was done (both required). There is no sign-off step; the action is shown with the reading on Records and in the PDF reports.
+An out-of-limit reading is saved together with its corrective action: an action from the list (required) and an optional note saying what was done. There is no sign-off step; the action is shown with the reading on Records and in the PDF reports.
 
 ## 6. API surface
 

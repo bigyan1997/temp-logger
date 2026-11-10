@@ -145,10 +145,9 @@ function CalibrationForm({ staffId, date }) {
               <input
                 value={actionNotes}
                 onChange={(e) => setActionNotes(e.target.value)}
-                placeholder="Note: what was done (required)"
+                placeholder="Note: what was done (optional)"
                 aria-label="Note: what was done"
                 className={`${inputClass} min-w-64 flex-1`}
-                required
               />
             </div>
           </div>
@@ -186,8 +185,8 @@ function CalibrationForm({ staffId, date }) {
                   )}
                 </p>
                 <div className="min-w-48 flex-1">
-                  <label htmlFor={`comment-${unit.id}`} className="mb-1 block text-sm">{off ? 'Comment (required: more than 1 °C out)' : 'Comment (optional)'}</label>
-                  <input id={`comment-${unit.id}`} value={row.comment} onChange={(e) => setGauge(unit.id, { comment: e.target.value })} className={inputClass} required={off} />
+                  <label htmlFor={`comment-${unit.id}`} className="mb-1 block text-sm">Comment (optional)</label>
+                  <input id={`comment-${unit.id}`} value={row.comment} onChange={(e) => setGauge(unit.id, { comment: e.target.value })} className={inputClass} />
                 </div>
               </div>
             )

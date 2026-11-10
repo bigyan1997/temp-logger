@@ -2,6 +2,7 @@
 Django settings for the Achieve Temperature Logger.
 """
 
+import sys
 from pathlib import Path
 
 from decouple import Csv, config
@@ -152,6 +153,11 @@ GOOGLE_SERVICE_ACCOUNT_FILE = config('GOOGLE_SERVICE_ACCOUNT_FILE', default='') 
 # The folder scripts/backup.ps1 writes the nightly database backup to. When set, an alert email is sent
 # if a day has no backup in it. Empty means the backup is not monitored.
 BACKUP_DIR = config('BACKUP_DIR', default='')
+
+# The tests must never see this PC's real backup or Google Drive folders: a real backup folder changes
+# which alerts they expect, and they must not drop test PDFs into Drive. Tests that need one set it themselves.
+if sys.argv[1:2] == ['test']:
+    BACKUP_DIR = REPORTS_EXPORT_DIR = GOOGLE_DRIVE_FOLDER_ID = ''
 
 # Alert emails (see docs/DEPLOYMENT.md). With no EMAIL_HOST they are only printed in the server window.
 APP_URL = config('APP_URL', default='')  # where staff open the app, for the button in alert emails (the address you type in the browser, with http://)

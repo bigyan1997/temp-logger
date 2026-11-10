@@ -80,7 +80,7 @@ The **Records** card opens one page with a tab for each kind of record: **Coolro
 
 ### Calibration (day staff)
 
-The home page shows when the next 6-monthly thermometer calibration is due (a notice appears 15 days before). **New calibration** opens the Table 14 form: the probe in iced water must read 0 °C give or take 1 °C, and you can also compare each coolroom or freezer gauge with the probe. A reading outside the margin needs an action (replaced or repaired) and a note. On Save a PDF copy is made and copied to Drive. **Records** lists every calibration with its PDF and a **Void** button (a reason is required). Calibration has its **own Audit log**; its voids do not appear in the Temperature Logger's.
+The home page shows when the next 6-monthly thermometer calibration is due (a notice appears 15 days before). **New calibration** opens the Table 14 form: the probe in iced water must read 0 °C give or take 1 °C, and you can also compare each coolroom or freezer gauge with the probe. A reading outside the margin needs an action (replaced or repaired); a note is optional. On Save a PDF copy is made and copied to Drive. **Records** lists every calibration with its PDF and a **Void** button (a reason is required). Calibration has its **own Audit log**; its voids do not appear in the Temperature Logger's.
 
 ### Inside the Temperature Logger
 
@@ -162,7 +162,7 @@ If you type a temperature over the limit, the row shows **Out of limit** and a p
 You must fill in:
 
 1. **What was done about it.** Choose from the list.
-2. **Note (required).** One short sentence about what you actually did, for example "Moved stock to the Coolroom and checked the door."
+2. **Note (optional).** If it helps, one short sentence about what you actually did, for example "Moved stock to the Coolroom and checked the door."
 3. **Hours too warm** (storage only). How long the food was above the limit, if you know.
 
 Then click **Save with this action**.
@@ -394,7 +394,7 @@ If the **nightly database backup** does not happen, the same people get a **DATA
 | **"Your name" is empty or wrong** | Pick your name from the list. Entries cannot be saved without it. |
 | **"This unit already has a reading for that time"** | That reading was already logged. Look for **Logged by** on the row. If it is wrong, ask day staff to void and correct it. |
 | **"Please check this value"** | The number looks unusual (for example a freezer above 0 °C). Fix a typo, or click **Yes, that is correct** if it is right. |
-| **It will not save an out-of-limit reading** | You must choose an action **and** write a note. Fill in both. |
+| **It will not save an out-of-limit reading** | Choose what was done from the **action** list. The note is optional. |
 | **You entered a temperature on the wrong day** | Ask day staff to void it and enter it again (see [Void and correct](#void-and-correct-an-entry)). You cannot change it yourself. |
 | **A banner says "A new version of the Temperature Logger is ready"** | Click **Refresh now** to get the latest version. |
 | **You forgot to log a reading** | Log it as soon as you remember, on the correct **Day** and **time tab**, and add a **Note** that it was late. Do not guess a temperature: log what you actually read. |
@@ -432,6 +432,6 @@ If the **nightly database backup** does not happen, the same people get a **DATA
 **Remember**
 
 - Always pick **your own name**.
-- A reading that is too warm needs **an action and a note**.
+- A reading that is too warm needs **an action** (a note is optional).
 - **Nothing is deleted.** Day staff void and correct.
 - Log a missed reading as soon as you can.

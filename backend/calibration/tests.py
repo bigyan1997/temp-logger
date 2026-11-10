@@ -86,19 +86,17 @@ class CalibrationApiTests(ReadingTestCase):
         response = self.calibrate('1.1', day='2026-11-04')
         self.assertEqual(response.status_code, 400)  # failed, and no action was given
 
-    def test_a_failed_probe_needs_an_action_and_a_note(self):
+    def test_a_failed_probe_needs_an_action_but_no_note(self):
         self.assertIn('action', self.calibrate('2.0').json())
-        self.assertIn('action_notes', self.calibrate('2.0', action='replaced').json())
-        response = self.calibrate('2.0', **FIX)
-        self.assertEqual(response.status_code, 201)
+        response = self.calibrate('2.0', action='replaced')
+        self.assertEqual(response.status_code, 201, response.json())
         self.assertFalse(response.json()['passed'])
         self.assertEqual(response.json()['action_label'], 'Thermometer replaced')
 
-    def test_a_gauge_more_than_a_degree_out_needs_a_comment(self):
-        bad = self.gauge(self.coolroom, '5.0', '3.0')
-        self.assertEqual(self.calibrate(gauges=[bad]).status_code, 400)
-        bad['comment'] = 'Gauge reads high. Booked a service.'
-        self.assertEqual(self.calibrate(gauges=[bad]).status_code, 201)
+    def test_a_gauge_more_than_a_degree_out_saves_without_a_comment(self):
+        response = self.calibrate(gauges=[self.gauge(self.coolroom, '5.0', '3.0')])
+        self.assertEqual(response.status_code, 201, response.json())
+        self.assertEqual(response.json()['gauges'][0]['difference'], '2.0')
 
     def test_refuses_future_dates_and_the_same_unit_twice(self):
         self.assertEqual(self.calibrate(day='2999-01-01').status_code, 400)
