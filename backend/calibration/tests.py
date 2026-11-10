@@ -178,12 +178,16 @@ class CalibrationAlertTests(ReadingTestCase):
         override = override_settings(REPORTS_LOCAL_DIR=Path(tempfile.mkdtemp()), REPORTS_EXPORT_DIR='', GOOGLE_DRIVE_FOLDER_ID='')
         override.enable()
         self.addCleanup(override.disable)
+
+    # Only the tests that need a calibration make one: Postgres refuses to delete calibrations.
+    def record_calibration(self):
         self.post('/api/calibrations/', date='2026-05-20', probe_reading='0.0', gauges=[])  # next due 20 Nov
 
     def kinds(self, day, hour=9):
         return [alert.kind for alert in send_due_alerts(datetime(2026, 11, day, hour, tzinfo=SYDNEY)) if alert.kind.startswith('calibration')]
 
     def test_the_notice_starts_fifteen_days_before_and_is_sent_once(self):
+        self.record_calibration()
         self.assertEqual(self.kinds(4), [])
         self.assertEqual(self.kinds(5), ['calibration'])
         self.assertEqual(self.kinds(5, hour=10), [])  # not again the same day
@@ -191,9 +195,9 @@ class CalibrationAlertTests(ReadingTestCase):
         self.assertEqual(AlertSent.objects.filter(kind='calibration').count(), 1)
 
     def test_an_overdue_email_is_sent_once_after_the_due_date(self):
+        self.record_calibration()
         self.assertEqual(self.kinds(21), ['calibration_overdue'])
         self.assertEqual(self.kinds(22), [])
 
     def test_nothing_is_sent_before_any_calibration_exists(self):
-        Calibration.objects.all().delete()
         self.assertEqual(self.kinds(21), [])
