@@ -15,16 +15,20 @@ export default function CleaningHome() {
   return (
     <EntryShell
       title="Cleaning & maintenance"
-      intro="HACCP Table 8. Tick each task that was done, then press Save. With the keyboard, press Enter to tick a task and move to the next one (Space ticks or unticks, Tab moves without ticking); after the last task, Enter lands on Save. In a note, Enter starts a new line and Ctrl+Enter moves on. A task that is already ticked for the day is locked; if one was ticked by mistake, void it on the Records page."
+      intro="HACCP Table 8. Tick each task that was done, then press Save. With the keyboard, press Enter to tick a task and move to the next one (Space ticks or unticks, Tab moves without ticking); after the last task, Enter lands on Save. In a note, Enter starts a new line and Ctrl+Enter moves on. A task that is already ticked for the day is locked, except tasks that can be done more than once a day (like stock put away), which you can tick again each time; if one was ticked by mistake, void it on the Records page."
     >
       {({ staffId, date }) => <TaskList key={date} staffId={staffId} date={date} />}
     </EntryShell>
   )
 }
 
-// What to say about a task that is not ticked yet.
+// A task done once a day is locked once it is ticked. One that can be done again (stock put away) never locks:
+// each tick adds another time.
+const isLocked = (task) => task.done && !task.repeatable
+
 function statusText(task, workingDay) {
-  if (task.done) return `Done by ${task.done_by}`
+  if (task.repeatable && task.done) return `Done ${task.times.length} time${task.times.length === 1 ? '' : 's'} today. Tick to add another`
+  if (task.done) return `Done by ${task.times[0].done_by}`
   if (task.due) return 'Due'
   if (task.last_done) return `Done on ${formatDay(task.last_done)}`
   return workingDay ? 'Not due' : 'No cleaning scheduled on weekends'
@@ -93,8 +97,8 @@ function TaskList({ staffId, date }) {
             <label className="flex min-w-72 flex-1 items-center gap-3">
               <input
                 type="checkbox"
-                checked={task.done || Boolean(ticked[task.id])}
-                disabled={task.done}
+                checked={isLocked(task) || Boolean(ticked[task.id])}
+                disabled={isLocked(task)}
                 data-task
                 autoFocus={task.id === firstOpenId}
                 onKeyDown={(e) => enterOnTask(e, task)}
@@ -107,7 +111,15 @@ function TaskList({ staffId, date }) {
               {task.frequency !== 'daily' && <span className="mr-2 rounded bg-brand-soft px-1.5 py-0.5 text-xs text-brand-dark">{task.frequency_label}</span>}
               {statusText(task, data.working_day)}
             </span>
-            {task.done && task.note && <span className="whitespace-pre-line text-sm text-muted">Note: {task.note}</span>}
+            {task.times.length > 0 && (
+              <ul className="basis-full space-y-0.5 pl-9 text-sm text-muted">
+                {task.times.map((time) => (
+                  <li key={time.number} className="whitespace-pre-line">
+                    {task.repeatable && `${time.number}. `}{time.done_by}, {time.at}{time.note && `: ${time.note}`}
+                  </li>
+                ))}
+              </ul>
+            )}
             {ticked[task.id] && (
               <textarea
                 value={notes[task.id] ?? ''}

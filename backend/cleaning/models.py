@@ -17,6 +17,9 @@ class CleaningTask(models.Model):
     name = models.CharField(max_length=80)
     frequency = models.CharField(max_length=10, choices=Frequency.choices, default=Frequency.DAILY)
     active = models.BooleanField(default=True)
+    repeatable = models.BooleanField(
+        default=False, help_text='Can be done more than once a day, e.g. stock put away after each delivery.'
+    )
 
     class Meta:
         ordering = ['id']  # the order they were added, which is the order of the paper columns
@@ -33,6 +36,7 @@ class CleaningCheck(Attributed):
 
     task = models.ForeignKey(CleaningTask, on_delete=models.PROTECT, related_name='checks')
     date = models.DateField()
+    number = models.PositiveSmallIntegerField(default=1, help_text='1 for a task done once a day; 1, 2, 3 for one done again.')
     note = models.CharField(max_length=300, blank=True)
     voided = models.BooleanField(default=False)
     void_reason = models.CharField(max_length=300, blank=True)
@@ -40,9 +44,10 @@ class CleaningCheck(Attributed):
     class Meta:
         ordering = ['-date', 'task__id']
         constraints = [
-            # A task can only be ticked once a day, unless the earlier tick was voided.
-            models.UniqueConstraint(fields=['task', 'date'], condition=Q(voided=False), name='one_live_check_per_task_day'),
+            # Each time a task is done that day has its own number, so it cannot be ticked twice by accident.
+            # A voided tick frees its number.
+            models.UniqueConstraint(fields=['task', 'date', 'number'], condition=Q(voided=False), name='one_live_check_per_task_day_number'),
         ]
 
     def __str__(self):
-        return f'{self.task.name} {self.date:%d/%m/%Y}'
+        return f'{self.task.name} {self.date:%d/%m/%Y}' + (f' (#{self.number})' if self.number > 1 else '')

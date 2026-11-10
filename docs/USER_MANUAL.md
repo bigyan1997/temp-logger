@@ -80,7 +80,8 @@ The **Records** card opens one page with a tab for each kind of record: **Coolro
 
 ### Cleaning & Maintenance (day staff)
 
-This is the paper Table 8. **Tick tasks** (the home page) shows every task for one day: pick your name and the day, tick what was done, add a note if you want one, and press **Save**. A task that is already ticked for that day is locked and shows who did it.
+This is the paper Table 8. **Tick tasks** (the home page) shows every task for one day: pick your name and the day, tick what was done, add a note if you want one, and press **Save**. A task that is already ticked for that day is locked and shows who did it and when.
+- **Tasks done more than once a day**, like **Stock put away** after each delivery, never lock. Each time you tick it and press Save is saved as another entry (with your name, the time and an optional note, for example which delivery), and the row lists every time. The Records page shows them as "time 2", "time 3", and the PDF shows a tick with "x2", "x3". Any task can be set to work this way on the **Tasks** page.
 
 - **Every working day** tasks (bathroom check, warehouse cleans, van cleans and so on) are due Monday to Friday.
 - **Monthly** and **quarterly** tasks (forklift recharge, pest spray, bait change) say "Due" until they have been ticked in that month or quarter, then show the date they were done.

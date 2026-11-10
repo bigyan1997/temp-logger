@@ -49,14 +49,36 @@ class CleaningApiTests(ReadingTestCase):
         self.assertEqual(response.status_code, 201)
         task = next(t for t in response.json()['tasks'] if t['id'] == self.bathroom.pk)
         self.assertTrue(task['done'])
-        self.assertEqual(task['done_by'], 'Sam')
-        self.assertEqual(task['note'], 'Soap refilled')
+        self.assertEqual(task['times'][0]['done_by'], 'Sam')
+        self.assertEqual(task['times'][0]['note'], 'Soap refilled')
         self.assertEqual(CleaningCheck.objects.get().entered_by, self.admin)
 
     def test_saving_twice_does_not_double_tick(self):
         self.tick(self.bathroom)
         self.assertEqual(self.tick(self.bathroom).status_code, 201)
         self.assertEqual(CleaningCheck.objects.count(), 1)
+
+    def test_a_repeatable_task_can_be_done_again_the_same_day_and_a_normal_one_cannot(self):
+        put_away = CleaningTask.objects.get(name='Stock put away')
+        self.assertTrue(put_away.repeatable)  # stock comes in several times a day
+        self.tick(put_away, self.bathroom)
+        self.tick(put_away, self.bathroom)
+        self.assertEqual(CleaningCheck.objects.filter(task=put_away).count(), 2)
+        self.assertEqual(CleaningCheck.objects.filter(task=self.bathroom).count(), 1)
+        tasks = self.client.get(f'/api/cleaning-checks/day/?date={MONDAY}').json()['tasks']
+        times = next(t for t in tasks if t['id'] == put_away.pk)['times']
+        self.assertEqual([t['number'] for t in times], [1, 2])
+
+    def test_voiding_one_of_several_keeps_the_others_and_the_pdf_shows_how_many(self):
+        put_away = CleaningTask.objects.get(name='Stock put away')
+        for _ in range(3):
+            self.tick(put_away)
+        second = CleaningCheck.objects.get(task=put_away, number=2)
+        self.client.post(f'/api/cleaning-checks/{second.pk}/void/', {'reason': 'Duplicate'}, format='json')
+        self.assertEqual(CleaningCheck.objects.filter(task=put_away, voided=False).count(), 2)
+        self.tick(put_away)  # numbering carries on after the highest one still live
+        self.assertEqual(sorted(CleaningCheck.objects.filter(task=put_away, voided=False).values_list('number', flat=True)), [1, 3, 4])
+        self.assertEqual(self.client.get('/api/cleaning-checks/pdf/?from=2026-11-02&to=2026-11-06').status_code, 200)
 
     def test_a_name_and_at_least_one_task_are_needed(self):
         self.assertEqual(self.post('/api/cleaning-checks/', date=MONDAY, ticks=[]).status_code, 400)

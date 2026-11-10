@@ -10,7 +10,7 @@ const section = {
   empty: 'No tasks yet.',
   activeKey: 'active',
   title: (item) => item.name,
-  detail: (item) => item.frequency_label,
+  detail: (item) => item.frequency_label + (item.repeatable ? ', can be done more than once a day' : ''),
   fields: [
     { name: 'name', label: 'Task', type: 'text', required: true },
     {
@@ -23,6 +23,12 @@ const section = {
         { value: 'monthly', label: 'Once a month' },
         { value: 'quarterly', label: 'Once a quarter' },
       ],
+    },
+    {
+      name: 'repeatable',
+      label: 'Can be done more than once a day',
+      type: 'checkbox',
+      help: 'Tick for a task like stock put away, done after every delivery. Each time it is ticked is saved as another entry, with its own name, time and note.',
     },
   ],
 }

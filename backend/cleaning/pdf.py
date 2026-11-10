@@ -28,6 +28,13 @@ def lines(text):
     return escape(text).replace('\r', '').replace('\n', '<br/>')
 
 
+def tick_text(times):
+    """A tick, with x2, x3 when a task was done more than once that day."""
+    if times == 0:
+        return ''
+    return TICK if times == 1 else f'{TICK} x{times}'
+
+
 def days_shown(start, end, checked_days):
     """Every working day in the period, plus any weekend day that has something ticked."""
     days, day = [], start
@@ -46,7 +53,9 @@ def render_cleaning(start, end):
     used = {check.task_id for check in live}
     tasks = [task for task in CleaningTask.objects.all() if task.active or task.pk in used]
 
-    ticked = {(check.task_id, check.date) for check in live}
+    times_done = {}  # (task, day) -> how many times it was done
+    for check in live:
+        times_done[(check.task_id, check.date)] = times_done.get((check.task_id, check.date), 0) + 1
     names = {}
     for check in live:
         names.setdefault(check.date, set()).add(check.recorded_by.name)
@@ -54,7 +63,7 @@ def render_cleaning(start, end):
     rows = [[Paragraph('Day / Date', HEAD)] + [Paragraph(escape(task.name), HEAD) for task in tasks] + [Paragraph('Done by', HEAD)]]
     for day in days_shown(start, end, {check.date for check in live}):
         row = [Paragraph(f'{day:%A} {day:%d/%m/%y}', CELL)]
-        row += [Paragraph(TICK, TICKED) if (task.pk, day) in ticked else '' for task in tasks]
+        row += [Paragraph(tick_text(times_done.get((task.pk, day), 0)), TICKED) for task in tasks]
         row.append(Paragraph(escape(', '.join(sorted(names.get(day, [])))), CELL))
         rows.append(row)
 

@@ -92,7 +92,7 @@ export default function CleaningRecords({ embedded = false }) {
             {records.map((r) => (
               <tr key={r.id} className={r.voided ? 'text-muted line-through' : ''}>
                 <td className="whitespace-nowrap px-4 py-3">{formatDay(r.date)}</td>
-                <td className="px-4 py-3">{r.task_name}</td>
+                <td className="px-4 py-3">{r.task_name}{r.number > 1 && <span className="ml-2 text-sm text-muted">(time {r.number})</span>}</td>
                 <td className="px-4 py-3">{r.recorded_by_name}</td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm">{formatDateTime(r.recorded_at)}<br /><span className="text-muted">{r.entered_by_name}</span></td>
                 <td className="px-4 py-3 text-sm">

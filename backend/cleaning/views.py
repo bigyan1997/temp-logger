@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 
 from django.db import transaction
+from django.db.models import Max
 from django.http import HttpResponse
 from django.utils import timezone
 from rest_framework import mixins, status, viewsets
@@ -54,19 +55,21 @@ class CleaningCheckViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         return checks
 
     def create(self, request):
-        """Save the tasks ticked on a day. A task already ticked that day is left as it is."""
+        """Save the tasks ticked on a day. A task already ticked that day is left as it is, unless it can be done
+        more than once a day (stock put away): then each tick is another time it was done."""
         serializer = SaveDaySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         day, person = serializer.validated_data['date'], serializer.validated_data['recorded_by']
         with transaction.atomic():
-            done = set(CleaningCheck.objects.filter(date=day, voided=False).values_list('task_id', flat=True))
             for tick in serializer.validated_data['ticks']:
-                if tick['task'].pk in done:
+                task = tick['task']
+                earlier = CleaningCheck.objects.filter(task=task, date=day, voided=False)
+                if earlier.exists() and not task.repeatable:
                     continue
+                number = (earlier.aggregate(Max('number'))['number__max'] or 0) + 1
                 CleaningCheck.objects.create(
-                    task=tick['task'], date=day, note=tick['note'], recorded_by=person, entered_by=request.user,
+                    task=task, date=day, number=number, note=tick['note'], recorded_by=person, entered_by=request.user,
                 )
-                done.add(tick['task'].pk)
         return Response(day_status(day), status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['get'])
