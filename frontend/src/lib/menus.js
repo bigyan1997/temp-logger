@@ -6,7 +6,9 @@ import {
   Gauge,
   History,
   Home,
+  ListChecks,
   PackageCheck,
+  SprayCan,
   Settings,
   Snowflake,
   Thermometer,
@@ -58,6 +60,23 @@ export const calibrationMenu = {
       links: [
         { to: '/calibration/records', label: 'Records', Icon: ClipboardList },
         { to: '/calibration/audit', label: 'Audit log', Icon: History },
+      ],
+    },
+  ],
+}
+
+export const cleaningMenu = {
+  name: 'Cleaning & Maintenance',
+  Icon: SprayCan,
+  home: { to: '/cleaning', label: 'Tick tasks', Icon: ListChecks },
+  groups: [
+    {
+      label: 'Table 8',
+      adminOnly: true,
+      links: [
+        { to: '/cleaning/records', label: 'Records', Icon: ClipboardList },
+        { to: '/cleaning/tasks', label: 'Tasks', Icon: Settings },
+        { to: '/cleaning/audit', label: 'Audit log', Icon: History },
       ],
     },
   ],

@@ -60,6 +60,7 @@ temp-logger/
     corrective/         CorrectiveAction (action required, note optional)
     audit/              AuditLog (one `module` per line: temperature or calibration), void/supersede logic
     calibration/        Calibration + GaugeCheck (Table 14), PDF, due date rules, voids
+    cleaning/           CleaningTask + CleaningCheck (Table 8): the day's tick list, voids, PDF, due rules
     reports/            PDF generation, CSV export
     requirements.txt
   frontend/
@@ -69,6 +70,7 @@ temp-logger/
       pages/night/      Today, Storage, Receiving, Dispatch, Mine
       pages/admin/      Dashboard, Records, Trends, Actions, Reports, Settings
       pages/calibration/ Home, Records, New calibration
+      pages/cleaning/    Home (tick tasks), Records, Tasks
       pages/AllRecords.jsx  every record of every module, in tabs (day staff)
       theme/            Tailwind tokens
   scripts/              run_server.bat, keep_alive.ps1, auto_deploy.ps1, backup.ps1 (modelled on npd-tracker-v2)
@@ -187,8 +189,9 @@ An out-of-limit reading is saved together with its corrective action: an action 
 | GET `dashboard/` | Admin | Counts, today progress (`today`), missed storage readings (today and yesterday, after a 2-hour grace period), out-of-limit readings from the last 7 days |
 | GET `day/?date=` | Anyone | What is due and already logged on a day: storage slots (done, due, missed, upcoming) per unit, receiving per supplier, dispatch per run |
 | POST `{storage-readings,receiving-checks,dispatch-readings}/{id}/void/` | Admin | Void an entry with a reason, optionally with a `replacement` (the correction). Undone entirely if the correction is refused. Written to the audit log |
-| GET `audit-log/?module=` | Admin | The audit log of one module (`temperature`, the default, or `calibration`): voids, limit changes, login changes |
+| GET `audit-log/?module=` | Admin | The audit log of one module (`temperature`, the default, `calibration` or `cleaning`): voids, limit changes, login changes |
 | GET, POST `calibrations/`; GET `calibrations/{id}/`, `{id}/pdf/`, `due/`; POST `{id}/void/` | Admin | The Calibration module (Table 14). Never edited or deleted; a mistake is voided with a reason (written to the calibration audit log) |
+| GET `cleaning-checks/day/?date=`; POST `cleaning-checks/`; GET `cleaning-checks/` (`from`, `to`, `task`, `include_voided`); POST `cleaning-checks/{id}/void/`; GET `cleaning-checks/pdf/?from=&to=`; GET, POST, PATCH, DELETE `cleaning-tasks/` | Admin | The Cleaning & Maintenance module (Table 8). A tick is never edited or deleted; a mistake is voided with a reason. A task nothing refers to can be deleted, otherwise deactivate it |
 | GET `trends/?unit=&from=&to=` | Admin | One unit's temperatures over time |
 | GET `reports/{storage,receiving,dispatch}.pdf?from=&to=` | Admin | PDF copying paper Tables 9, 10 and 11 (up to 186 days (about 6 months); whole Sunday-to-Friday weeks; Table 9 has 4 weeks per page with rotated unit names, Tables 10 and 11 have a row per day, starting with a Sunday night row) |
 | GET `reading-options/` | Anyone | Limits, corrective-action choices per kind of check, product types, storage slot times |

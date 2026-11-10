@@ -1,10 +1,13 @@
 import { Link, Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from './auth.jsx'
 import AppLayout from './components/AppLayout.jsx'
-import { calibrationMenu, recordsMenu, temperatureMenu } from './lib/menus.js'
+import { calibrationMenu, cleaningMenu, recordsMenu, temperatureMenu } from './lib/menus.js'
 import CalibrationHome from './pages/calibration/CalibrationHome.jsx'
 import CalibrationRecords from './pages/calibration/CalibrationRecords.jsx'
 import NewCalibration from './pages/calibration/NewCalibration.jsx'
+import CleaningHome from './pages/cleaning/CleaningHome.jsx'
+import CleaningRecords from './pages/cleaning/CleaningRecords.jsx'
+import CleaningTasks from './pages/cleaning/CleaningTasks.jsx'
 import AllRecords from './pages/AllRecords.jsx'
 import AppHome from './pages/AppHome.jsx'
 import AuditLog from './pages/admin/AuditLog.jsx'
@@ -98,6 +101,20 @@ export default function App() {
         <Route path="/calibration/records" element={adminPage(<CalibrationRecords />)} />
         <Route path="/calibration/audit" element={adminPage(<AuditLog module="calibration" />)} />
       </Route>
+      {/* The Cleaning & Maintenance module (Table 8): day staff only. */}
+      <Route
+        element={
+          <RequireAuth>
+            <AppLayout menu={cleaningMenu} />
+          </RequireAuth>
+        }
+      >
+        <Route path="/cleaning" element={adminPage(<CleaningHome />)} />
+        <Route path="/cleaning/records" element={adminPage(<CleaningRecords />)} />
+        <Route path="/cleaning/tasks" element={adminPage(<CleaningTasks />)} />
+        <Route path="/cleaning/audit" element={adminPage(<AuditLog module="cleaning" />)} />
+      </Route>
+
       {/* All records of every module, in tabs. Day staff only. */}
       <Route
         element={

@@ -1,7 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { CheckCircle2, FileDown, XOctagon } from 'lucide-react'
 import { useState } from 'react'
 import { api } from '../../api/client.js'
+import VoidReasonDialog from '../../components/VoidReasonDialog.jsx'
 import { formatDateTime, formatDay } from '../../lib/format.js'
 
 // Day staff: every calibration done so far, with its PDF and Void. Kept apart from the Temperature Logger's records.
@@ -90,54 +91,14 @@ export default function CalibrationRecords({ embedded = false }) {
         </table>
       </div>
 
-      {voiding && <VoidCalibration calibration={voiding} onClose={() => setVoiding(null)} />}
-    </div>
-  )
-}
-
-// Cancel a calibration done by mistake. It stays in the list, marked void, and is written to the audit log.
-function VoidCalibration({ calibration, onClose }) {
-  const queryClient = useQueryClient()
-  const [reason, setReason] = useState('')
-  const submit = useMutation({
-    mutationFn: () => api(`/calibrations/${calibration.id}/void/`, { method: 'POST', body: { reason } }),
-    onSuccess: () => {
-      queryClient.invalidateQueries()
-      onClose()
-    },
-  })
-
-  return (
-    <div className="fixed inset-0 z-20 grid place-items-center bg-ink/40 p-4" role="dialog" aria-modal="true" aria-label="Void calibration">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault()
-          submit.mutate()
-        }}
-        className="w-full max-w-lg rounded-xl bg-surface p-5 shadow-lg"
-      >
-        <h2 className="text-lg font-semibold">Void this calibration</h2>
-        <p className="mt-1 text-muted">{formatDay(calibration.date)} · {Number(calibration.probe_reading).toFixed(1)} °C</p>
-        <p className="mt-1 text-sm text-muted">It stays in the list, marked void, and the change is written to the audit log. A voided calibration does not count towards the 6-monthly due date.</p>
-        <label htmlFor="void-reason" className="mb-1 mt-4 block text-sm font-medium">Why is it being voided? (required)</label>
-        <input
-          id="void-reason"
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-          className="h-11 w-full rounded-lg border border-line bg-surface px-3 text-base focus:border-brand focus:outline-2 focus:outline-brand"
-          required
-          autoFocus
+      {voiding && (
+        <VoidReasonDialog
+          heading="Void this calibration"
+          title={`${formatDay(voiding.date)} · ${Number(voiding.probe_reading).toFixed(1)} °C. A voided calibration does not count towards the 6-monthly due date.`}
+          endpoint={`/calibrations/${voiding.id}/void/`}
+          onClose={() => setVoiding(null)}
         />
-        {submit.error && <p role="alert" className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-bad">{submit.error.message}</p>}
-        <div className="mt-5 flex gap-2">
-          <button type="submit" disabled={submit.isPending} className="h-11 rounded-lg bg-brand px-5 font-semibold text-white hover:bg-brand-dark disabled:opacity-60">
-            Void calibration
-          </button>
-          <button type="button" onClick={onClose} className="h-11 rounded-lg border border-line px-5 font-medium hover:bg-brand-soft">
-            Cancel
-          </button>
-        </div>
-      </form>
+      )}
     </div>
   )
 }

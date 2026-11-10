@@ -1,0 +1,109 @@
+from datetime import date, timedelta
+
+from django.db import transaction
+from django.http import HttpResponse
+from django.utils import timezone
+from rest_framework import mixins, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
+
+from accounts.permissions import IsAdminRole
+from audit.models import AuditLog, record
+from reports.grids import MAX_DAYS
+from setup.views import ConfigViewSet
+
+from .day import day_status
+from .models import CleaningCheck, CleaningTask
+from .pdf import render_cleaning
+from .serializers import CleaningCheckSerializer, CleaningTaskSerializer, SaveDaySerializer
+
+DEFAULT_PDF_DAYS = 35  # five weeks, one sheet of the paper table
+
+
+class CleaningTaskViewSet(ConfigViewSet):
+    """The tasks (columns of Table 8). Managed on the Cleaning module's Tasks page."""
+
+    queryset = CleaningTask.objects.all()
+    serializer_class = CleaningTaskSerializer
+
+
+class CleaningPagination(PageNumberPagination):
+    page_size = 100
+
+
+class CleaningCheckViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    """Day staff only. A tick is saved once and never edited or deleted: a mistake is voided with a reason."""
+
+    permission_classes = [IsAdminRole]
+    serializer_class = CleaningCheckSerializer
+    pagination_class = CleaningPagination
+
+    def get_queryset(self):
+        checks = CleaningCheck.objects.select_related('task', 'recorded_by', 'entered_by')
+        # Only the list hides voided ones, so a voided one can still be opened.
+        if self.action == 'list' and self.request.query_params.get('include_voided') != '1':
+            checks = checks.filter(voided=False)
+        params = self.request.query_params
+        if params.get('from'):
+            checks = checks.filter(date__gte=params['from'])
+        if params.get('to'):
+            checks = checks.filter(date__lte=params['to'])
+        if params.get('task'):
+            checks = checks.filter(task_id=params['task'])
+        return checks
+
+    def create(self, request):
+        """Save the tasks ticked on a day. A task already ticked that day is left as it is."""
+        serializer = SaveDaySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        day, person = serializer.validated_data['date'], serializer.validated_data['recorded_by']
+        with transaction.atomic():
+            done = set(CleaningCheck.objects.filter(date=day, voided=False).values_list('task_id', flat=True))
+            for tick in serializer.validated_data['ticks']:
+                if tick['task'].pk in done:
+                    continue
+                CleaningCheck.objects.create(
+                    task=tick['task'], date=day, note=tick['note'], recorded_by=person, entered_by=request.user,
+                )
+                done.add(tick['task'].pk)
+        return Response(day_status(day), status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['get'])
+    def day(self, request):
+        """What is due and already ticked on ?date= (default today)."""
+        try:
+            day = date.fromisoformat(request.query_params.get('date', timezone.localdate().isoformat()))
+        except ValueError:
+            return Response({'date': 'Use a date like 2026-11-02.'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(day_status(day))
+
+    @action(detail=True, methods=['post'])
+    def void(self, request, pk=None):
+        check = self.get_object()
+        if check.voided:
+            return Response({'detail': 'This entry is already voided.'}, status=status.HTTP_400_BAD_REQUEST)
+        reason = str(request.data.get('reason', '')).strip()
+        if len(reason) < 3:
+            return Response({'reason': 'Say why this entry is being voided.'}, status=status.HTTP_400_BAD_REQUEST)
+        with transaction.atomic():
+            check.voided = True
+            check.void_reason = reason[:300]
+            check.save(update_fields=['voided', 'void_reason'])
+            record(request.user, AuditLog.Action.VOIDED, f'Voided: {check}', reason, module=AuditLog.Module.CLEANING)
+        return Response(self.get_serializer(check).data)
+
+    @action(detail=False, methods=['get'])
+    def pdf(self, request):
+        """Table 8 as a PDF. ?from=YYYY-MM-DD&to=YYYY-MM-DD (default: the last five weeks)."""
+        today = timezone.localdate()
+        try:
+            end = date.fromisoformat(request.query_params.get('to', today.isoformat()))
+            start = date.fromisoformat(request.query_params.get('from', (end - timedelta(days=DEFAULT_PDF_DAYS - 1)).isoformat()))
+        except ValueError:
+            return Response({'message': 'Use dates like 2026-11-02.'}, status=status.HTTP_400_BAD_REQUEST)
+        if start > end or (end - start).days >= MAX_DAYS:
+            return Response({'message': f'Choose a period of up to {MAX_DAYS} days.'}, status=status.HTTP_400_BAD_REQUEST)
+        response = HttpResponse(render_cleaning(start, end), content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="cleaning-{start}-to-{end}.pdf"'
+        return response

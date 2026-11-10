@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'reports',
     'alerts',
     'calibration',
+    'cleaning',
 ]
 
 MIDDLEWARE = [

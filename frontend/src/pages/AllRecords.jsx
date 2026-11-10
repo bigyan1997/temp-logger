@@ -1,13 +1,15 @@
 import { useSearchParams } from 'react-router-dom'
 import CalibrationRecords from './calibration/CalibrationRecords.jsx'
+import CleaningRecords from './cleaning/CleaningRecords.jsx'
 import Records from './admin/Records.jsx'
 
-// One tab for each kind of record. `kind` is what Records.jsx understands; Calibration has its own page.
+// One tab for each kind of record. `kind` is what Records.jsx understands; Calibration and Cleaning have their own pages.
 const tabs = [
   { key: 'storage', label: 'Coolrooms & freezers' },
   { key: 'receiving', label: 'Receiving' },
   { key: 'dispatch', label: 'Dispatch' },
   { key: 'calibration', label: 'Calibration' },
+  { key: 'cleaning', label: 'Cleaning' },
 ]
 
 // Every saved record of every module in one place (day staff only). The tab is kept in the address (?tab=).
@@ -33,7 +35,7 @@ export default function AllRecords() {
       </div>
 
       {/* key: start each tab with fresh filters */}
-      {tab === 'calibration' ? <CalibrationRecords key={tab} embedded /> : <Records key={tab} kind={tab} />}
+      {tab === 'calibration' ? <CalibrationRecords key={tab} embedded /> : tab === 'cleaning' ? <CleaningRecords key={tab} embedded /> : <Records key={tab} kind={tab} />}
     </div>
   )
 }

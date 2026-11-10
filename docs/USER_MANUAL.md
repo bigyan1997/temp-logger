@@ -68,15 +68,26 @@ Click **Sign out** at the bottom of the left-hand menu when you finish, especial
 
 ### The front page (day login only)
 
-After signing in, **day staff** see the Achieve HACCP front page, with a card for each part of the app. There are three cards: **Temperature Logger**, **Calibration** (the 6-monthly thermometer check, Table 14) and **Records** (every saved record in one place). Click one to open it. The **All modules** link at the top of the left-hand menu brings you back to this page.
+After signing in, **day staff** see the Achieve HACCP front page, with a card for each part of the app. There are four cards: **Temperature Logger**, **Calibration** (the 6-monthly thermometer check, Table 14), **Cleaning & Maintenance** (Table 8) and **Records** (every saved record in one place). Click one to open it. The **All modules** link at the top of the left-hand menu brings you back to this page.
 
 ![The Achieve HACCP front page](manual/01b-front-page.png)
 
-**Night staff** go straight into the Temperature Logger and never see this page. Calibration and Records are for day staff only.
+**Night staff** go straight into the Temperature Logger and never see this page. Calibration, Cleaning & Maintenance and Records are for day staff only.
 
 ### Records (day staff)
 
-The **Records** card opens one page with a tab for each kind of record: **Coolrooms & freezers**, **Receiving**, **Dispatch** and **Calibration**. Each tab has the same filters (month, day, unit, supplier or run, out of limit only, show voided) and the same **Void / correct** button. The Temperature Logger and Calibration menus also have their own **Records** page that shows only their own records, for quick access.
+The **Records** card opens one page with a tab for each kind of record: **Coolrooms & freezers**, **Receiving**, **Dispatch**, **Calibration** and **Cleaning**. Each tab has the same filters (month, day, unit, supplier or run, out of limit only, show voided) and the same **Void / correct** button. The Temperature Logger and Calibration menus also have their own **Records** page that shows only their own records, for quick access.
+
+### Cleaning & Maintenance (day staff)
+
+This is the paper Table 8. **Tick tasks** (the home page) shows every task for one day: pick your name and the day, tick what was done, add a note if you want one, and press **Save**. A task that is already ticked for that day is locked and shows who did it.
+
+- **Every working day** tasks (bathroom check, warehouse cleans, van cleans and so on) are due Monday to Friday.
+- **Monthly** and **quarterly** tasks (forklift recharge, pest spray, bait change) say "Due" until they have been ticked in that month or quarter, then show the date they were done.
+- If a tick was made by mistake, open **Records**, press **Void** and give a reason. The task can then be ticked again. Nothing is ever deleted.
+- **Records** also has the **Table 8 PDF** for the dates you choose, laid out like the paper table with a "Done by" column.
+- **Tasks** is where you add a new van, rename a task, change how often it is due, or deactivate one that is no longer done.
+- Cleaning has its **own Audit log**.
 
 ### Calibration (day staff)
 

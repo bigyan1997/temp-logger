@@ -21,6 +21,7 @@ class AuditLog(models.Model):
     class Module(models.TextChoices):
         TEMPERATURE = 'temperature', 'Temperature Logger'
         CALIBRATION = 'calibration', 'Calibration'
+        CLEANING = 'cleaning', 'Cleaning & Maintenance'
 
     # Each module reads only its own lines, so the records and voids of one never show in another.
     module = models.CharField(max_length=20, choices=Module.choices, default=Module.TEMPERATURE)

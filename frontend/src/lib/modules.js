@@ -1,4 +1,4 @@
-import { ClipboardList, Gauge, Thermometer } from 'lucide-react'
+import { ClipboardList, Gauge, SprayCan, Thermometer } from 'lucide-react'
 
 // The parts of the Achieve HACCP app. To add a module: add an entry here and its routes in App.jsx.
 // forNight: whether the night login may use it. The night login only ever sees these.
@@ -22,10 +22,19 @@ export const modules = [
     forNight: false,
   },
   {
+    key: 'cleaning',
+    name: 'Cleaning & Maintenance',
+    description: 'Tick off the daily, monthly and quarterly cleaning and maintenance tasks.',
+    tables: 'HACCP Table 8',
+    to: '/cleaning',
+    Icon: SprayCan,
+    forNight: false,
+  },
+  {
     key: 'records',
     name: 'Records',
-    description: 'Every saved record in one place: coolrooms and freezers, receiving, dispatch and calibration.',
-    tables: 'Tables 9, 10, 11 and 14',
+    description: 'Every saved record in one place: coolrooms and freezers, receiving, dispatch, calibration and cleaning.',
+    tables: 'Tables 8, 9, 10, 11 and 14',
     to: '/all-records',
     Icon: ClipboardList,
     forNight: false,
