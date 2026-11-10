@@ -16,7 +16,6 @@ export default function CleaningHome() {
   return (
     <EntryShell
       title="Cleaning & maintenance"
-      intro="HACCP Table 8. Tick each task that was done, then press Save. With the keyboard, press Enter to tick a task and move to the next one (Space ticks or unticks, Tab moves without ticking); after the last task, Enter lands on Save. In a note, Enter starts a new line and Ctrl+Enter moves on. A task that is already ticked for the day is locked, except tasks that can be done more than once a day (like stock put away), which you can tick again each time; if one was ticked by mistake, void it on the Records page."
     >
       {({ staffId, date }) => <TaskList key={date} staffId={staffId} date={date} />}
     </EntryShell>

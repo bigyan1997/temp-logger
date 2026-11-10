@@ -4,7 +4,7 @@ import { todayInSydney } from '../lib/format.js'
 import StaffPicker, { useStaffChoice } from './StaffPicker.jsx'
 
 // The top of every entry screen: title, who is taking the readings, and which day.
-// `children` is a function that receives { staffId, date, setDate } so the screen below can use them.
+// `intro` is optional. `children` is a function that receives { staffId, date, setDate } so the screen below can use them.
 export default function EntryShell({ title, intro, children }) {
   const { staff, staffId, setStaffId } = useStaffChoice()
   const [searchParams] = useSearchParams()
@@ -13,7 +13,7 @@ export default function EntryShell({ title, intro, children }) {
   return (
     <div className="max-w-6xl">
       <h1 className="text-2xl font-semibold">{title}</h1>
-      <p className="mt-1 max-w-prose text-muted">{intro}</p>
+      {intro && <p className="mt-1 max-w-prose text-muted">{intro}</p>}
 
       <div className="mt-6 flex flex-wrap items-end gap-6 rounded-xl border border-line bg-surface p-4">
         <div className="w-64">
