@@ -78,9 +78,13 @@ After signing in, **day staff** see the Achieve HACCP front page, with a card fo
 
 The **Records** card opens one page with a tab for each kind of record: **Coolrooms & freezers**, **Receiving**, **Dispatch**, **Calibration** and **Cleaning**. Each tab has the same filters (month, day, unit, supplier or run, out of limit only, show voided) and the same **Void / correct** button. The Temperature Logger and Calibration menus also have their own **Records** page that shows only their own records, for quick access.
 
+![The Records page, with a tab for each kind of record](manual/28-all-records.png)
+
 ### Cleaning & Maintenance (day staff)
 
 This is the paper Table 8. **Tick tasks** (the home page) shows every task for one day: pick your name and the day, tick what was done, add a note if you want one, and press **Save**. A task that is already ticked for that day is locked and shows who did it and when.
+
+![The Cleaning screen: tick each task, then Save. Stock put away has been done twice today](manual/24-cleaning-tick.png)
 - **Tasks done more than once a day**, like **Stock put away** after each delivery, never lock. Each time you tick it and press Save is saved as another entry (with your name, the time and an optional note, for example which delivery), and the row lists every time. The Records page shows them as "time 2", "time 3", and the PDF shows a tick with "x2", "x3". Any task can be set to work this way on the **Tasks** page.
 
 - **Every working day** tasks (bathroom check, warehouse cleans, van cleans and so on) are due Monday to Friday.
@@ -92,9 +96,19 @@ This is the paper Table 8. **Tick tasks** (the home page) shows every task for o
 - **Notifications** lists the monthly and quarterly tasks that are due (forklift recharge, pest spray, bait change), the thermometer calibration, and the reminder emails already sent. A task is due from the first working day of its month or quarter until it is ticked off, and is marked overdue after a week. A reminder email goes out when it falls due and again every week while it is not done (emails only start once the task has been ticked in the app at least once). A red number beside Notifications in the menu shows how many are due. On the **Tasks** page, the **Send reminders** tick chooses which tasks do this.
 - Cleaning has its **own Audit log**.
 
+![Notifications: what is due, and the reminder emails already sent](manual/25-cleaning-notifications.png)
+
+![Cleaning records: every tick, with Void and the Table 8 PDF](manual/26-cleaning-records.png)
+
+![The Tasks page: add, rename or deactivate a task](manual/27-cleaning-tasks.png)
+
 ### Calibration (day staff, inside Cleaning & Maintenance)
 
 In the Cleaning & Maintenance menu, under **Table 14: Calibration**. The home page shows when the next 6-monthly thermometer calibration is due (a notice appears 15 days before). **New calibration** opens the Table 14 form: the probe in iced water must read 0 °C give or take 1 °C, and you can also compare each coolroom or freezer gauge with the probe. A reading outside the margin needs an action (replaced or repaired); a note is optional. On Save a PDF copy is made and copied to Drive. **Records** lists every calibration with its PDF and a **Void** button (a reason is required). Calibration has its **own Audit log**; its voids do not appear in the Temperature Logger's.
+
+![The calibration home page, with the due notice](manual/29-calibration-home.png)
+
+![Calibration records](manual/30-calibration-records.png)
 
 ### Inside the Temperature Logger
 

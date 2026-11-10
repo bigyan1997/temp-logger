@@ -13,7 +13,7 @@ const navClass = ({ isActive }) =>
 // A small heading above a group of links. Only shown in the side menu (wide screens).
 function GroupLabel({ children }) {
   return (
-    <p className="mb-1 mt-4 hidden px-3 text-xs font-medium uppercase tracking-wide text-muted lg:block">{children}</p>
+    <p className="mb-1 mt-4 hidden px-3 text-xs font-bold uppercase tracking-wide text-ink lg:block">{children}</p>
   )
 }
 
