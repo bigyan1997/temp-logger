@@ -224,7 +224,7 @@ flowchart LR
 - Own Postgres database and user, separate from the other apps. Own port 8003.
 - Deploy steps follow npd-tracker-v2: build to a temp folder and swap into `dist`, run migrations, collectstatic, then let the keep-alive task restart Waitress. Never overwrite the live `dist` with a plain build.
 - **Migrations are forward-only** and must never drop or rewrite record data.
-- Backups: nightly `pg_dump`, keep daily for 30 days and monthly forever, restore tested before go-live. Because nothing is deleted, backup storage is monitored.
+- Backups: nightly `pg_dump` into a local folder plus a copy in Google Drive (Drive for desktop), keep daily for 30 days and monthly forever in both, emailed if a night is missed, restore tested before go-live. Because nothing is deleted, backup storage is monitored.
 - Health check endpoint for the keep-alive task. Logs rotate on disk.
 
 ## 9. Non-functional requirements
