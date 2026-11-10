@@ -1,5 +1,8 @@
 """Emails about monthly and quarterly cleaning tasks: once when one becomes due, then again every 7 days while
-it is still not done. Each is sent once (the key says which task, which period and which reminder)."""
+it is still not done. Each is sent once (the key says which task, which period and which reminder).
+
+Nothing is sent for a task that has never been ticked in the app (a new install, or a task just added): the
+notice in the app shows it, but a flood of emails about work done on paper would only confuse."""
 
 from django.utils import timezone
 
@@ -11,6 +14,8 @@ from .checks import Alert
 def cleaning_alerts(now):
     found = []
     for item in due_tasks(timezone.localdate(now)):
+        if item['last_done'] is None:
+            continue
         task, period, due_date = item['task'], item['period'], item['due_date']
         reminder = item['days_late'] // OVERDUE_AFTER_DAYS  # 0 on the first day, 1 a week later, and so on
         key = f'{task.pk}:{period.isoformat()}:{reminder}'

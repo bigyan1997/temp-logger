@@ -89,7 +89,7 @@ This is the paper Table 8. **Tick tasks** (the home page) shows every task for o
 - If a tick was made by mistake, open **Records**, press **Void** and give a reason. The task can then be ticked again. Nothing is ever deleted.
 - **Records** also has the **Table 8 PDF** for the dates you choose, laid out like the paper table with a "Done by" column.
 - **Tasks** is where you add a new van, rename a task, change how often it is due, or deactivate one that is no longer done.
-- **Notifications** lists the monthly and quarterly tasks that are due (forklift recharge, pest spray, bait change), the thermometer calibration, and the reminder emails already sent. A task is due from the first working day of its month or quarter until it is ticked off, and is marked overdue after a week. A reminder email goes out when it falls due and again every week while it is not done. A red number beside Notifications in the menu shows how many are due. On the **Tasks** page, the **Send reminders** tick chooses which tasks do this.
+- **Notifications** lists the monthly and quarterly tasks that are due (forklift recharge, pest spray, bait change), the thermometer calibration, and the reminder emails already sent. A task is due from the first working day of its month or quarter until it is ticked off, and is marked overdue after a week. A reminder email goes out when it falls due and again every week while it is not done (emails only start once the task has been ticked in the app at least once). A red number beside Notifications in the menu shows how many are due. On the **Tasks** page, the **Send reminders** tick chooses which tasks do this.
 - Cleaning has its **own Audit log**.
 
 ### Calibration (day staff, inside Cleaning & Maintenance)

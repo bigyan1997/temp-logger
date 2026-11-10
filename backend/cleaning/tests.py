@@ -42,6 +42,12 @@ class ReminderTests(ReadingTestCase):
     def due(self, day):
         return {item['task'].name.split()[0]: item for item in due_tasks(day)}
 
+    def done_before(self, *tasks):
+        """Tick the tasks in an earlier period: reminders only start once a task has been done in the app."""
+        admin = User.objects.create_user('old@x.com', email='old@x.com', password='x', role='admin')
+        for task in tasks:
+            CleaningCheck.objects.create(task=task, date=date(2026, 1, 5), recorded_by=self.sam, entered_by=admin)
+
     def test_forklift_pest_and_bait_send_reminders_to_start_with(self):
         notified = set(CleaningTask.objects.filter(notify=True).values_list('pk', flat=True))
         self.assertEqual(notified, {self.forklift.pk, self.pest.pk, self.bait.pk})
@@ -67,6 +73,7 @@ class ReminderTests(ReadingTestCase):
 
     def test_emails_go_once_when_due_then_once_a_week_while_not_done(self):
         AlertRecipient.objects.create(email='boss@example.com')
+        self.done_before(self.forklift)
 
         def sent_on(day):
             moment = datetime(day.year, day.month, day.day, 9, 0, tzinfo=SYDNEY)
@@ -78,8 +85,15 @@ class ReminderTests(ReadingTestCase):
         self.assertEqual(len(week_later), 1)
         self.assertTrue(week_later[0].startswith('OVERDUE'))
 
+    def test_no_email_for_a_task_that_has_never_been_ticked(self):
+        AlertRecipient.objects.create(email='boss@example.com')
+        moment = datetime(2026, 11, 2, 9, 0, tzinfo=SYDNEY)
+        self.assertEqual([a for a in send_due_alerts(moment) if a.kind.startswith('cleaning')], [])
+        self.assertIn('Forklift', self.due(date(2026, 11, 2)))  # but the app still shows it as due
+
     def test_the_notifications_page_lists_what_is_due_and_what_was_sent(self):
         AlertRecipient.objects.create(email='boss@example.com')
+        self.done_before(self.forklift, self.pest, self.bait)
         self.sign_in(User.objects.create_user('c@x.com', email='c@x.com', password='x', role='admin'))
         send_due_alerts(timezone.now())
         data = self.client.get('/api/cleaning-checks/notifications/').json()
