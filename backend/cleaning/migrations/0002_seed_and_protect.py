@@ -1,16 +1,17 @@
 from django.db import migrations
 
-# The columns of the paper Table 8 (HACCP Plan 1.6), in order. The paper has no frequency for Clean Shelving,
-# so it starts as daily; the admin can change it on the Tasks page.
+# The columns of the paper Table 8 (HACCP Plan 1.6), in order, except the vans: the paper lists #6, #7, #8 and #4,
+# but the vans in use now are 1, 3, 7 and 8 (owner, 2026-11-11). The paper has no frequency for Clean Shelving,
+# so it starts as daily. The admin changes any of this on the Tasks page.
 TASKS = [
     ('Bathroom check (toilet paper, hand towel, soap)', 'daily'),
     ('Warehouse clean - front', 'daily'),
     ('Warehouse clean - back', 'daily'),
     ('Repack sink - water/soap check', 'daily'),
-    ('Van clean #6', 'daily'),
+    ('Van clean #1', 'daily'),
+    ('Van clean #3', 'daily'),
     ('Van clean #7', 'daily'),
     ('Van clean #8', 'daily'),
-    ('Van clean #4', 'daily'),
     ('Stock put away', 'daily'),
     ('Forklift recharge & water (1st of month)', 'monthly'),
     ('Clean shelving', 'daily'),
