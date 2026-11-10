@@ -68,7 +68,7 @@ Click **Sign out** at the bottom of the left-hand menu when you finish, especial
 
 ### The front page (day login only)
 
-After signing in, **day staff** see the Achieve HACCP front page, with a card for each part of the app. There are four cards: **Temperature Logger**, **Calibration** (the 6-monthly thermometer check, Table 14), **Cleaning & Maintenance** (Table 8) and **Records** (every saved record in one place). Click one to open it. The **All modules** link at the top of the left-hand menu brings you back to this page.
+After signing in, **day staff** see the Achieve HACCP front page, with a card for each part of the app. There are three cards: **Temperature Logger**, **Cleaning & Maintenance** (the cleaning tasks of Table 8 and the 6-monthly thermometer calibration of Table 14) and **Records** (every saved record in one place). Click one to open it. The **All modules** link at the top of the left-hand menu brings you back to this page.
 
 ![The Achieve HACCP front page](manual/01b-front-page.png)
 
@@ -89,11 +89,12 @@ This is the paper Table 8. **Tick tasks** (the home page) shows every task for o
 - If a tick was made by mistake, open **Records**, press **Void** and give a reason. The task can then be ticked again. Nothing is ever deleted.
 - **Records** also has the **Table 8 PDF** for the dates you choose, laid out like the paper table with a "Done by" column.
 - **Tasks** is where you add a new van, rename a task, change how often it is due, or deactivate one that is no longer done.
+- **Notifications** lists the monthly and quarterly tasks that are due (forklift recharge, pest spray, bait change), the thermometer calibration, and the reminder emails already sent. A task is due from the first working day of its month or quarter until it is ticked off, and is marked overdue after a week. A reminder email goes out when it falls due and again every week while it is not done. A red number beside Notifications in the menu shows how many are due. On the **Tasks** page, the **Send reminders** tick chooses which tasks do this.
 - Cleaning has its **own Audit log**.
 
-### Calibration (day staff)
+### Calibration (day staff, inside Cleaning & Maintenance)
 
-The home page shows when the next 6-monthly thermometer calibration is due (a notice appears 15 days before). **New calibration** opens the Table 14 form: the probe in iced water must read 0 °C give or take 1 °C, and you can also compare each coolroom or freezer gauge with the probe. A reading outside the margin needs an action (replaced or repaired); a note is optional. On Save a PDF copy is made and copied to Drive. **Records** lists every calibration with its PDF and a **Void** button (a reason is required). Calibration has its **own Audit log**; its voids do not appear in the Temperature Logger's.
+In the Cleaning & Maintenance menu, under **Table 14: Calibration**. The home page shows when the next 6-monthly thermometer calibration is due (a notice appears 15 days before). **New calibration** opens the Table 14 form: the probe in iced water must read 0 °C give or take 1 °C, and you can also compare each coolroom or freezer gauge with the probe. A reading outside the margin needs an action (replaced or repaired); a note is optional. On Save a PDF copy is made and copied to Drive. **Records** lists every calibration with its PDF and a **Void** button (a reason is required). Calibration has its **own Audit log**; its voids do not appear in the Temperature Logger's.
 
 ### Inside the Temperature Logger
 

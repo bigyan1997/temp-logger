@@ -10,6 +10,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from accounts.permissions import IsAdminRole
+from alerts.models import AlertSent
 from audit.models import AuditLog, record
 from reports.grids import MAX_DAYS
 from setup.views import ConfigViewSet
@@ -17,6 +18,7 @@ from setup.views import ConfigViewSet
 from .day import day_status
 from .models import CleaningCheck, CleaningTask
 from .pdf import render_cleaning
+from .reminders import due_tasks
 from .serializers import CleaningCheckSerializer, CleaningTaskSerializer, SaveDaySerializer
 
 DEFAULT_PDF_DAYS = 35  # five weeks, one sheet of the paper table
@@ -80,6 +82,33 @@ class CleaningCheckViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         except ValueError:
             return Response({'date': 'Use a date like 2026-11-02.'}, status=status.HTTP_400_BAD_REQUEST)
         return Response(day_status(day))
+
+    @action(detail=False, methods=['get'])
+    def notifications(self, request):
+        """Monthly and quarterly tasks that are due now, and the reminder emails already sent about them."""
+        due = [
+            {
+                'task': item['task'].pk,
+                'name': item['task'].name,
+                'frequency_label': item['task'].get_frequency_display(),
+                'state': item['state'],
+                'due_date': item['due_date'],
+                'days_late': item['days_late'],
+                'last_done': item['last_done'],
+            }
+            for item in due_tasks(timezone.localdate())
+        ]
+        names = dict(CleaningTask.objects.values_list('pk', 'name'))
+        sent = [
+            {
+                'id': alert.id,
+                'sent_at': alert.sent_at,
+                'name': names.get(int(alert.key.split(':')[0]), ''),
+                'what': 'Task due' if alert.kind == 'cleaning_due' else 'Still not done (reminder)',
+            }
+            for alert in AlertSent.objects.filter(kind__startswith='cleaning_').order_by('-sent_at')[:50]
+        ]
+        return Response({'count': len(due), 'due': due, 'sent': sent})
 
     @action(detail=True, methods=['post'])
     def void(self, request, pk=None):

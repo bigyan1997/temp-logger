@@ -6,6 +6,8 @@ KIND_LABELS = {
     'reminder': 'Reminder: readings due',
     'reminder2': 'Still not logged',
     'out_of_limit': 'Out-of-limit reading',
+    'cleaning_due': 'Cleaning task due',
+    'cleaning_late': 'Cleaning task overdue',
 }
 
 

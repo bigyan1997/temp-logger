@@ -103,4 +103,5 @@ def due_alerts(now):
     # Imported here because these files import Alert from this one.
     from .backup_check import missed_backup
     from .calibration_check import calibration_alerts
-    return reminders(now) + missed_backup(now) + calibration_alerts(now)
+    from .cleaning_check import cleaning_alerts
+    return reminders(now) + missed_backup(now) + calibration_alerts(now) + cleaning_alerts(now)

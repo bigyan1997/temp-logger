@@ -1,14 +1,21 @@
-from datetime import date
+from datetime import date, datetime
+from zoneinfo import ZoneInfo
 
 from django.test import SimpleTestCase
+from django.utils import timezone
 
+from accounts.models import User
+from alerts.sender import send_due_alerts
 from audit.models import AuditLog
 from readings.tests.base import ReadingTestCase
+from setup.models import AlertRecipient, ClosedDay
 
 from . import rules
 from .models import CleaningCheck, CleaningTask
+from .reminders import due_tasks
 
 MONDAY = '2026-11-02'
+SYDNEY = ZoneInfo('Australia/Sydney')
 
 
 class RuleTests(SimpleTestCase):
@@ -23,6 +30,63 @@ class RuleTests(SimpleTestCase):
         self.assertFalse(rules.is_due('daily', date(2026, 11, 7), False))  # a Saturday
         self.assertTrue(rules.is_due('monthly', date(2026, 11, 7), False))
         self.assertFalse(rules.is_due('monthly', date(2026, 11, 7), True))
+
+
+class ReminderTests(ReadingTestCase):
+    def setUp(self):
+        super().setUp()
+        self.forklift = CleaningTask.objects.get(name__startswith='Forklift')
+        self.pest = CleaningTask.objects.get(name__startswith='Pest spray')
+        self.bait = CleaningTask.objects.get(name__startswith='Bait change')
+
+    def due(self, day):
+        return {item['task'].name.split()[0]: item for item in due_tasks(day)}
+
+    def test_forklift_pest_and_bait_send_reminders_to_start_with(self):
+        notified = set(CleaningTask.objects.filter(notify=True).values_list('pk', flat=True))
+        self.assertEqual(notified, {self.forklift.pk, self.pest.pk, self.bait.pk})
+
+    def test_a_task_is_due_from_the_first_working_day_of_its_period(self):
+        # 1 Nov 2026 is a Sunday, so the forklift is due on Monday 2 November. The quarter began on Thursday 1 October.
+        self.assertNotIn('Forklift', self.due(date(2026, 11, 1)))
+        self.assertEqual(self.due(date(2026, 11, 2))['Forklift']['due_date'], date(2026, 11, 2))
+        self.assertEqual(self.due(date(2026, 11, 2))['Pest']['due_date'], date(2026, 10, 1))
+
+    def test_a_public_holiday_moves_the_due_date(self):
+        ClosedDay.objects.create(date=date(2026, 11, 2), label='Holiday')
+        self.assertNotIn('Forklift', self.due(date(2026, 11, 2)))
+        self.assertEqual(self.due(date(2026, 11, 3))['Forklift']['due_date'], date(2026, 11, 3))
+
+    def test_it_is_overdue_after_a_week_and_stops_when_done_in_that_period(self):
+        self.assertEqual(self.due(date(2026, 11, 8))['Forklift']['state'], 'due')
+        self.assertEqual(self.due(date(2026, 11, 9))['Forklift']['state'], 'overdue')
+        admin = User.objects.create_user('b@x.com', email='b@x.com', password='x', role='admin')
+        CleaningCheck.objects.create(task=self.forklift, date=date(2026, 11, 4), recorded_by=self.sam, entered_by=admin)
+        self.assertNotIn('Forklift', self.due(date(2026, 11, 9)))
+        self.assertEqual(self.due(date(2026, 12, 1))['Forklift']['due_date'], date(2026, 12, 1))  # next month
+
+    def test_emails_go_once_when_due_then_once_a_week_while_not_done(self):
+        AlertRecipient.objects.create(email='boss@example.com')
+
+        def sent_on(day):
+            moment = datetime(day.year, day.month, day.day, 9, 0, tzinfo=SYDNEY)
+            return [a.subject for a in send_due_alerts(moment) if a.kind.startswith('cleaning') and 'Forklift' in a.subject]
+
+        self.assertEqual(sent_on(date(2026, 11, 2)), ['Due: Forklift recharge & water (1st of month)'])
+        self.assertEqual(sent_on(date(2026, 11, 3)), [])  # nothing new the next day
+        week_later = sent_on(date(2026, 11, 9))
+        self.assertEqual(len(week_later), 1)
+        self.assertTrue(week_later[0].startswith('OVERDUE'))
+
+    def test_the_notifications_page_lists_what_is_due_and_what_was_sent(self):
+        AlertRecipient.objects.create(email='boss@example.com')
+        self.sign_in(User.objects.create_user('c@x.com', email='c@x.com', password='x', role='admin'))
+        send_due_alerts(timezone.now())
+        data = self.client.get('/api/cleaning-checks/notifications/').json()
+        self.assertEqual(data['count'], len(data['due']))
+        self.assertEqual(len(data['sent']), data['count'])
+        self.sign_in(self.night)
+        self.assertEqual(self.client.get('/api/cleaning-checks/notifications/').status_code, 403)
 
 
 class CleaningApiTests(ReadingTestCase):

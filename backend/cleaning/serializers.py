@@ -12,7 +12,7 @@ class CleaningTaskSerializer(UniqueNameMixin, serializers.ModelSerializer):
 
     class Meta:
         model = CleaningTask
-        fields = ['id', 'name', 'frequency', 'frequency_label', 'active', 'repeatable']
+        fields = ['id', 'name', 'frequency', 'frequency_label', 'active', 'repeatable', 'notify']
 
 
 class CleaningCheckSerializer(serializers.ModelSerializer):

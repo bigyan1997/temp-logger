@@ -17,6 +17,9 @@ class CleaningTask(models.Model):
     name = models.CharField(max_length=80)
     frequency = models.CharField(max_length=10, choices=Frequency.choices, default=Frequency.DAILY)
     active = models.BooleanField(default=True)
+    notify = models.BooleanField(
+        default=False, help_text='Show a notice and email a reminder when a monthly or quarterly task is due.'
+    )
     repeatable = models.BooleanField(
         default=False, help_text='Can be done more than once a day, e.g. stock put away after each delivery.'
     )

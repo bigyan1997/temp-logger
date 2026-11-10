@@ -10,7 +10,7 @@ const section = {
   empty: 'No tasks yet.',
   activeKey: 'active',
   title: (item) => item.name,
-  detail: (item) => item.frequency_label + (item.repeatable ? ', can be done more than once a day' : ''),
+  detail: (item) => [item.frequency_label, item.notify && 'sends reminders', item.repeatable && 'can be done more than once a day'].filter(Boolean).join(', '),
   fields: [
     { name: 'name', label: 'Task', type: 'text', required: true },
     {
@@ -23,6 +23,12 @@ const section = {
         { value: 'monthly', label: 'Once a month' },
         { value: 'quarterly', label: 'Once a quarter' },
       ],
+    },
+    {
+      name: 'notify',
+      label: 'Send reminders',
+      type: 'checkbox',
+      help: 'For a monthly or quarterly task: show a notice and email a reminder when it is due, and again every week until it is ticked off.',
     },
     {
       name: 'repeatable',

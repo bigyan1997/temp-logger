@@ -1,11 +1,12 @@
 import { Link, Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from './auth.jsx'
 import AppLayout from './components/AppLayout.jsx'
-import { calibrationMenu, cleaningMenu, recordsMenu, temperatureMenu } from './lib/menus.js'
+import { cleaningMenu, recordsMenu, temperatureMenu } from './lib/menus.js'
 import CalibrationHome from './pages/calibration/CalibrationHome.jsx'
 import CalibrationRecords from './pages/calibration/CalibrationRecords.jsx'
 import NewCalibration from './pages/calibration/NewCalibration.jsx'
 import CleaningHome from './pages/cleaning/CleaningHome.jsx'
+import CleaningNotifications from './pages/cleaning/CleaningNotifications.jsx'
 import CleaningRecords from './pages/cleaning/CleaningRecords.jsx'
 import CleaningTasks from './pages/cleaning/CleaningTasks.jsx'
 import AllRecords from './pages/AllRecords.jsx'
@@ -88,20 +89,7 @@ export default function App() {
         <Route path="/settings/:section?" element={adminPage(<Settings />)} />
       </Route>
 
-      {/* The Calibration module (Table 14): day staff only. */}
-      <Route
-        element={
-          <RequireAuth>
-            <AppLayout menu={calibrationMenu} />
-          </RequireAuth>
-        }
-      >
-        <Route path="/calibration" element={adminPage(<CalibrationHome />)} />
-        <Route path="/calibration/new" element={adminPage(<NewCalibration />)} />
-        <Route path="/calibration/records" element={adminPage(<CalibrationRecords />)} />
-        <Route path="/calibration/audit" element={adminPage(<AuditLog module="calibration" />)} />
-      </Route>
-      {/* The Cleaning & Maintenance module (Table 8): day staff only. */}
+      {/* The Cleaning & Maintenance module: Table 8 cleaning and Table 14 calibration. Day staff only. */}
       <Route
         element={
           <RequireAuth>
@@ -112,7 +100,12 @@ export default function App() {
         <Route path="/cleaning" element={adminPage(<CleaningHome />)} />
         <Route path="/cleaning/records" element={adminPage(<CleaningRecords />)} />
         <Route path="/cleaning/tasks" element={adminPage(<CleaningTasks />)} />
+        <Route path="/cleaning/notifications" element={adminPage(<CleaningNotifications />)} />
         <Route path="/cleaning/audit" element={adminPage(<AuditLog module="cleaning" />)} />
+        <Route path="/calibration" element={adminPage(<CalibrationHome />)} />
+        <Route path="/calibration/new" element={adminPage(<NewCalibration />)} />
+        <Route path="/calibration/records" element={adminPage(<CalibrationRecords />)} />
+        <Route path="/calibration/audit" element={adminPage(<AuditLog module="calibration" />)} />
       </Route>
 
       {/* All records of every module, in tabs. Day staff only. */}

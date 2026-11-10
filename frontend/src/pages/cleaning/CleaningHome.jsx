@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2 } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { api } from '../../api/client.js'
+import CleaningNotices from '../../components/CleaningNotices.jsx'
 import EntryShell from '../../components/EntryShell.jsx'
 import { formatDay } from '../../lib/format.js'
 import { focusNext } from '../../lib/focusNext.js'
@@ -17,7 +18,14 @@ export default function CleaningHome() {
     <EntryShell
       title="Cleaning & maintenance"
     >
-      {({ staffId, date }) => <TaskList key={date} staffId={staffId} date={date} />}
+      {({ staffId, date }) => (
+        <>
+          <div className="mb-4">
+            <CleaningNotices />
+          </div>
+          <TaskList key={date} staffId={staffId} date={date} />
+        </>
+      )}
     </EntryShell>
   )
 }

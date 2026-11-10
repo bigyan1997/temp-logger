@@ -2,6 +2,7 @@ import { ChevronRight, LogOut, ShieldCheck } from 'lucide-react'
 import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../auth.jsx'
 import CalibrationStatus, { useCalibrationDue } from '../components/CalibrationStatus.jsx'
+import CleaningNotices from '../components/CleaningNotices.jsx'
 import { modulesFor } from '../lib/modules.js'
 
 // The front page of Achieve HACCP: one card for each module.
@@ -32,8 +33,14 @@ export default function AppHome() {
         </button>
       </header>
 
-      {isAdmin && ['due_soon', 'overdue'].includes(calibrationDue?.state) && (
+      {isAdmin && (
         <div className="mt-8">
+          <CleaningNotices />
+        </div>
+      )}
+
+      {isAdmin && ['due_soon', 'overdue'].includes(calibrationDue?.state) && (
+        <div className="mt-4">
           <CalibrationStatus>
             <Link to="/calibration/new" className="inline-flex h-10 items-center rounded-lg bg-brand px-4 font-semibold text-white hover:bg-brand-dark">
               Do the calibration

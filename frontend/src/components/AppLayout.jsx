@@ -57,9 +57,10 @@ export default function AppLayout({ menu }) {
             .map((group) => (
               <div key={group.label} className="contents">
                 <GroupLabel>{group.label}</GroupLabel>
-                {group.links.map(({ to, label, Icon }) => (
-                  <NavLink key={to} to={to} className={navClass}>
+                {group.links.map(({ to, label, Icon, Badge, end }) => (
+                  <NavLink key={to} to={to} end={end} className={navClass}>
                     <Icon size={18} aria-hidden="true" /> {label}
+                    {Badge && <Badge />}
                   </NavLink>
                 ))}
               </div>
