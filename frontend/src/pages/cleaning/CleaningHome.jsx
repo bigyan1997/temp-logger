@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { CheckCircle2 } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { api } from '../../api/client.js'
 import EntryShell from '../../components/EntryShell.jsx'
@@ -112,10 +113,15 @@ function TaskList({ staffId, date }) {
               {statusText(task, data.working_day)}
             </span>
             {task.times.length > 0 && (
-              <ul className="basis-full space-y-0.5 pl-9 text-sm text-muted">
+              <ul className="basis-full space-y-1.5 pl-9 text-sm">
                 {task.times.map((time) => (
-                  <li key={time.number} className="whitespace-pre-line">
-                    {task.repeatable && `${time.number}. `}{time.done_by}, {time.at}{time.note && `: ${time.note}`}
+                  <li key={time.number}>
+                    <p className="flex items-center gap-1.5 font-medium text-ok">
+                      <CheckCircle2 size={16} aria-hidden="true" />
+                      Done{task.repeatable && ` (time ${time.number})`} by {time.done_by} at {time.at}
+                    </p>
+                    {/* What was done, on its own line so it is easy to read */}
+                    <p className={`whitespace-pre-line pl-5 ${time.note ? 'text-ink' : 'text-muted'}`}>{time.note || 'No note'}</p>
                   </li>
                 ))}
               </ul>
