@@ -21,11 +21,11 @@ class UnprocessableEntry(APIException):
 
 
 class CorrectiveActionInputSerializer(serializers.Serializer):
-    action = serializers.ChoiceField(choices=Action.choices)
-    notes = serializers.CharField(
-        max_length=500,
-        error_messages={'required': 'Add a note saying what was done.', 'blank': 'Add a note saying what was done.'},
+    # The action from the list is required; the note is optional (owner, 2026-11-11).
+    action = serializers.ChoiceField(
+        choices=Action.choices, error_messages={'required': 'Choose what was done about it.'}
     )
+    notes = serializers.CharField(max_length=500, required=False, allow_blank=True, default='')
     hours_above_limit = serializers.DecimalField(
         max_digits=4, decimal_places=1, min_value=0, required=False, allow_null=True
     )

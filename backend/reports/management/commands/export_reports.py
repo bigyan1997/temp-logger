@@ -1,4 +1,4 @@
-"""Saves the three report PDFs for every finished 4-week block to Google Drive and/or a folder.
+r"""Saves the three report PDFs for every finished 4-week block to Google Drive and/or a folder.
 
 They are always saved in the project's report_exports folder. Extra copies come from settings (backend\.env):
 REPORTS_EXPORT_DIR (e.g. a Google Drive for desktop folder), or GOOGLE_DRIVE_FOLDER_ID with

@@ -26,13 +26,12 @@ export default function CorrectiveFields({ kind, value, onChange }) {
         </select>
       </div>
       <div>
-        <label className="mb-1 block text-sm font-medium">Note (required)</label>
+        <label className="mb-1 block text-sm font-medium">Note (optional)</label>
         <input
           value={value.notes}
           onChange={(e) => set({ notes: e.target.value })}
           placeholder="What you did, e.g. moved to the other coolroom"
           maxLength={500}
-          required
           className={inputClass}
         />
       </div>
@@ -56,9 +55,9 @@ export default function CorrectiveFields({ kind, value, onChange }) {
 
 export const emptyCorrective = { action: '', notes: '', hours: '' }
 
-// An action must be chosen, a note written, and "hours too warm" (optional) must be a number like 2 or 1.5.
+// An action must be chosen. The note is optional, and "hours too warm" (optional) must be a number like 2 or 1.5.
 export const isHoursValid = (hours) => hours === '' || /^\d{1,2}(\.\d)?$/.test(hours.trim())
-export const isCorrectiveValid = (value) => Boolean(value.action) && value.notes.trim() !== '' && isHoursValid(value.hours)
+export const isCorrectiveValid = (value) => Boolean(value.action) && isHoursValid(value.hours)
 
 // The shape the API expects.
 export function correctiveBody({ action, notes, hours }) {

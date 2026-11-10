@@ -4,18 +4,24 @@ from .base import ReadingTestCase
 
 
 class CorrectiveActionNoteTests(ReadingTestCase):
-    """What was done about an out-of-limit reading must be written down, or the reading cannot be saved."""
+    """An out-of-limit reading needs an action from the list; the note is optional (owner, 2026-11-11)."""
 
     def setUp(self):
         super().setUp()
         self.sign_in(self.night)
 
-    def test_a_note_is_required(self):
-        for corrective in ({'action': 'rechecked'}, {'action': 'rechecked', 'notes': ''}, {'action': 'rechecked', 'notes': '   '}):
+    def test_an_action_is_required(self):
+        for corrective in ({'notes': 'Rechecked'}, {'action': ''}):
             response = self.dispatch('5.4', corrective=corrective)
             self.assertEqual(response.status_code, 400, corrective)
-            self.assertIn('Add a note', str(response.json()))
         self.assertEqual(CorrectiveAction.objects.count(), 0)
+
+    def test_the_note_is_optional(self):
+        days = ('2026-11-02', '2026-11-03', '2026-11-04')
+        for day, corrective in zip(days, ({'action': 'rechecked'}, {'action': 'rechecked', 'notes': ''}, {'action': 'rechecked', 'notes': '   '})):
+            response = self.dispatch('5.4', date=day, corrective=corrective)
+            self.assertEqual(response.status_code, 201, response.json())
+        self.assertEqual(CorrectiveAction.objects.count(), 3)
 
     def test_it_saves_with_a_note_and_shows_it_with_the_reading(self):
         response = self.dispatch('5.4', corrective={'action': 'rechecked', 'notes': 'Rechecked, now 4.2'})
@@ -23,10 +29,9 @@ class CorrectiveActionNoteTests(ReadingTestCase):
         self.assertEqual(response.json()['corrective_action']['notes'], 'Rechecked, now 4.2')
         self.assertEqual(CorrectiveAction.objects.get().notes, 'Rechecked, now 4.2')
 
-    def test_the_note_is_needed_for_every_kind_of_reading(self):
-        needs_note = {'action': 'rejected'}
-        self.assertEqual(self.receiving('13.0', corrective=needs_note).status_code, 400)
-        self.assertEqual(self.storage(self.freezer, '-12.0', corrective={'action': 'used_immediately'}).status_code, 400)
+    def test_no_note_is_needed_for_any_kind_of_reading(self):
+        self.assertEqual(self.receiving('13.0', corrective={'action': 'rejected'}).status_code, 201)
+        self.assertEqual(self.storage(self.freezer, '-12.0', corrective={'action': 'used_immediately'}).status_code, 201)
 
     def test_there_is_no_sign_off_any_more(self):
         self.dispatch('5.4', corrective={'action': 'rechecked', 'notes': 'Done'})

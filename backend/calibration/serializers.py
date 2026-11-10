@@ -21,14 +21,8 @@ class GaugeCheckSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('That unit is not in use.')
         return unit
 
-    def validate(self, attrs):
-        # HACCP Table 14: any difference between a gauge and the probe "should be noted".
-        difference = attrs['gauge_reading'] - attrs['probe_reading']
-        if not rules.within_margin(difference) and not attrs.get('comment', '').strip():
-            raise serializers.ValidationError(
-                {'comment': f'{attrs["unit"].name}: the gauge is more than {rules.TOLERANCE} °C out. Add a comment.'}
-            )
-        return attrs
+    # HACCP Table 14: any difference between a gauge and the probe "should be noted". The difference
+    # itself is always recorded; the comment is optional, even when it is more than 1 °C (owner, 2026-11-11).
 
 
 class CalibrationSerializer(RecordedBySerializerMixin, serializers.ModelSerializer):
@@ -68,11 +62,9 @@ class CalibrationSerializer(RecordedBySerializerMixin, serializers.ModelSerializ
         attrs['passed'] = rules.within_margin(rules.probe_difference(attrs['probe_reading']))
         if attrs['passed']:
             attrs['action'], attrs['action_notes'] = '', ''
-        else:
-            if not attrs.get('action'):
-                raise serializers.ValidationError({'action': 'Say what was done: replaced or repaired.'})
-            if not attrs.get('action_notes', '').strip():
-                raise serializers.ValidationError({'action_notes': 'Add a note saying what was done.'})
+        elif not attrs.get('action'):
+            # The action is required; the note is optional (owner, 2026-11-11).
+            raise serializers.ValidationError({'action': 'Say what was done: replaced or repaired.'})
         return attrs
 
     def create(self, validated_data):

@@ -57,7 +57,7 @@ temp-logger/
     accounts/           User (role), login/logout/me
     setup/              Unit, Supplier, Run, SlotSchedule (admin-managed config)
     readings/           StorageReading, ReceivingCheck, DispatchReading, services.py (limits, due slots)
-    corrective/         CorrectiveAction (action + required note)
+    corrective/         CorrectiveAction (action required, note optional)
     audit/              AuditLog (one `module` per line: temperature or calibration), void/supersede logic
     calibration/        Calibration + GaugeCheck (Table 14), PDF, due date rules, voids
     reports/            PDF generation, CSV export
@@ -169,7 +169,7 @@ sequenceDiagram
 ```
 
 ### 5.5 Corrective action lifecycle
-An out-of-limit reading is saved together with its corrective action: an action from the list and a note saying what was done (both required). There is no sign-off step; the action is shown with the reading on Records and in the PDF reports.
+An out-of-limit reading is saved together with its corrective action: an action from the list (required) and an optional note saying what was done. There is no sign-off step; the action is shown with the reading on Records and in the PDF reports.
 
 ## 6. API surface
 
@@ -224,7 +224,7 @@ flowchart LR
 - Own Postgres database and user, separate from the other apps. Own port 8003.
 - Deploy steps follow npd-tracker-v2: build to a temp folder and swap into `dist`, run migrations, collectstatic, then let the keep-alive task restart Waitress. Never overwrite the live `dist` with a plain build.
 - **Migrations are forward-only** and must never drop or rewrite record data.
-- Backups: nightly `pg_dump`, keep daily for 30 days and monthly forever, restore tested before go-live. Because nothing is deleted, backup storage is monitored.
+- Backups: nightly `pg_dump` into a local folder plus a copy in Google Drive (Drive for desktop), keep daily for 30 days and monthly forever in both, emailed if a night is missed, restore tested before go-live. Because nothing is deleted, backup storage is monitored.
 - Health check endpoint for the keep-alive task. Logs rotate on disk.
 
 ## 9. Non-functional requirements
