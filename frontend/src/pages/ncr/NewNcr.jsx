@@ -11,11 +11,19 @@ const inputClass =
   'h-12 w-full rounded-lg border border-line bg-surface px-3 text-base focus:border-brand focus:outline-2 focus:outline-brand'
 
 // The photos, sent with the name of whoever is adding them. Used here and on the report's own page.
-export function uploadPhotos(reportId, files, staffId) {
+export function uploadPhotos(reportId, files, staffId, updateId) {
   const form = new FormData()
   files.forEach((file) => form.append('files', file))
   form.append('recorded_by', staffId)
+  if (updateId) form.append('update', updateId) // the photo belongs to a follow-up, e.g. the manufacturer's response
   return api(`/non-conformances/${reportId}/add_photos/`, { method: 'POST', body: form })
+}
+
+// The date and time right now, for a "datetime-local" box (local to this computer).
+export const nowForInput = () => {
+  const now = new Date()
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
+  return now.toISOString().slice(0, 16)
 }
 
 const megabytes = (bytes) => `${(bytes / (1024 * 1024)).toFixed(1)} MB`
@@ -38,12 +46,14 @@ function ReportForm({ staffId, date }) {
   const [manufacturer, setManufacturer] = useState('')
   const [description, setDescription] = useState('')
   const [files, setFiles] = useState([])
+  const [notified, setNotified] = useState(false)
+  const [notifiedAt, setNotifiedAt] = useState(nowForInput)
 
   const save = useMutation({
     mutationFn: async () => {
       const report = await api('/non-conformances/', {
         method: 'POST',
-        body: { date, recorded_by: staffId, product, customer, manufacturer, description },
+        body: { date, recorded_by: staffId, product, customer, manufacturer, description, ...(notified ? { notified_at: notifiedAt } : {}) },
       })
       // The report is saved before the photos go up, so a photo problem never loses what was typed.
       let notice = ''
@@ -100,6 +110,20 @@ function ReportForm({ staffId, date }) {
           className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-base focus:border-brand focus:outline-2 focus:outline-brand"
         />
         <p className="mt-1 text-xs text-muted">Enter starts a new line.</p>
+      </div>
+
+      <div>
+        <label className="flex items-center gap-3 text-base font-medium">
+          <input type="checkbox" checked={notified} onChange={(e) => setNotified(e.target.checked)} className="size-5 accent-brand" />
+          The manufacturer has been notified
+        </label>
+        {notified && (
+          <div className="mt-2">
+            <label htmlFor="notified-at" className="mb-1 block text-sm">Date and time they were told</label>
+            <input id="notified-at" type="datetime-local" value={notifiedAt} max={nowForInput()} onChange={(e) => e.target.value && setNotifiedAt(e.target.value)} className={`${inputClass} w-64`} />
+          </div>
+        )}
+        <p className="mt-1 text-xs text-muted">Not told yet? Leave it unticked and add it later from the report.</p>
       </div>
 
       <div>

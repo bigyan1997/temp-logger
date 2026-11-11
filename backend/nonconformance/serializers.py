@@ -35,7 +35,7 @@ class PhotoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Photo
         fields = [
-            'id', 'url', 'original_name', 'size', 'recorded_by_name', 'recorded_at', 'copy_status', 'copy_error',
+            'id', 'update', 'url', 'original_name', 'size', 'recorded_by_name', 'recorded_at', 'copy_status', 'copy_error',
             'voided', 'void_reason',
         ]
 
@@ -53,12 +53,14 @@ class NonConformanceSerializer(RecordedBySerializerMixin, serializers.ModelSeria
     entered_by_name = serializers.CharField(source='entered_by.display_name', read_only=True)
     updates = UpdateSerializer(many=True, read_only=True)
     photos = PhotoSerializer(many=True, read_only=True)
+    # Optional when the report is made: when the manufacturer was told. Saved as the first follow-up.
+    notified_at = serializers.DateTimeField(write_only=True, required=False)
 
     class Meta:
         model = NonConformance
         fields = [
             'id', 'number', 'date', 'product', 'customer', 'manufacturer', 'description', 'recorded_by', 'recorded_by_name',
-            'entered_by_name', 'recorded_at', 'status', 'updates', 'photos', 'voided', 'void_reason',
+            'entered_by_name', 'recorded_at', 'notified_at', 'status', 'updates', 'photos', 'voided', 'void_reason',
         ]
         read_only_fields = ['recorded_at', 'voided', 'void_reason']
 
@@ -69,6 +71,11 @@ class NonConformanceSerializer(RecordedBySerializerMixin, serializers.ModelSeria
         if day > timezone.localdate():
             raise serializers.ValidationError('The date cannot be in the future.')
         return day
+
+    def validate_notified_at(self, moment):
+        if moment > timezone.now() + timedelta(minutes=5):
+            raise serializers.ValidationError('That time is in the future.')
+        return moment
 
     def validate_product(self, value):
         value = tidy(value)

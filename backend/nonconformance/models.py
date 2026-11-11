@@ -61,6 +61,8 @@ class Photo(Attributed):
     """A photo attached to a report. The file is kept in NCR_PHOTOS_DIR (see photos.py); never deleted, only voided."""
 
     report = models.ForeignKey(NonConformance, on_delete=models.PROTECT, related_name='photos')
+    # Set when the photo came with a follow-up (e.g. a photo the manufacturer sent with their response).
+    update = models.ForeignKey(Update, null=True, blank=True, on_delete=models.PROTECT, related_name='photos')
     path = models.CharField(max_length=200, help_text='Where the file is, inside NCR_PHOTOS_DIR.')
     original_name = models.CharField(max_length=200)
     content_type = models.CharField(max_length=40)

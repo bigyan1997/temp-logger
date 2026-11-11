@@ -81,7 +81,12 @@ class NonConformanceViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixi
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        report = serializer.save(entered_by=request.user)
+        notified_at = serializer.validated_data.pop('notified_at', None)
+        with transaction.atomic():
+            report = serializer.save(entered_by=request.user)
+            if notified_at:  # "Has the manufacturer been notified?" answered on the first page of the report
+                Update.objects.create(report=report, kind=Update.Kind.NOTIFIED, happened_at=notified_at,
+                                      recorded_by=report.recorded_by, entered_by=request.user)
         return Response(self.get_serializer(report).data, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['get'])
@@ -117,6 +122,9 @@ class NonConformanceViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixi
             return Response({'detail': 'This report is voided.'}, status=status.HTTP_400_BAD_REQUEST)
         person = AddUpdateSerializer(data={'kind': 'note', 'text': 'x', 'recorded_by': request.data.get('recorded_by')})
         person.is_valid(raise_exception=True)
+        update = None
+        if request.data.get('update'):  # the photo belongs to a follow-up, e.g. the manufacturer's response
+            update = get_object_or_404(report.updates, pk=request.data['update'])
         files = request.FILES.getlist('files')
         if not files:
             return Response({'files': 'Choose at least one photo.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -130,7 +138,7 @@ class NonConformanceViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixi
             except ValueError as problem:
                 return Response({'files': str(problem)}, status=status.HTTP_400_BAD_REQUEST)
             saved.append(Photo.objects.create(
-                report=report, path=relative, original_name=uploaded.name[:200], content_type=content_type, size=size,
+                report=report, update=update, path=relative, original_name=uploaded.name[:200], content_type=content_type, size=size,
                 recorded_by=person.validated_data['recorded_by'], entered_by=request.user,
             ))
         for photo in saved:

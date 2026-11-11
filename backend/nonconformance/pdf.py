@@ -70,12 +70,10 @@ def table_style(header=True):
     return TableStyle(style)
 
 
-def photo_flowables(report, width):
-    """The report's photos, two to a row, each with its file name. A file that cannot be drawn is just named."""
+def photo_flowables(photo_list, width):
+    """The photos, two to a row, each with its file name. A file that cannot be drawn is just named."""
     pictures, problems = [], []
-    for photo in report.photos.all():
-        if photo.voided:
-            continue
+    for photo in photo_list:
         try:
             path = photos.full_path(photo.path)
             with PilImage.open(path) as opened:
@@ -110,9 +108,17 @@ def render_report(report):
     if report.voided:
         story.append(Paragraph(f'<font color="{RED}"><b>VOIDED: {text(report.void_reason)}</b></font>', BODY))
     inner = width - label_width - 4 * mm
+    live_photos = [p for p in report.photos.all() if not p.voided]
     description = [Paragraph(text(report.description), CELL)]
-    if any(not p.voided for p in report.photos.all()):
-        description += [Spacer(1, 3 * mm)] + photo_flowables(report, inner)  # photos sit in the description box, as on paper
+    own = [p for p in live_photos if p.update_id is None]
+    if own:
+        description += [Spacer(1, 3 * mm)] + photo_flowables(own, inner)  # photos sit in the description box, as on paper
+
+    def with_photos(kind):
+        """A follow-up row's text, then the photos that came with those follow-ups (e.g. the manufacturer's photo)."""
+        ids = {u.pk for u in live(report, kind)}
+        pictures = [p for p in live_photos if p.update_id in ids]
+        return [Paragraph(lines(live(report, kind)), CELL)] + ([Spacer(1, 3 * mm)] + photo_flowables(pictures, inner) if pictures else [])
     # Same rows, in the same order and wording, as the paper form.
     rows = [
         ('Date', Paragraph(f'{report.date:%d/%m/%Y}', CELL)),
@@ -121,8 +127,8 @@ def render_report(report):
         ('Manufacturer', Paragraph(text(report.manufacturer) or NO_ANSWER, CELL)),
         ('Description of Problem<br/>(attach photos if available)', description),
         ('Has manufacturer been notified.<br/>(specify date and time)', Paragraph(lines(live(report, Update.Kind.NOTIFIED)), CELL)),
-        ('Manufacturer Response', Paragraph(lines(live(report, Update.Kind.RESPONSE)), CELL)),
-        ('Specify further corrective action to be taken', Paragraph(lines(live(report, Update.Kind.ACTION)), CELL)),
+        ('Manufacturer Response', with_photos(Update.Kind.RESPONSE)),
+        ('Specify further corrective action to be taken', with_photos(Update.Kind.ACTION)),
         ('Signed / Dated', Paragraph(signed_off(report), CELL)),
     ]
     table = Table([[Paragraph(label, FORM_LABEL), value] for label, value in rows], colWidths=[label_width, width - label_width])

@@ -247,6 +247,29 @@ class DriveCopyTests(ReadingTestCase):
             self.assertEqual(len(files), 1, root)
             self.assertTrue(files[0].read_bytes().startswith(b'%PDF'))
 
+    def test_notified_time_on_a_new_report_becomes_the_first_follow_up(self):
+        response = self.post('/api/non-conformances/', notified_at='2026-11-02T09:30:00+11:00', **REPORT)
+        self.assertEqual(response.status_code, 201, response.content)
+        report = NonConformance.objects.get(pk=response.json()['id'])
+        update = report.updates.get()
+        self.assertEqual((update.kind, update.recorded_by), ('notified', self.sam))
+
+    def test_a_photo_can_come_with_a_follow_up_and_shows_in_the_pdf_row(self):
+        update_id = self.post(f'/api/non-conformances/{self.report_id}/updates/', kind='response', text='Sorry', recorded_by=self.sam.pk).json()['id']
+        response = self.client.post(f'/api/non-conformances/{self.report_id}/add_photos/',
+                                    {'files': [picture()], 'recorded_by': self.sam.pk, 'update': update_id}, format='multipart')
+        self.assertEqual(response.status_code, 201, response.content)
+        self.assertEqual(response.json()[0]['update'], update_id)
+        self.assertEqual(Photo.objects.get().update_id, update_id)
+        self.assertTrue(self.client.get(f'/api/non-conformances/{self.report_id}/pdf/').content.startswith(b'%PDF'))
+
+    def test_a_photo_cannot_be_tied_to_another_reports_follow_up(self):
+        other = self.post('/api/non-conformances/', **REPORT).json()['id']
+        update_id = self.post(f'/api/non-conformances/{other}/updates/', kind='note', text='x', recorded_by=self.sam.pk).json()['id']
+        response = self.client.post(f'/api/non-conformances/{self.report_id}/add_photos/',
+                                    {'files': [picture()], 'recorded_by': self.sam.pk, 'update': update_id}, format='multipart')
+        self.assertEqual(response.status_code, 404)
+
     def test_a_photo_is_copied_into_a_folder_for_the_report(self):
         response = self.upload(picture(name='brownies: carton?.png'))
         photo = Photo.objects.get()

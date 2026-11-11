@@ -7,7 +7,7 @@ import StaffPicker, { useStaffChoice } from '../../components/StaffPicker.jsx'
 import VoidReasonDialog from '../../components/VoidReasonDialog.jsx'
 import { formatDateTime, formatDay } from '../../lib/format.js'
 import { StatusLabel } from './NcrHome.jsx'
-import { uploadPhotos } from './NewNcr.jsx'
+import { nowForInput, uploadPhotos } from './NewNcr.jsx'
 
 const inputClass =
   'h-11 w-full rounded-lg border border-line bg-surface px-3 text-base focus:border-brand focus:outline-2 focus:outline-brand'
@@ -15,19 +15,12 @@ const textClass =
   'w-full rounded-lg border border-line bg-surface px-3 py-2 text-base focus:border-brand focus:outline-2 focus:outline-brand'
 
 const kinds = [
-  { value: 'notified', label: 'Manufacturer notified', timeLabel: 'Date and time the manufacturer was told', needsText: false },
   { value: 'response', label: 'Manufacturer response', timeLabel: 'When they replied', needsText: true },
   { value: 'action', label: 'Further corrective action', timeLabel: 'When', needsText: true },
+  { value: 'notified', label: 'Manufacturer notified', timeLabel: 'Date and time the manufacturer was told', needsText: false },
   { value: 'note', label: 'Note', timeLabel: 'When', needsText: true },
-  { value: 'closed', label: 'Close the report (signed off)', timeLabel: 'Date and time', needsText: false },
+  { value: 'closed', label: 'Sign off and close the report', timeLabel: 'Date and time', needsText: false },
 ]
-
-// The date and time right now, in the form a "datetime-local" box wants (local to this computer).
-const nowForInput = () => {
-  const now = new Date()
-  now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
-  return now.toISOString().slice(0, 16)
-}
 
 // A short label saying whether the second copy of a photo has reached Google Drive.
 function CopyLabel({ photo }) {
@@ -65,8 +58,9 @@ export default function NcrDetail() {
 
   const closed = report.status === 'closed'
   const voided = report.voided
-  const photos = report.photos.filter((p) => !p.voided)
+  const photos = report.photos.filter((p) => !p.voided && !p.update)
   const voidedPhotos = report.photos.filter((p) => p.voided)
+  const updatePhotos = (update) => report.photos.filter((p) => !p.voided && p.update === update.id)
   const problem = !staffId ? 'Pick your name first.' : null
 
   return (
@@ -180,6 +174,18 @@ export default function NcrDetail() {
               )}
             </div>
             {update.text && <p className={`mt-1 whitespace-pre-line ${update.voided ? 'text-muted line-through' : ''}`}>{update.text}</p>}
+            {updatePhotos(update).length > 0 && (
+              <ul className="mt-2 flex flex-wrap gap-3">
+                {updatePhotos(update).map((photo) => (
+                  <li key={photo.id} className="w-36">
+                    <a href={photo.url} target="_blank" rel="noreferrer">
+                      <img src={photo.url} alt={photo.original_name} loading="lazy" className="h-24 w-36 rounded-lg border border-line object-cover" />
+                    </a>
+                    <CopyLabel photo={photo} />
+                  </li>
+                ))}
+              </ul>
+            )}
             {update.voided && <p className="mt-1 whitespace-pre-line text-sm font-medium">Voided: {update.void_reason}</p>}
           </li>
         ))}
@@ -207,16 +213,21 @@ function FollowUpForm({ report, closed, staff, staffId, setStaffId, problem }) {
   const [kind, setKind] = useState(options[0].value)
   const [when, setWhen] = useState(nowForInput)
   const [text, setText] = useState('')
+  const [files, setFiles] = useState([])
   const chosen = kinds.find((k) => k.value === kind) ?? options[0]
 
   const save = useMutation({
-    mutationFn: () =>
-      api(`/non-conformances/${report.id}/updates/`, { method: 'POST', body: { kind, text, recorded_by: staffId, happened_at: when } }),
+    mutationFn: async () => {
+      const update = await api(`/non-conformances/${report.id}/updates/`, { method: 'POST', body: { kind, text, recorded_by: staffId, happened_at: when } })
+      // The follow-up is saved first, so a photo problem never loses what was typed.
+      if (files.length) await uploadPhotos(report.id, files, staffId, update.id)
+    },
+    onSettled: () => queryClient.invalidateQueries(),
     onSuccess: () => {
-      queryClient.invalidateQueries()
       setText('')
+      setFiles([])
       setWhen(nowForInput())
-      setKind(closed ? 'note' : 'notified')
+      setKind(options[0].value)
     },
   })
   const missing = problem || (chosen.needsText && !text.trim() ? 'Write what happened.' : null)
@@ -252,10 +263,20 @@ function FollowUpForm({ report, closed, staff, staffId, setStaffId, problem }) {
         <textarea id="text" value={text} onChange={(e) => setText(e.target.value)} rows={3} maxLength={4000} className={textClass} />
         <p className="mt-1 text-xs text-muted">Enter starts a new line.</p>
       </div>
+      {chosen.value !== 'closed' && (
+        <div>
+          <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-line px-3 text-sm font-medium hover:bg-brand-soft">
+            <ImagePlus size={16} aria-hidden="true" /> {chosen.value === 'response' ? 'Add the manufacturer’s photo' : 'Add a photo'} (optional)
+            <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple className="sr-only"
+              onChange={(e) => { setFiles([...files, ...e.target.files]); e.target.value = '' }} />
+          </label>
+          {files.length > 0 && <span className="ml-3 text-sm">{files.map((f) => f.name).join(', ')} <button type="button" onClick={() => setFiles([])} className="ml-1 text-muted underline">remove</button></span>}
+        </div>
+      )}
       {save.error && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-bad">{save.error.message}</p>}
       <div className="flex items-center gap-4">
         <button type="submit" disabled={Boolean(missing) || save.isPending} className="h-11 rounded-lg bg-brand px-5 font-semibold text-white hover:bg-brand-dark disabled:opacity-50">
-          {save.isPending ? 'Saving…' : chosen.value === 'closed' ? 'Close the report' : 'Add to the report'}
+          {save.isPending ? 'Saving…' : chosen.value === 'closed' ? 'Sign off and close' : 'Add to the report'}
         </button>
         {missing && <span className="text-sm text-muted">{missing}</span>}
       </div>

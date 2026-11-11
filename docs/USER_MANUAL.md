@@ -109,14 +109,15 @@ This is the paper Table 5. Use it when there is a problem with a product: a cust
 ![The list of non-conformance reports](manual/31-ncr-list.png)
 
 1. Click **New report**. Pick your name, check the **Day**, then type the **Product name / code**, the **Customer**, the **Manufacturer** (your supplier names are suggested as you type) and a **Description of the problem**. Enter in the description starts a new line.
-2. Click **Choose photos** to attach photos (JPG, PNG, GIF or WEBP, up to 10 MB each, up to 20 per report). Click **Save report**.
+2. If the manufacturer has already been told, tick **The manufacturer has been notified** (the date and time are filled in; change them if needed). Otherwise leave it and add it later.
+3. Click **Choose photos** to attach photos (JPG, PNG, GIF or WEBP, up to 10 MB each, up to 20 per report). Click **Save report**.
 
 ![A new report with a photo chosen](manual/32-ncr-new.png)
 
 A report is saved once and never changed. What happens afterwards is added to it as dated **follow-ups**, each with the person's name and the date and time:
 
-- **Manufacturer notified** (the date and time they were told), then **Manufacturer response**, then **Further corrective action**, or a plain **Note**.
-- **Close the report (signed off)** when it is finished. A closed report can still have notes added.
+- **Manufacturer response** (with the manufacturer's photo if they sent one), then **Further corrective action**, **Manufacturer notified** (if it was not ticked when the report was made), or a plain **Note**.
+- **Sign off and close the report** when it is finished. A closed report can still have notes added.
 - A follow-up or photo added by mistake is **voided** with a reason (the Audit log in this module records it). Nothing is deleted.
 
 ![A report with its photos and follow-ups](manual/33-ncr-detail.png)
