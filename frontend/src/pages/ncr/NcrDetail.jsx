@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { CloudCheck, CloudUpload, FileDown, ImagePlus } from 'lucide-react'
+import { CheckCircle2, CloudCheck, CloudUpload, FileDown, ImagePlus } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { api } from '../../api/client.js'
@@ -15,11 +15,11 @@ const textClass =
   'w-full rounded-lg border border-line bg-surface px-3 py-2 text-base focus:border-brand focus:outline-2 focus:outline-brand'
 
 const kinds = [
-  { value: 'response', label: 'Manufacturer response', timeLabel: 'When they replied', needsText: true },
-  { value: 'action', label: 'Further corrective action', timeLabel: 'When', needsText: true },
-  { value: 'notified', label: 'Manufacturer notified', timeLabel: 'Date and time the manufacturer was told', needsText: false },
+  { value: 'response', short: 'Response', label: 'Manufacturer response', timeLabel: 'When they replied', needsText: true },
+  { value: 'action', short: 'Corrective action', label: 'Further corrective action', timeLabel: 'When', needsText: true },
+  { value: 'notified', short: 'Notified', label: 'Manufacturer notified', timeLabel: 'Date and time the manufacturer was told', needsText: false },
   { value: 'note', label: 'Note', timeLabel: 'When', needsText: true },
-  { value: 'closed', label: 'Sign off and close the report', timeLabel: 'Date and time', needsText: false },
+  { value: 'closed', short: 'Sign off', label: 'Sign off and close the report', timeLabel: 'Date and time', needsText: false },
 ]
 
 // A short label saying whether the second copy of a photo has reached Google Drive.
@@ -206,19 +206,31 @@ function Field({ label, value }) {
   )
 }
 
-// Add a follow-up: the manufacturer was told, they replied, a corrective action, a note, or close the report.
+// The steps run in the order of the paper form. The form always offers the next one that is missing, so most of the
+// time nobody has to choose anything: write the response, then the corrective action, then sign off.
+const STEPS = ['notified', 'response', 'action', 'closed']
+
+function nextStep(report) {
+  const done = (kind) => report.updates.some((u) => u.kind === kind && !u.voided)
+  return STEPS.find((step) => !done(step)) ?? 'note'
+}
+
+// Add the next follow-up. Saving moves on to the next step by itself.
 function FollowUpForm({ report, closed, staff, staffId, setStaffId, problem }) {
   const queryClient = useQueryClient()
-  const options = closed ? kinds.filter((k) => k.value === 'note') : kinds
-  const [kind, setKind] = useState(options[0].value)
+  const next = closed ? 'note' : nextStep(report)
+  const [picked, setPicked] = useState(null) // a step chosen by hand; null = just follow the order
+  const kind = picked ?? next
   const [when, setWhen] = useState(nowForInput)
   const [text, setText] = useState('')
   const [files, setFiles] = useState([])
-  const chosen = kinds.find((k) => k.value === kind) ?? options[0]
+  const chosen = kinds.find((k) => k.value === kind)
+  const steps = closed ? [] : kinds.filter((k) => k.value !== 'note')
+  const isDone = (value) => report.updates.some((u) => u.kind === value && !u.voided)
 
   const save = useMutation({
-    mutationFn: async () => {
-      const update = await api(`/non-conformances/${report.id}/updates/`, { method: 'POST', body: { kind, text, recorded_by: staffId, happened_at: when } })
+    mutationFn: async (body) => {
+      const update = await api(`/non-conformances/${report.id}/updates/`, { method: 'POST', body: { kind, text, recorded_by: staffId, happened_at: when, ...body } })
       // The follow-up is saved first, so a photo problem never loses what was typed.
       if (files.length) await uploadPhotos(report.id, files, staffId, update.id)
     },
@@ -227,7 +239,7 @@ function FollowUpForm({ report, closed, staff, staffId, setStaffId, problem }) {
       setText('')
       setFiles([])
       setWhen(nowForInput())
-      setKind(options[0].value)
+      setPicked(null)
     },
   })
   const missing = problem || (chosen.needsText && !text.trim() ? 'Write what happened.' : null)
@@ -236,33 +248,56 @@ function FollowUpForm({ report, closed, staff, staffId, setStaffId, problem }) {
     <form
       onSubmit={(e) => {
         e.preventDefault()
-        save.mutate()
+        save.mutate({})
       }}
       className="mt-6 space-y-4 rounded-xl border border-line bg-surface p-5"
     >
-      <h3 className="font-semibold">{closed ? 'This report is closed. You can still add a note.' : 'Add a follow-up'}</h3>
+      <h3 className="font-semibold">{closed ? 'This report is closed. You can still add a note.' : 'What happens next'}</h3>
+      {!closed && (
+        <ol className="flex flex-wrap gap-2" aria-label="Steps">
+          {steps.map((step, index) => (
+            <li key={step.value}>
+              <button
+                type="button"
+                onClick={() => setPicked(step.value)}
+                aria-current={kind === step.value ? 'step' : undefined}
+                className={`inline-flex h-9 items-center gap-1 rounded-full border px-3 text-sm ${kind === step.value ? 'border-brand bg-brand-soft font-semibold' : 'border-line hover:bg-brand-soft'}`}
+              >
+                {isDone(step.value) ? <CheckCircle2 size={14} className="text-ok" aria-label="Done" /> : `${index + 1}.`} {step.short}
+              </button>
+            </li>
+          ))}
+          <li>
+            <button
+              type="button"
+              onClick={() => setPicked('note')}
+              aria-current={kind === 'note' ? 'step' : undefined}
+              className={`inline-flex h-9 items-center rounded-full border px-3 text-sm ${kind === 'note' ? 'border-brand bg-brand-soft font-semibold' : 'border-line hover:bg-brand-soft'}`}
+            >
+              Just a note
+            </button>
+          </li>
+        </ol>
+      )}
+      <p className="text-lg font-semibold">{chosen.label}</p>
       <div className="flex flex-wrap items-end gap-4">
         <div className="w-64">
           <StaffPicker staff={staff} staffId={staffId} setStaffId={setStaffId} />
-        </div>
-        <div className="mb-4">
-          <label htmlFor="kind" className="mb-1 block text-sm font-medium">What happened</label>
-          <select id="kind" value={kind} onChange={(e) => setKind(e.target.value)} className={`${inputClass} w-72`}>
-            {options.map((k) => <option key={k.value} value={k.value}>{k.label}</option>)}
-          </select>
         </div>
         <div className="mb-4">
           <label htmlFor="when" className="mb-1 block text-sm font-medium">{chosen.timeLabel}</label>
           <input id="when" type="datetime-local" value={when} max={nowForInput()} onChange={(e) => e.target.value && setWhen(e.target.value)} className={`${inputClass} w-64`} />
         </div>
       </div>
-      <div>
-        <label htmlFor="text" className="mb-1 block text-sm font-medium">
-          {chosen.value === 'closed' ? 'Closing note (optional)' : chosen.needsText ? 'Details (required)' : 'Details (optional)'}
-        </label>
-        <textarea id="text" value={text} onChange={(e) => setText(e.target.value)} rows={3} maxLength={4000} className={textClass} />
-        <p className="mt-1 text-xs text-muted">Enter starts a new line.</p>
-      </div>
+      {chosen.value !== 'notified' && (
+        <div>
+          <label htmlFor="text" className="mb-1 block text-sm font-medium">
+            {chosen.value === 'closed' ? 'Closing note (optional)' : 'Details (required)'}
+          </label>
+          <textarea id="text" value={text} onChange={(e) => setText(e.target.value)} rows={3} maxLength={4000} autoFocus className={textClass} />
+          <p className="mt-1 text-xs text-muted">Enter starts a new line.</p>
+        </div>
+      )}
       {chosen.value !== 'closed' && (
         <div>
           <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-line px-3 text-sm font-medium hover:bg-brand-soft">
@@ -274,10 +309,20 @@ function FollowUpForm({ report, closed, staff, staffId, setStaffId, problem }) {
         </div>
       )}
       {save.error && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-bad">{save.error.message}</p>}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4">
         <button type="submit" disabled={Boolean(missing) || save.isPending} className="h-11 rounded-lg bg-brand px-5 font-semibold text-white hover:bg-brand-dark disabled:opacity-50">
-          {save.isPending ? 'Saving…' : chosen.value === 'closed' ? 'Sign off and close' : 'Add to the report'}
+          {save.isPending ? 'Saving…' : chosen.value === 'closed' ? 'Sign off and close' : chosen.value === 'note' ? 'Add note' : 'Save and go to next step'}
         </button>
+        {chosen.value === 'action' && (
+          <button
+            type="button"
+            disabled={Boolean(problem) || save.isPending}
+            onClick={() => save.mutate({ text: 'None' })}
+            className="h-11 rounded-lg border border-line px-5 font-medium hover:bg-brand-soft disabled:opacity-50"
+          >
+            No further action needed
+          </button>
+        )}
         {missing && <span className="text-sm text-muted">{missing}</span>}
       </div>
     </form>

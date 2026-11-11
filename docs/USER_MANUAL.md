@@ -116,7 +116,7 @@ This is the paper Table 5. Use it when there is a problem with a product: a cust
 
 A report is saved once and never changed. What happens afterwards is added to it as dated **follow-ups**, each with the person's name and the date and time:
 
-- **Manufacturer response** (with the manufacturer's photo if they sent one), then **Further corrective action**, **Manufacturer notified** (if it was not ticked when the report was made), or a plain **Note**.
+- The report page shows the steps of the paper form in order: **Notified** (skipped if it was ticked when the report was made), **Response** (with the manufacturer's photo if they sent one), **Corrective action** (or the **No further action needed** button), then **Sign off**. Saving a step moves on to the next one by itself, so there is no list to choose from. **Just a note** adds a plain note at any time, and a step can be clicked to do it out of order.
 - **Sign off and close the report** when it is finished. A closed report can still have notes added.
 - A follow-up or photo added by mistake is **voided** with a reason (the Audit log in this module records it). Nothing is deleted.
 
