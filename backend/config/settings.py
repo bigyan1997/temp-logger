@@ -160,6 +160,11 @@ BACKUP_DIR = config('BACKUP_DIR', default='')
 # Where the photos attached to non-conformance reports are kept (a folder on this PC, backed up by scripts/backup.ps1).
 NCR_PHOTOS_DIR = config('NCR_PHOTOS_DIR', default=str(BASE_DIR.parent / 'ncr_photos'))
 
+# Google Drive for non-conformance reports, signed in as a Google account (python manage.py drive_authorize).
+NCR_DRIVE_TOKEN_FILE = config('NCR_DRIVE_TOKEN_FILE', default='secrets/drive-token.json')
+NCR_DRIVE_CLIENT_FILE = config('NCR_DRIVE_CLIENT_FILE', default='secrets/drive-oauth-client.json')
+NCR_DRIVE_ROOT_FOLDER = config('NCR_DRIVE_ROOT_FOLDER', default='Non-Conformance Reports')
+
 # Where problems with the system itself are emailed: a failed nightly backup, a failed auto-deploy. Empty means a
 # failed backup goes to the Alert emails list instead, and a failed deploy is only written to the log.
 SYSTEM_ALERT_EMAIL = config('SYSTEM_ALERT_EMAIL', default='')
@@ -167,7 +172,7 @@ SYSTEM_ALERT_EMAIL = config('SYSTEM_ALERT_EMAIL', default='')
 # The tests must never see this PC's real backup or Google Drive folders: a real backup folder changes
 # which alerts they expect, and they must not drop test PDFs into Drive. Tests that need one set it themselves.
 if sys.argv[1:2] == ['test']:
-    BACKUP_DIR = REPORTS_EXPORT_DIR = GOOGLE_DRIVE_FOLDER_ID = GOOGLE_DRIVE_URL = SYSTEM_ALERT_EMAIL = ''
+    BACKUP_DIR = REPORTS_EXPORT_DIR = GOOGLE_DRIVE_FOLDER_ID = GOOGLE_DRIVE_URL = SYSTEM_ALERT_EMAIL = NCR_DRIVE_TOKEN_FILE = ''
 
 # Alert emails (see docs/DEPLOYMENT.md). With no EMAIL_HOST they are only printed in the server window.
 APP_URL = config('APP_URL', default='')  # where staff open the app, for the button in alert emails (the address you type in the browser, with http://)

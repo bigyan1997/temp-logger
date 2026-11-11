@@ -22,6 +22,7 @@ Thumbs.db
 test.sqlite3
 
 # Google service account keys must never be committed
+backend/secrets/
 *-key.json
 *service-account*.json
 

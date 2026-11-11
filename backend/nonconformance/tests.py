@@ -243,9 +243,12 @@ class DriveCopyTests(ReadingTestCase):
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(response.json()['problems'], [])
         for root in (local, self.drive_folder):
-            files = list((root / 'Non-Conformance Reports').glob('NCR-0001 - Choc brownies 12pk BR12 - *.pdf'))
+            # The PDF goes in the report's own folder, beside its photo.
+            folder = root / 'Non-Conformance Reports' / 'NCR-0001 - Choc brownies 12pk BR12'
+            files = list(folder.glob('NCR-0001 - Choc brownies 12pk BR12 - *.pdf'))
             self.assertEqual(len(files), 1, root)
             self.assertTrue(files[0].read_bytes().startswith(b'%PDF'))
+        self.assertEqual(len(list((self.drive_folder / 'Non-Conformance Reports' / 'NCR-0001 - Choc brownies 12pk BR12').glob('*.png'))), 1)
 
     def test_notified_time_on_a_new_report_becomes_the_first_follow_up(self):
         response = self.post('/api/non-conformances/', notified_at='2026-11-02T09:30:00+11:00', **REPORT)
@@ -280,7 +283,7 @@ class DriveCopyTests(ReadingTestCase):
     def test_a_photo_is_copied_into_a_folder_for_the_report(self):
         response = self.upload(picture(name='brownies: carton?.png'))
         photo = Photo.objects.get()
-        copy = self.drive_folder / 'Non-Conformance Photos' / 'NCR-0001 - Choc brownies 12pk BR12' / f'{photo.pk}-brownies carton .png'
+        copy = self.drive_folder / 'Non-Conformance Reports' / 'NCR-0001 - Choc brownies 12pk BR12' / f'{photo.pk}-brownies carton .png'
         self.assertTrue(copy.is_file(), list(self.drive_folder.rglob('*')))
         self.assertEqual(copy.read_bytes(), (self.base / 'photos' / photo.path).read_bytes())
         self.assertEqual(response.json()[0]['copy_status'], 'saved')
@@ -290,7 +293,7 @@ class DriveCopyTests(ReadingTestCase):
         response = self.upload(picture())
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json()[0]['copy_status'], 'waiting')
-        self.assertIn('Could not copy yet', response.json()[0]['copy_error'])
+        self.assertIn('could not be reached', response.json()[0]['copy_error'])
         self.assertTrue((self.base / 'photos' / Photo.objects.get().path).is_file())
         self.drive_folder.mkdir()  # it comes back
         self.assertEqual(drive.copy_pending(), 1)
@@ -327,6 +330,28 @@ class DriveCopyTests(ReadingTestCase):
                 drive.copy_pending()
                 drive.copy_pending()
         self.assertEqual(len(saved), 1)  # once, not on every retry
-        self.assertEqual(saved[0][0], ['Non-Conformance Photos', 'NCR-0001 - Choc brownies 12pk BR12'])
+        self.assertEqual(saved[0][0], ['Non-Conformance Reports', 'NCR-0001 - Choc brownies 12pk BR12'])
         self.assertEqual(saved[0][2], 'image/png')
         self.assertEqual(Photo.objects.get().copied_to, ['Google Drive folder abc', str(self.drive_folder)])
+
+
+class SignedInDriveTests(ReadingTestCase):
+    """The signed-in Google account (drive_authorize) is a copy place too, with the report folder made inside its root."""
+
+    def test_the_root_folder_name_is_not_made_again_inside_the_root(self):
+        from reports.destinations import GoogleDrive
+        from .oauth_drive import OAuthDrive
+
+        place = object.__new__(OAuthDrive)
+        with mock.patch.object(GoogleDrive, 'save_in') as save_in:
+            place.save_in(['Non-Conformance Reports', 'NCR-0001 - Brownies'], 'a.png', b'x', 'image/png')
+        save_in.assert_called_once_with(['NCR-0001 - Brownies'], 'a.png', b'x', 'image/png')
+
+    def test_it_is_a_copy_place_only_when_signed_in(self):
+        self.assertEqual(drive.configured_labels(), [])
+        with mock.patch('nonconformance.oauth_drive.enabled', return_value=True):
+            self.assertEqual(drive.configured_labels(), ['Google Drive (signed-in account)'])
+            with mock.patch('nonconformance.oauth_drive.OAuthDrive', side_effect=RuntimeError('no network')):
+                places, problems = drive.destinations()
+        self.assertEqual(places, [])
+        self.assertIn('no network', problems[0])

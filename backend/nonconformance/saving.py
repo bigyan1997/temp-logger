@@ -1,15 +1,13 @@
 """Saves a PDF of a report where the other report PDFs go: always the project's report_exports folder, plus the
-Google Drive folder or synced folder from settings (reports/destinations.py)."""
+Google Drive (the signed-in account, a folder or a synced folder from settings), in the report's own folder with its photos."""
 
 from django.conf import settings
 from django.utils import timezone
 
-from reports.destinations import LocalFolder, extra_destinations
+from reports.destinations import LocalFolder
 
-from .drive import clean
+from .drive import ROOT_FOLDER, clean, destinations, folder_name
 from .pdf import render_report
-
-SUBFOLDER = 'Non-Conformance Reports'
 
 
 def file_name(report):
@@ -31,14 +29,13 @@ def save_report_copies(report):
         places.append(LocalFolder(settings.REPORTS_LOCAL_DIR, create=True))
     except Exception as error:
         problems.append(f'The copy on this computer could not be saved: {error}')
-    try:
-        places += extra_destinations()
-    except Exception as error:
-        problems.append(f'Google Drive could not be reached: {error}')
+    found, trouble = destinations()
+    places += found
+    problems += trouble
 
     for place in places:
         try:
-            place.save_in([SUBFOLDER], name, pdf, 'application/pdf')
+            place.save_in([ROOT_FOLDER, folder_name(report)], name, pdf, 'application/pdf')  # beside the report's photos
             saved.append(place.label)
         except Exception as error:
             problems.append(f'Could not save to {place.label}: {error}')
