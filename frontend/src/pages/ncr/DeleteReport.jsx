@@ -2,12 +2,14 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../api/client.js'
+import StaffPicker, { useStaffChoice } from '../../components/StaffPicker.jsx'
 
 // Delete a whole report (for one made by mistake or while testing). It asks for a reason, and the audit log keeps
 // a line saying what was deleted. A plain mistake in a real report should be voided instead.
 export default function DeleteReport({ report, onClose }) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
+  const { staff, staffId, setStaffId } = useStaffChoice()
   const [reason, setReason] = useState('')
   const [sure, setSure] = useState(false)
   const finish = () => {
@@ -15,7 +17,7 @@ export default function DeleteReport({ report, onClose }) {
     onClose()
   }
   const remove = useMutation({
-    mutationFn: () => api(`/non-conformances/${report.id}/delete/`, { method: 'POST', body: { reason } }),
+    mutationFn: () => api(`/non-conformances/${report.id}/delete/`, { method: 'POST', body: { reason, recorded_by: staffId } }),
     onSuccess: (result) => {
       queryClient.invalidateQueries()
       if (result.problems.length === 0) finish()
@@ -49,7 +51,10 @@ export default function DeleteReport({ report, onClose }) {
               The photos are removed from this computer and the report's Google Drive folder goes to Drive's Bin. The audit log keeps one line saying what was deleted and why.
               If it is a real report with a mistake in it, <strong>void</strong> it instead.
             </p>
-            <label htmlFor="delete-reason" className="mb-1 mt-4 block text-sm font-medium">Why is it being deleted? (required)</label>
+            <div className="mt-4 w-64">
+              <StaffPicker staff={staff} staffId={staffId} setStaffId={setStaffId} />
+            </div>
+            <label htmlFor="delete-reason" className="mb-1 block text-sm font-medium">Why is it being deleted? (required)</label>
             <textarea
               id="delete-reason"
               value={reason}
@@ -66,7 +71,7 @@ export default function DeleteReport({ report, onClose }) {
             </label>
             {remove.error && <p role="alert" className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-bad">{remove.error.message}</p>}
             <div className="mt-5 flex gap-2">
-              <button type="submit" disabled={!sure || reason.trim().length < 3 || remove.isPending} className="h-11 rounded-lg bg-bad px-5 font-semibold text-white hover:opacity-90 disabled:opacity-50">
+              <button type="submit" disabled={!staffId || !sure || reason.trim().length < 3 || remove.isPending} className="h-11 rounded-lg bg-bad px-5 font-semibold text-white hover:opacity-90 disabled:opacity-50">
                 {remove.isPending ? 'Deleting…' : 'Delete report'}
               </button>
               <button type="button" onClick={onClose} className="h-11 rounded-lg border border-line px-5 font-medium hover:bg-brand-soft">Cancel</button>

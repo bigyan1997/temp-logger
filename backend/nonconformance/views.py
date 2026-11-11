@@ -15,6 +15,7 @@ from rest_framework.views import APIView
 from accounts.permissions import IsAdminRole
 from audit.models import AuditLog, record
 from reports.grids import MAX_DAYS
+from setup.models import StaffMember
 
 from . import photos
 from .drive import copy_photo, drive_link
@@ -31,6 +32,11 @@ class Pagination(PageNumberPagination):
     page_size = 50
 
 
+def named_person(request):
+    """The staff member the screen says is doing this (`recorded_by`), or None when none was sent or it is not on the list."""
+    return StaffMember.objects.filter(pk=request.data.get('recorded_by') or 0).first()
+
+
 def void_with_reason(request, item, label):
     """Mark a report, follow-up or photo void. Returns an error Response, or None when it worked."""
     if item.voided:
@@ -42,7 +48,7 @@ def void_with_reason(request, item, label):
         item.voided = True
         item.void_reason = reason[:300]
         item.save(update_fields=['voided', 'void_reason'])
-        record(request.user, AuditLog.Action.VOIDED, f'Voided: {label}', reason, module=AuditLog.Module.NONCONFORMANCE)
+        record(request.user, AuditLog.Action.VOIDED, f'Voided: {label}', reason, module=AuditLog.Module.NONCONFORMANCE, staff=named_person(request))
     return None
 
 
@@ -160,7 +166,10 @@ class NonConformanceViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixi
         reason = str(request.data.get('reason', '')).strip()
         if len(reason) < 3:
             return Response({'reason': 'Say why it is being deleted.'}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({'deleted': True, 'problems': delete_report(report, request.user, reason[:300])})
+        person = named_person(request)
+        if not person:
+            return Response({'recorded_by': 'Pick your name first.'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'deleted': True, 'problems': delete_report(report, request.user, reason[:300], person)})
 
     @action(detail=True, methods=['get'])
     def pdf(self, request, pk=None):

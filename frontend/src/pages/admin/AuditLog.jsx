@@ -36,7 +36,7 @@ export default function AuditLog({ module = 'temperature' }) {
             {entries.map((e) => (
               <tr key={e.id}>
                 <td className="whitespace-nowrap px-4 py-3 text-sm">{formatDateTime(e.at)}</td>
-                <td className="px-4 py-3">{e.user_name}</td>
+                <td className="px-4 py-3">{e.user_name}{e.staff_name && <span className="text-muted"> / </span>}{e.staff_name}</td>
                 <td className="px-4 py-3">{e.summary}</td>
                 <td className="whitespace-pre-line px-4 py-3 text-muted">{e.reason}</td>
               </tr>

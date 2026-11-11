@@ -21,4 +21,4 @@ class AuditLogViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     def get_queryset(self):
         # ?module=calibration for the Calibration module; the Temperature Logger is the default.
         module = self.request.query_params.get('module', AuditLog.Module.TEMPERATURE)
-        return AuditLog.objects.select_related('user').filter(module=module)
+        return AuditLog.objects.select_related('user', 'staff').filter(module=module)

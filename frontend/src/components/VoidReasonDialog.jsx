@@ -4,11 +4,12 @@ import { api } from '../api/client.js'
 
 // Cancel a record that was saved by mistake (Calibration and Cleaning). It stays in the list, marked void,
 // and the change is written to the audit log. `endpoint` is the record's void address, e.g. '/calibrations/5/void/'.
-export default function VoidReasonDialog({ heading, title, endpoint, onClose }) {
+// `staffId`: when given, the named person is sent too, so the audit log says who did it (Non-Conformance does this).
+export default function VoidReasonDialog({ heading, title, endpoint, onClose, staffId }) {
   const queryClient = useQueryClient()
   const [reason, setReason] = useState('')
   const submit = useMutation({
-    mutationFn: () => api(endpoint, { method: 'POST', body: { reason } }),
+    mutationFn: () => api(endpoint, { method: 'POST', body: { reason, ...(staffId ? { recorded_by: staffId } : {}) } }),
     onSuccess: () => {
       queryClient.invalidateQueries()
       onClose()

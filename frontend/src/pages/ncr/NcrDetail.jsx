@@ -198,7 +198,7 @@ export default function NcrDetail() {
 
       {!voided && <FollowUpForm report={report} closed={closed} staff={staff} staffId={staffId} setStaffId={setStaffId} problem={problem} />}
       {deleting && <DeleteReport report={report} onClose={() => setDeleting(false)} />}
-      {voiding && <VoidReasonDialog {...voiding} onClose={() => setVoiding(null)} />}
+      {voiding && <VoidReasonDialog {...voiding} staffId={staffId} onClose={() => setVoiding(null)} />}
     </div>
   )
 }

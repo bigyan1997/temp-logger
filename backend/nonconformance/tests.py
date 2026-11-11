@@ -127,9 +127,11 @@ class NonConformanceTests(ReadingTestCase):
     def test_voiding_needs_a_reason_is_audited_in_its_own_log_and_keeps_the_report(self):
         report_id = self.create().json()['id']
         self.assertEqual(self.client.post(f'/api/non-conformances/{report_id}/void/', {}, format='json').status_code, 400)
-        self.assertEqual(self.client.post(f'/api/non-conformances/{report_id}/void/', {'reason': 'Entered twice'}, format='json').status_code, 200)
+        self.assertEqual(self.client.post(f'/api/non-conformances/{report_id}/void/', {'reason': 'Entered twice', 'recorded_by': self.sam.pk}, format='json').status_code, 200)
         self.assertEqual(self.client.post(f'/api/non-conformances/{report_id}/void/', {'reason': 'Again'}, format='json').status_code, 400)
-        self.assertTrue(AuditLog.objects.filter(module='nonconformance', reason='Entered twice').exists())
+        self.assertTrue(AuditLog.objects.filter(module='nonconformance', reason='Entered twice', staff=self.sam).exists())
+        rows = self.client.get('/api/audit-log/?module=nonconformance').json()['results']
+        self.assertEqual((rows[0]['user_name'], rows[0]['staff_name']), (self.admin.display_name, 'Sam'))
         self.assertEqual(self.client.get('/api/audit-log/').json()['count'], 0)  # not in the Temperature Logger's log
         self.assertEqual(self.client.get('/api/non-conformances/').json()['count'], 0)
         self.assertEqual(self.client.get('/api/non-conformances/?include_voided=1').json()['count'], 1)
@@ -153,13 +155,15 @@ class NonConformanceTests(ReadingTestCase):
             self.assertEqual(len(stored), 1)
 
             self.assertEqual(self.client.post(f'/api/non-conformances/{report_id}/delete/', {'reason': ''}, format='json').status_code, 400)
-            response = self.client.post(f'/api/non-conformances/{report_id}/delete/', {'reason': 'test report'}, format='json')
+            # a name is needed too, so the audit line says who did it
+            self.assertEqual(self.client.post(f'/api/non-conformances/{report_id}/delete/', {'reason': 'test report'}, format='json').status_code, 400)
+            response = self.client.post(f'/api/non-conformances/{report_id}/delete/', {'reason': 'test report', 'recorded_by': self.sam.pk}, format='json')
             self.assertEqual(response.status_code, 200, response.content)
             self.assertEqual(response.json(), {'deleted': True, 'problems': []})
             self.assertEqual(list(base.rglob('*.png')), [])  # the picture is gone from this PC
         self.assertEqual((NonConformance.objects.count(), Update.objects.count(), Photo.objects.count()), (0, 0, 0))
         line = AuditLog.objects.get(action='deleted')
-        self.assertEqual((line.module, line.reason), ('nonconformance', 'test report'))
+        self.assertEqual((line.module, line.reason, line.staff), ('nonconformance', 'test report', self.sam))
         self.assertIn('Choc brownies', line.summary)
         self.assertIn('1 follow-up', line.summary)
 

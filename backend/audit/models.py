@@ -29,6 +29,8 @@ class AuditLog(models.Model):
     at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='+')
     action = models.CharField(max_length=20, choices=Action.choices)
+    # The named person at the keyboard, when the screen asks for one (the login above is shared by everyone on that login).
+    staff = models.ForeignKey('setup.StaffMember', null=True, blank=True, on_delete=models.PROTECT, related_name='+')
     summary = models.CharField(max_length=300)
     reason = models.CharField(max_length=300, blank=True)
 
@@ -39,6 +41,6 @@ class AuditLog(models.Model):
         return f'{self.at:%d/%m/%Y %H:%M} {self.summary}'
 
 
-def record(user, action, summary, reason='', module=AuditLog.Module.TEMPERATURE):
-    """Add one line to the audit log."""
-    return AuditLog.objects.create(user=user, action=action, summary=summary[:300], reason=reason[:300], module=module)
+def record(user, action, summary, reason='', module=AuditLog.Module.TEMPERATURE, staff=None):
+    """Add one line to the audit log. `staff` is the named person, when known."""
+    return AuditLog.objects.create(user=user, action=action, summary=summary[:300], reason=reason[:300], module=module, staff=staff)

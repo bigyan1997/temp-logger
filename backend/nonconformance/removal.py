@@ -12,7 +12,7 @@ from . import oauth_drive, photos
 from .drive import folder_name
 
 
-def delete_report(report, user, reason):
+def delete_report(report, user, reason, person):
     """Returns a list of problems with the clean-up after the delete (an empty list means everything went well)."""
     updates, pictures = list(report.updates.all()), list(report.photos.all())
     paths = [photo.path for photo in pictures]
@@ -23,7 +23,7 @@ def delete_report(report, user, reason):
         report.photos.all().delete()
         report.updates.all().delete()
         report.delete()
-        record(user, AuditLog.Action.DELETED, summary, reason, module=AuditLog.Module.NONCONFORMANCE)
+        record(user, AuditLog.Action.DELETED, summary, reason, module=AuditLog.Module.NONCONFORMANCE, staff=person)
 
     problems = []
     for path in paths:
