@@ -8,8 +8,9 @@ from zoneinfo import ZoneInfo
 from django.core import mail
 from django.core.management import call_command
 from django.core.management.base import CommandError
-from django.test import override_settings
+from django.test import SimpleTestCase, override_settings
 
+from alerts.emails import module_for, render_html
 from alerts.models import AlertSent
 from alerts.sender import send_due_alerts
 from readings.tests.base import MONDAY_9AM, MONDAY_9PM, ReadingTestCase
@@ -153,7 +154,7 @@ class AlertTests(ReadingTestCase):
 
     def test_test_email_command(self):
         call_command('send_alerts', test=True)
-        self.assertEqual(self.subjects(), ['Temperature Logger: Test alert'])
+        self.assertEqual(self.subjects(), ['Achieve HACCP: Test alert'])
         AlertRecipient.objects.update(active=False)
         with self.assertRaises(CommandError):
             call_command('send_alerts', test=True)
@@ -222,3 +223,25 @@ class BackupAlertTests(ReadingTestCase):
     @override_settings(BACKUP_DIR='')
     def test_not_checked_when_backup_dir_is_not_set(self):
         self.assertEqual(self.kinds(at(3, 7)), [])
+
+
+class EmailLookTests(SimpleTestCase):
+    """Each part of the app has its own name, icon, colour and button in its emails."""
+
+    def test_each_kind_of_alert_belongs_to_the_right_module(self):
+        names = {kind: module_for(kind)['name'] for kind in ('reminder', 'out_of_limit', 'cleaning_due', 'cleaning_late', 'calibration', 'calibration_overdue', 'backup', 'test')}
+        self.assertEqual(names['reminder'], 'Temperature Logger')
+        self.assertEqual(names['cleaning_due'], 'Cleaning & Maintenance')
+        self.assertEqual(names['cleaning_late'], 'Cleaning & Maintenance')
+        self.assertEqual(names['calibration'], 'Calibration')
+        self.assertEqual(names['calibration_overdue'], 'Calibration')
+        self.assertEqual(names['backup'], 'Achieve HACCP')
+        self.assertEqual(names['test'], 'Achieve HACCP')
+
+    def test_the_cleaning_email_is_not_headed_temperature_logger(self):
+        with override_settings(APP_URL='http://orders-pc:8003'):
+            html = render_html('OVERDUE: Pest spray (quarterly)', 'It was due.', (), 'failed', module_for('cleaning_late'))
+        self.assertIn('Cleaning &amp; Maintenance', html)
+        self.assertIn('Open Notifications', html)
+        self.assertIn('http://orders-pc:8003/cleaning/notifications', html)
+        self.assertNotIn('Temperature Logger', html)

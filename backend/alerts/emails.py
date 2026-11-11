@@ -16,6 +16,25 @@ TONES = {
     'failed': ('#b4233c', '#fdecee', '⚠️', 'ACTION NEEDED'),
 }
 BRAND = '#0b7a75'
+
+# Which part of the app an alert is about: its name, icon, header colour and the page its button opens.
+# The "system" ones (backup, test) are about the whole app.
+MODULES = {
+    'temperature': {'name': 'Temperature Logger', 'icon': '🌡️', 'colour': BRAND, 'path': '/log/storage', 'button': 'Open the Temperature Logger'},
+    'cleaning': {'name': 'Cleaning & Maintenance', 'icon': '🧹', 'colour': '#2f6f9f', 'path': '/cleaning/notifications', 'button': 'Open Notifications'},
+    'calibration': {'name': 'Calibration', 'icon': '📏', 'colour': '#6b4fa3', 'path': '/calibration', 'button': 'Open Calibration'},
+    'system': {'name': 'Achieve HACCP', 'icon': '🛡️', 'colour': '#4a5a60', 'path': '', 'button': ''},
+}
+# alert kind -> module (see checks.py and the other *_check.py files). Anything not listed is about the whole app.
+KIND_MODULE = {
+    'reminder': 'temperature', 'reminder2': 'temperature', 'out_of_limit': 'temperature', 'sample': 'temperature',
+    'cleaning_due': 'cleaning', 'cleaning_late': 'cleaning',
+    'calibration': 'calibration', 'calibration_overdue': 'calibration',
+}
+
+
+def module_for(kind):
+    return MODULES[KIND_MODULE.get(kind, 'system')]
 INK = '#12262b'
 MUTED = '#5a6e73'
 LINE = '#d8e3e4'
@@ -39,14 +58,16 @@ def unit_rows(items, accent):
     )
 
 
-def render_html(subject, lead, items, tone):
+def render_html(subject, lead, items, tone, module):
     accent, soft, icon, label = TONES[tone]
     app_url = settings.APP_URL.rstrip('/')
+    # Storage reminders only link to the screen when units are still to log; the other modules always have a page to open.
+    show_button = app_url and module['path'] and (items or module is not MODULES['temperature'])
     button = (
-        f'<p style="margin:26px 0 4px;"><a href="{escape(app_url)}/log/storage" '
-        f'style="background:{BRAND};color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;'
-        f'padding:12px 22px;border-radius:8px;display:inline-block;{FONT}">Open the Temperature Logger</a></p>'
-        if app_url and items else ''
+        f'<p style="margin:26px 0 4px;"><a href="{escape(app_url)}{module["path"]}" '
+        f'style="background:{module["colour"]};color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;'
+        f'padding:12px 22px;border-radius:8px;display:inline-block;{FONT}">{escape(module["button"])}</a></p>'
+        if show_button else ''
     )
     return f"""<!doctype html>
 <html><body style="margin:0;padding:0;background:#f4f8f8;">
@@ -54,10 +75,10 @@ def render_html(subject, lead, items, tone):
 <tr><td align="center">
 <table role="presentation" width="560" cellpadding="0" cellspacing="0"
        style="max-width:560px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid {LINE};">
-  <tr><td style="background:{BRAND};padding:18px 24px;{FONT}">
-    <span style="font-size:20px;">🌡️</span>
-    <span style="color:#ffffff;font-size:18px;font-weight:700;vertical-align:middle;margin-left:6px;">Temperature Logger</span>
-    <div style="color:#cfeceb;font-size:12px;margin-top:2px;">Achieve Cafe Provisions</div>
+  <tr><td style="background:{module['colour']};padding:18px 24px;{FONT}">
+    <span style="font-size:20px;">{module['icon']}</span>
+    <span style="color:#ffffff;font-size:18px;font-weight:700;vertical-align:middle;margin-left:6px;">{escape(module['name'])}</span>
+    <div style="color:#ffffff;opacity:.85;font-size:12px;margin-top:2px;">Achieve HACCP &middot; Achieve Cafe Provisions</div>
   </td></tr>
   <tr><td style="background:{soft};padding:22px 24px;border-bottom:3px solid {accent};{FONT}">
     <div style="font-size:12px;font-weight:700;letter-spacing:.08em;color:{accent};">{icon}&nbsp; {label}</div>
@@ -69,7 +90,7 @@ def render_html(subject, lead, items, tone):
     {button}
   </td></tr>
   <tr><td style="padding:14px 24px;background:#f4f8f8;border-top:1px solid {LINE};font-size:12px;color:{MUTED};{FONT}">
-    Sent automatically by the Temperature Logger. You will not get this same alert again.
+    Sent automatically by Achieve HACCP ({escape(module['name'])}). You will not get this same alert again.
   </td></tr>
 </table>
 </td></tr></table>
@@ -78,6 +99,7 @@ def render_html(subject, lead, items, tone):
 
 def send_alert_email(alert, to):
     """Send one Alert (see checks.py) to a list of addresses, as text and HTML."""
-    message = EmailMultiAlternatives(f'Temperature Logger: {alert.subject}', alert.body, None, to)
-    message.attach_alternative(render_html(alert.subject, alert.lead, alert.items, alert.tone), 'text/html')
+    module = module_for(alert.kind)
+    message = EmailMultiAlternatives(f'{module["name"]}: {alert.subject}', alert.body, None, to)
+    message.attach_alternative(render_html(alert.subject, alert.lead, alert.items, alert.tone, module), 'text/html')
     message.send()

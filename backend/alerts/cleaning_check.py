@@ -20,9 +20,9 @@ def cleaning_alerts(now):
         reminder = item['days_late'] // OVERDUE_AFTER_DAYS  # 0 on the first day, 1 a week later, and so on
         key = f'{task.pk}:{due_date.isoformat()}:{reminder}'
         if reminder == 0:
-            lead = f'{task.name} (Table 8) is due. It is {task.get_frequency_display().lower()}.'
+            lead = f'{task.name} is due. Tick it off in Cleaning & Maintenance once it has been done.'
             found.append(Alert('cleaning_due', key, f'Due: {task.name}', lead, lead=lead, tone='reminder'))
         else:
-            lead = f'{task.name} (Table 8) was due on {due_date:%A %d %B %Y} and has not been ticked off.'
+            lead = f'{task.name} was due on {due_date:%A %d %B %Y} and has not been ticked off.'
             found.append(Alert('cleaning_late', key, f'OVERDUE: {task.name}', lead, lead=lead, tone='failed'))
     return found

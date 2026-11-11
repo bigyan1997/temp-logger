@@ -414,6 +414,15 @@ The people on the **Alert emails** list get an email when storage readings are l
 
 The email lists the units that are still to do and links to the app. Nothing is sent if everything is already logged, or if it is a public holiday.
 
+Other reminders go to the same list, and each kind looks different so you can tell them apart at a glance. The header names the part of the app and has its own colour and icon:
+
+- **Temperature Logger** (teal): storage readings that are late.
+- **Cleaning & Maintenance** (blue): a monthly or quarterly task that is due, then once a week while it is not done (for example pest spray). The button opens the Notifications page.
+- **Calibration** (purple): the 6-monthly thermometer calibration is due soon or overdue.
+- **Achieve HACCP** (grey): things about the whole app, such as a failed database backup.
+
+The subject line starts with the same name, for example "Cleaning & Maintenance: OVERDUE: Pest spray (quarterly)".
+
 If the **nightly database backup** does not happen, the same people get a **DATABASE BACKUP FAILED** email, so a missing backup is noticed the next morning.
 
 ---
