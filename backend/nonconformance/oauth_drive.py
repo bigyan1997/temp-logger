@@ -11,7 +11,7 @@ from pathlib import Path
 
 from django.conf import settings
 
-from reports.destinations import DRIVE_SCOPE, GoogleDrive
+from reports.destinations import DRIVE_FILES, DRIVE_SCOPE, GoogleDrive
 
 LABEL = 'Google Drive (signed-in account)'
 _root_id = None  # looked up once, then remembered
@@ -47,6 +47,16 @@ class OAuthDrive(GoogleDrive):
         if subfolders and subfolders[0] == settings.NCR_DRIVE_ROOT_FOLDER:
             subfolders = subfolders[1:]
         super().save_in(subfolders, name, data, content_type)
+
+    def trash_folder(self, name):
+        """Move the report's folder to Drive's Bin (recoverable for 30 days). Nothing happens if it is not there."""
+        escaped = name.replace('\\', '\\\\').replace("'", "\\'")
+        found = self.check(self.session.get(DRIVE_FILES, params={
+            'q': f"name = '{escaped}' and '{self.folder_id}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
+            'fields': 'files(id)',
+        }))['files']
+        for folder in found:
+            self.check(self.session.patch(f'{DRIVE_FILES}/{folder["id"]}', params={'supportsAllDrives': 'true'}, json={'trashed': True}))
 
     def root_id(self):
         global _root_id

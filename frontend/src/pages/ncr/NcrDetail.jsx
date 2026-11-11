@@ -6,6 +6,7 @@ import { api } from '../../api/client.js'
 import StaffPicker, { useStaffChoice } from '../../components/StaffPicker.jsx'
 import VoidReasonDialog from '../../components/VoidReasonDialog.jsx'
 import { formatDateTime, formatDay } from '../../lib/format.js'
+import DeleteReport from './DeleteReport.jsx'
 import DriveLink from './DriveLink.jsx'
 import { StatusLabel } from './NcrHome.jsx'
 import { nowForInput, uploadPhotos } from './NewNcr.jsx'
@@ -44,6 +45,7 @@ export default function NcrDetail() {
   const queryClient = useQueryClient()
   const { staff, staffId, setStaffId } = useStaffChoice()
   const [voiding, setVoiding] = useState(null) // { heading, title, endpoint }
+  const [deleting, setDeleting] = useState(false)
   const { data: report, isLoading, error } = useQuery({ queryKey: ['ncr', id], queryFn: () => api(`/non-conformances/${id}/`) })
 
   // Saves a PDF of the report, as it is now, on this PC and in Google Drive.
@@ -81,6 +83,7 @@ export default function NcrDetail() {
             <CloudUpload size={16} aria-hidden="true" /> {saveToDrive.isPending ? 'Saving…' : 'Upload to Drive'}
           </button>
           <DriveLink />
+          <button onClick={() => setDeleting(true)} className="h-10 rounded-lg border border-line px-3 text-sm font-medium text-bad hover:bg-red-50">Delete</button>
           {!voided && (
             <button
               onClick={() => setVoiding({ heading: 'Void this report', title: `${report.number} · ${report.product}`, endpoint: `/non-conformances/${report.id}/void/` })}
@@ -194,6 +197,7 @@ export default function NcrDetail() {
       </ul>
 
       {!voided && <FollowUpForm report={report} closed={closed} staff={staff} staffId={staffId} setStaffId={setStaffId} problem={problem} />}
+      {deleting && <DeleteReport report={report} onClose={() => setDeleting(false)} />}
       {voiding && <VoidReasonDialog {...voiding} onClose={() => setVoiding(null)} />}
     </div>
   )

@@ -137,10 +137,37 @@ class NonConformanceTests(ReadingTestCase):
         self.assertEqual(self.update(report_id, 'note', 'x').status_code, 400)
         self.assertEqual(NonConformance.objects.count(), 1)  # nothing is deleted
 
-    def test_there_is_no_way_to_edit_or_delete_a_report(self):
+    def test_there_is_no_way_to_edit_a_report_or_use_the_plain_delete_address(self):
         report_id = self.create().json()['id']
         self.assertEqual(self.client.patch(f'/api/non-conformances/{report_id}/', {'product': 'x'}, format='json').status_code, 405)
         self.assertEqual(self.client.delete(f'/api/non-conformances/{report_id}/').status_code, 405)
+
+    def test_deleting_a_report_removes_it_with_its_follow_ups_and_photos_and_keeps_an_audit_line(self):
+        base = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, base, ignore_errors=True)
+        with override_settings(NCR_PHOTOS_DIR=str(base)):
+            report_id = self.create().json()['id']
+            self.update(report_id, 'note', 'a follow-up')
+            self.client.post(f'/api/non-conformances/{report_id}/add_photos/', {'files': [picture()], 'recorded_by': self.sam.pk}, format='multipart')
+            stored = list(base.rglob('*.png'))
+            self.assertEqual(len(stored), 1)
+
+            self.assertEqual(self.client.post(f'/api/non-conformances/{report_id}/delete/', {'reason': ''}, format='json').status_code, 400)
+            response = self.client.post(f'/api/non-conformances/{report_id}/delete/', {'reason': 'test report'}, format='json')
+            self.assertEqual(response.status_code, 200, response.content)
+            self.assertEqual(response.json(), {'deleted': True, 'problems': []})
+            self.assertEqual(list(base.rglob('*.png')), [])  # the picture is gone from this PC
+        self.assertEqual((NonConformance.objects.count(), Update.objects.count(), Photo.objects.count()), (0, 0, 0))
+        line = AuditLog.objects.get(action='deleted')
+        self.assertEqual((line.module, line.reason), ('nonconformance', 'test report'))
+        self.assertIn('Choc brownies', line.summary)
+        self.assertIn('1 follow-up', line.summary)
+
+    def test_the_night_login_cannot_delete_a_report(self):
+        report_id = self.create().json()['id']
+        self.sign_in(self.night)
+        self.assertEqual(self.client.post(f'/api/non-conformances/{report_id}/delete/', {'reason': 'x y z'}, format='json').status_code, 403)
+        self.assertEqual(NonConformance.objects.count(), 1)
 
     # Searching ------------------------------------------------------------------------
 

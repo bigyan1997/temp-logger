@@ -21,6 +21,7 @@ from .drive import copy_photo, drive_link
 from .saving import save_report_copies
 from .models import NonConformance, Photo, Update
 from .pdf import render_register, render_report
+from .removal import delete_report
 from .serializers import AddUpdateSerializer, NonConformanceSerializer, PhotoSerializer, UpdateSerializer
 
 DEFAULT_REGISTER_DAYS = 365
@@ -46,8 +47,8 @@ def void_with_reason(request, item, label):
 
 
 class NonConformanceViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
-    """Day staff only. A report is saved once and never edited or deleted. Follow-ups are added to it, and a mistake is
-    voided with a reason."""
+    """Day staff only. A report is saved once and never edited. Follow-ups are added to it, and a mistake is voided with a
+    reason, or the whole report deleted (see removal.py)."""
 
     permission_classes = [IsAdminRole]
     serializer_class = NonConformanceSerializer
@@ -151,6 +152,15 @@ class NonConformanceViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixi
         report = self.get_object()
         problem = void_with_reason(request, report, str(report))
         return problem or Response(self.get_serializer(report).data)
+
+    @action(detail=True, methods=['post'], url_path='delete')
+    def remove(self, request, pk=None):
+        """Delete the report, its follow-ups and photos (admin, with a reason). One audit line keeps what was deleted."""
+        report = self.get_object()
+        reason = str(request.data.get('reason', '')).strip()
+        if len(reason) < 3:
+            return Response({'reason': 'Say why it is being deleted.'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'deleted': True, 'problems': delete_report(report, request.user, reason[:300])})
 
     @action(detail=True, methods=['get'])
     def pdf(self, request, pk=None):
