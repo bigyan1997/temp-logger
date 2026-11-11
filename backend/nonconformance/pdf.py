@@ -1,4 +1,4 @@
-"""Table 5 (Non-Conformance Report) as PDFs: one report with its history and photos, or a register of many."""
+"""Table 5 (Non-Conformance Report) as PDFs: one report laid out like the paper form, or a register of many."""
 
 from io import BytesIO
 from xml.sax.saxutils import escape
@@ -96,7 +96,7 @@ def photo_flowables(photo_list, width):
 
 
 def render_report(report):
-    """One report as a PDF: the fields of the paper table, the history, and the photos."""
+    """One report as a PDF: the rows of the paper table, with the photos inside them."""
     document = SimpleDocTemplate(
         BytesIO(), pagesize=A4, leftMargin=18 * mm, rightMargin=18 * mm, topMargin=18 * mm, bottomMargin=16 * mm,
         title=f'{COMPANY} - Table 5 Non-Conformance Report {report.number}',
@@ -135,20 +135,6 @@ def render_report(report):
     table.setStyle(table_style(header=False))
     story += [table, Spacer(1, 3 * mm),
               Paragraph(f'Reported by {escape(report.recorded_by.name)}, {when(report.recorded_at)}', SMALL), Spacer(1, 4 * mm)]
-
-    history = [u for u in report.updates.all()]
-    if history:
-        story.append(Paragraph('<b>History</b>', BODY))
-        rows = [[Paragraph(h, HEAD) for h in ('When', 'What', 'By', 'Note')]]
-        for update in history:
-            note = text(update.text)
-            if update.voided:
-                note = f'<font color="{RED}">VOIDED: {text(update.void_reason)}</font><br/>' + note
-            rows.append([Paragraph(when(update.happened_at), CELL), Paragraph(escape(update.get_kind_display()), CELL),
-                         Paragraph(escape(update.recorded_by.name), CELL), Paragraph(note, CELL)])
-        history_table = Table(rows, colWidths=[34 * mm, 38 * mm, 24 * mm, width - 96 * mm], repeatRows=1)
-        history_table.setStyle(table_style())
-        story += [history_table, Spacer(1, 5 * mm)]
 
     buffer = BytesIO()
     document.filename = buffer

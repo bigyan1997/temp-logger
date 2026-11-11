@@ -123,7 +123,7 @@ A report is saved once and never changed. What happens afterwards is added to it
 ![A report with its photos and follow-ups](manual/33-ncr-detail.png)
 
 - Each photo is kept on the computer and a copy is saved into Google Drive, in the same place as the report PDFs, in a folder named after the report. Under each photo it says **In Google Drive**, or **Waiting to copy to Google Drive** (it keeps trying by itself if Google Drive for desktop was not running).
-- **Download PDF** on a report gives the report laid out like the paper Table 5 (photos inside the description box, the follow-ups in their rows, then the history). **Upload to Drive** saves that PDF, as it is now, on the computer and in Google Drive (folder *Non-Conformance Reports*); each press makes a new dated file, so press it again after more follow-ups. **Table 5 register (PDF)**, at the bottom of the list, gives every report in the dates you choose, laid out like the paper table.
+- **Download PDF** on a report gives the report laid out like the paper Table 5 (photos inside the description box, the follow-ups in their rows). **Upload to Drive** saves that PDF, as it is now, on the computer and in Google Drive (folder *Non-Conformance Reports*); each press makes a new dated file, so press it again after more follow-ups. **Table 5 register (PDF)**, at the bottom of the list, gives every report in the dates you choose, laid out like the paper table.
 - **Show** on the list chooses Open, Closed or All reports, and **Search** finds a product, customer or manufacturer.
 
 ### Calibration (day staff, inside Cleaning & Maintenance)
