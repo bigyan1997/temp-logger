@@ -11,6 +11,7 @@ import { formatDay } from '../../lib/format.js'
 export const sections = [
   {
     path: 'staff',
+    page: 'settings',
     label: 'Staff names',
     endpoint: '/staff/',
     intro:
@@ -32,6 +33,7 @@ export const sections = [
   },
   {
     path: 'units',
+    page: 'lists',
     label: 'Storage units',
     endpoint: '/units/',
     intro:
@@ -64,6 +66,7 @@ export const sections = [
   },
   {
     path: 'suppliers',
+    page: 'lists',
     label: 'Suppliers',
     endpoint: '/suppliers/',
     intro: 'Suppliers whose deliveries are temperature-checked when they arrive.',
@@ -84,6 +87,7 @@ export const sections = [
   },
   {
     path: 'runs',
+    page: 'lists',
     label: 'Delivery runs',
     endpoint: '/runs/',
     intro: 'Delivery runs whose temperature is logged at dispatch. There is no run F or I.',
@@ -95,6 +99,7 @@ export const sections = [
   },
   {
     path: 'closed-days',
+    page: 'settings',
     label: 'Public holidays',
     endpoint: '/closed-days/',
     intro:
@@ -116,6 +121,7 @@ export const sections = [
   },
   {
     path: 'alerts',
+    page: 'settings',
     label: 'Alert emails',
     endpoint: '/alert-recipients/',
     intro:
@@ -128,6 +134,7 @@ export const sections = [
   },
   {
     path: 'logins',
+    page: 'settings',
     label: 'Logins',
     endpoint: '/users/',
     intro:
@@ -161,3 +168,8 @@ export const sections = [
     ],
   },
 ]
+
+// Shared by every module: logins, staff names, alert emails, public holidays.
+export const settingsSections = sections.filter((s) => s.page === 'settings')
+// Used only by the Temperature Logger: storage units, suppliers, delivery runs.
+export const listSections = sections.filter((s) => s.page === 'lists')

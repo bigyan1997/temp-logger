@@ -68,7 +68,7 @@ temp-logger/
       api/              fetch wrapper, query hooks
       components/       Button, NumberPad, StatusBadge, ReadingCard, DataTable, Modal
       pages/night/      Today, Storage, Receiving, Dispatch, Mine
-      pages/admin/      Dashboard, Records, Trends, Actions, Reports, Settings
+      pages/admin/      Dashboard, Records, Trends, Actions, Reports, Settings (shared: logins, staff, alert emails, holidays), Lists (units, suppliers, runs)
       pages/calibration/ Home, Records, New calibration
       pages/cleaning/    Home (tick tasks), Records, Tasks
       pages/AllRecords.jsx  every record of every module, in tabs (day staff)

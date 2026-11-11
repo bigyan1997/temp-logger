@@ -46,7 +46,7 @@ There are two shared logins on the office computer and on any other computer tha
 | Login | Used by | Can do |
 |---|---|---|
 | **Night** | Night staff | Log storage, receiving and dispatch |
-| **Admin (day)** | Day staff | Everything the night login can, plus Records, Trends, Reports, Audit log and Settings |
+| **Admin (day)** | Day staff | Everything the night login can, plus Records, Trends, Reports, Audit log, Lists and Settings |
 
 Open the app in your browser, type the email and password you were given, and click **Sign in**. Click the **eye** at the end of the password box to see what you typed, and click it again to hide it.
 
@@ -68,11 +68,11 @@ Click **Sign out** at the bottom of the left-hand menu when you finish, especial
 
 ### The front page (day login only)
 
-After signing in, **day staff** see the Achieve HACCP front page, with a card for each part of the app. There are three cards: **Temperature Logger**, **Cleaning & Maintenance** (the cleaning tasks of Table 8 and the 6-monthly thermometer calibration of Table 14) and **Records** (every saved record in one place). Click one to open it. The **All modules** link at the top of the left-hand menu brings you back to this page.
+After signing in, **day staff** see the Achieve HACCP front page, with a card for each part of the app. There are four cards: **Temperature Logger**, **Cleaning & Maintenance** (the cleaning tasks of Table 8 and the 6-monthly thermometer calibration of Table 14), **Records** (every saved record in one place) and **Settings** (logins, staff names, alert emails and public holidays). Click one to open it. The **All modules** link at the top of the left-hand menu brings you back to this page.
 
 ![The Achieve HACCP front page](manual/01b-front-page.png)
 
-**Night staff** go straight into the Temperature Logger and never see this page. Calibration, Cleaning & Maintenance and Records are for day staff only.
+**Night staff** go straight into the Temperature Logger and never see this page. Calibration, Cleaning & Maintenance, Records and Settings are for day staff only.
 
 ### Records (day staff)
 
@@ -352,7 +352,12 @@ The **Audit log** lists every void, correction, limit change, login change, publ
 
 ## 10. For day staff: Settings
 
-Everything you manage is in **Settings** (the last item on the menu). The sections are along the top left.
+What you manage is in two places, both for day staff only (the night login never sees them, and the server refuses it even if someone types the address):
+
+- **Settings** is a card on the front page. It holds what the whole app shares: **Logins**, **Staff names**, **Alert emails** and **Public holidays**.
+- **Lists** is in the Temperature Logger menu. It holds what only the Temperature Logger uses: **Storage units**, **Suppliers** and **Delivery runs**.
+
+The cleaning tasks are managed on the **Tasks** page of Cleaning & Maintenance. In each, the sections are along the top left.
 
 ### Staff names
 
@@ -366,7 +371,7 @@ The names staff pick from in **Your name**. Add every person who takes readings.
 
 ### Storage units
 
-The coolrooms and freezers and their limits.
+The coolrooms and freezers and their limits (Temperature Logger, **Lists**).
 
 ![Settings, Storage units](manual/21-settings-units.png)
 
@@ -374,13 +379,13 @@ Changing a **limit** is written to the audit log, so only change it if the HACCP
 
 ### Suppliers and delivery runs
 
-Add a supplier or a run letter when you start using one, and **deactivate** it when you stop. Tick **Usually frozen** on a supplier so Receiving starts on Frozen for them.
+In the Temperature Logger's **Lists**. Add a supplier or a run letter when you start using one, and **deactivate** it when you stop. Tick **Usually frozen** on a supplier so Receiving starts on Frozen for them.
 
 ### Public holidays
 
 Add the dates that are public holidays.
 
-1. Go to **Settings**, then **Public holidays**, then **Add a public holiday**.
+1. On the front page open **Settings**, then **Public holidays**, then **Add a public holiday**.
 2. Pick the **Date**. The **Name** is optional. Leave it blank for "Public holiday", or write something like "Public holiday - Christmas Day". The name appears on the reports.
 3. Click **Save**.
 

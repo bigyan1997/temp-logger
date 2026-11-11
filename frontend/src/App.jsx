@@ -1,7 +1,7 @@
 import { Link, Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from './auth.jsx'
 import AppLayout from './components/AppLayout.jsx'
-import { cleaningMenu, recordsMenu, temperatureMenu } from './lib/menus.js'
+import { cleaningMenu, recordsMenu, settingsMenu, temperatureMenu } from './lib/menus.js'
 import CalibrationHome from './pages/calibration/CalibrationHome.jsx'
 import CalibrationRecords from './pages/calibration/CalibrationRecords.jsx'
 import NewCalibration from './pages/calibration/NewCalibration.jsx'
@@ -14,7 +14,7 @@ import AppHome from './pages/AppHome.jsx'
 import AuditLog from './pages/admin/AuditLog.jsx'
 import Records from './pages/admin/Records.jsx'
 import Reports from './pages/admin/Reports.jsx'
-import Settings from './pages/admin/Settings.jsx'
+import Settings, { Lists } from './pages/admin/Settings.jsx'
 import Trends from './pages/admin/Trends.jsx'
 import Home from './pages/Home.jsx'
 import LogDispatch from './pages/LogDispatch.jsx'
@@ -86,7 +86,7 @@ export default function App() {
         <Route path="/trends" element={adminPage(<Trends />)} />
         <Route path="/reports" element={adminPage(<Reports />)} />
         <Route path="/audit" element={adminPage(<AuditLog />)} />
-        <Route path="/settings/:section?" element={adminPage(<Settings />)} />
+        <Route path="/lists/:section?" element={adminPage(<Lists />)} />
       </Route>
 
       {/* The Cleaning & Maintenance module: Table 8 cleaning and Table 14 calibration. Day staff only. */}
@@ -106,6 +106,17 @@ export default function App() {
         <Route path="/calibration/new" element={adminPage(<NewCalibration />)} />
         <Route path="/calibration/records" element={adminPage(<CalibrationRecords />)} />
         <Route path="/calibration/audit" element={adminPage(<AuditLog module="calibration" />)} />
+      </Route>
+
+      {/* Settings shared by the whole app. Day staff only. */}
+      <Route
+        element={
+          <RequireAuth>
+            <AppLayout menu={settingsMenu} />
+          </RequireAuth>
+        }
+      >
+        <Route path="/settings/:section?" element={adminPage(<Settings />)} />
       </Route>
 
       {/* All records of every module, in tabs. Day staff only. */}

@@ -12,6 +12,7 @@ import {
   SprayCan,
   Settings,
   Snowflake,
+  SlidersHorizontal,
   Thermometer,
   Truck,
 } from 'lucide-react'
@@ -41,7 +42,7 @@ export const temperatureMenu = {
         { to: '/trends', label: 'Trends', Icon: BarChart3 },
         { to: '/reports', label: 'Reports', Icon: FileText },
         { to: '/audit', label: 'Audit log', Icon: History },
-        { to: '/settings', label: 'Settings', Icon: Settings },
+        { to: '/lists', label: 'Lists', Icon: SlidersHorizontal },
       ],
     },
   ],
@@ -79,5 +80,12 @@ export const recordsMenu = {
   name: 'Records',
   Icon: ClipboardList,
   home: { to: '/all-records', label: 'All records', Icon: ClipboardList },
+  groups: [],
+}
+
+export const settingsMenu = {
+  name: 'Settings',
+  Icon: Settings,
+  home: { to: '/settings', label: 'Settings', Icon: Settings },
   groups: [],
 }
