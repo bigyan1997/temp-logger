@@ -61,7 +61,7 @@ temp-logger/
     audit/              AuditLog (one `module` per line: temperature or calibration), void/supersede logic
     calibration/        Calibration + GaugeCheck (Table 14), PDF, due date rules, voids
     cleaning/           CleaningTask + CleaningCheck (Table 8): the day's tick list, voids, PDF, due rules
-    nonconformance/     NonConformance + Update + Photo (Table 5): reports, follow-ups, photos (kept in NCR_PHOTOS_DIR, copied to Drive), PDFs
+    nonconformance/     NonConformance + Update + Photo (Table 5): reports, follow-ups (photos can belong to a follow-up), photos kept in NCR_PHOTOS_DIR and copied to Google Drive (drive.py, oauth_drive.py, saving.py), paper-style PDFs, `drive_authorize` command
     reports/            PDF generation, CSV export
     requirements.txt
   frontend/
@@ -203,6 +203,8 @@ How saving a reading answers:
 - `400` the entry is wrong (duplicate, not a scheduled time, deactivated item, missing name, impossible value).
 - `422` with `code: needs_confirmation` and `warnings`: the value looks odd, resend with `confirm_unusual: true`.
 - `422` with `code: corrective_required`: resend with `corrective: {action, notes, hours_above_limit}`.
+
+**Non-conformance Google Drive.** `nonconformance/drive.py` copies every photo, and `saving.py` every saved report PDF, to each place in `destinations()`: the optional places of `reports/destinations.py` (a Drive for desktop folder, a service-account Drive folder) plus the signed-in Google account (`oauth_drive.OAuthDrive`, turned on by `python manage.py drive_authorize`, token in gitignored `backend/secrets`). Layout in Drive: `Non-Conformance Reports/NCR-0001 - <product>/` with the photos and the PDF together. The photo is always saved on the PC first, `Photo.copied_to` records which places have it, and `send_alerts` retries the missing ones every 5 minutes. A service account cannot store files in a personal Gmail Drive (no storage quota); use the sign-in, a Shared Drive or Drive for desktop.
 
 **Everything in the plan is built.** Possible later additions: email and SMS alerts, the monthly review checklist (Table 15), a non-conformance report (Table 5).
 

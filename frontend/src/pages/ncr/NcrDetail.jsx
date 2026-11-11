@@ -227,7 +227,7 @@ function FollowUpForm({ report, closed, staff, staffId, setStaffId, problem }) {
   const [text, setText] = useState('')
   const [files, setFiles] = useState([])
   const chosen = kinds.find((k) => k.value === kind)
-  const steps = closed ? [] : kinds.filter((k) => k.value !== 'note')
+  const steps = closed ? [] : STEPS.map((value) => kinds.find((k) => k.value === value))
   const isDone = (value) => report.updates.some((u) => u.kind === value && !u.voided)
 
   const save = useMutation({

@@ -120,7 +120,11 @@ A report is saved once and never changed. What happens afterwards is added to it
 - **Sign off and close the report** when it is finished. A closed report can still have notes added.
 - A follow-up or photo added by mistake is **voided** with a reason (the Audit log in this module records it). Nothing is deleted.
 
-![A report with its photos and follow-ups](manual/33-ncr-detail.png)
+The report page shows the next step by itself, so there is no list to choose from. Write it, add a photo if there is one, and **Save and go to next step**:
+
+![The next step, ready to fill in](manual/34-ncr-follow-up.png)
+
+![A finished report with its photos and follow-ups](manual/33-ncr-detail.png)
 
 - Each photo is kept on the computer and a copy is saved straight into Google Drive, in a folder named after the report (the same folder the PDF goes in). Under each photo it says **In Google Drive**, or **Waiting to copy to Google Drive** (it keeps trying by itself if Google Drive for desktop was not running).
 - **Open in Google Drive** (top of the list and of each report) opens the Drive folder where the photos and PDFs are saved. It appears once `GOOGLE_DRIVE_FOLDER_ID` (or `GOOGLE_DRIVE_URL`, the folder's web address) is set in `backend\.env`.
