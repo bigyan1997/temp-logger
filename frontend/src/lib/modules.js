@@ -1,4 +1,4 @@
-import { ClipboardList, Settings, SprayCan, Thermometer } from 'lucide-react'
+import { ClipboardList, SprayCan, Thermometer } from 'lucide-react'
 
 // The parts of the Achieve HACCP app. To add a module: add an entry here and its routes in App.jsx.
 // forNight: whether the night login may use it. The night login only ever sees these.
@@ -28,15 +28,6 @@ export const modules = [
     tables: 'Tables 8, 9, 10, 11 and 14',
     to: '/all-records',
     Icon: ClipboardList,
-    forNight: false,
-  },
-  {
-    key: 'settings',
-    name: 'Settings',
-    description: 'Logins, staff names, alert emails and public holidays, shared by the whole app.',
-    tables: 'Day staff only',
-    to: '/settings',
-    Icon: Settings,
     forNight: false,
   },
 ]

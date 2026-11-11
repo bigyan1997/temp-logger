@@ -1,4 +1,4 @@
-import { LayoutGrid, LogOut, UserRound } from 'lucide-react'
+import { LayoutGrid, LogOut, Settings, UserRound } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../auth.jsx'
 import { modulesFor } from '../lib/modules.js'
@@ -93,12 +93,26 @@ export default function AppLayout({ menu }) {
             </label>
             <p className="mt-1 text-xs text-muted lg:pl-6">{isAdmin ? 'Admin login (day)' : 'Night login'}</p>
           </div>
-          <button
-            onClick={logout}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-line px-3 text-sm font-medium hover:bg-brand-soft"
-          >
-            <LogOut size={16} aria-hidden="true" /> Sign out
-          </button>
+          <div className="flex gap-2">
+            {isAdmin && (
+              <NavLink
+                to="/settings"
+                className={({ isActive }) =>
+                  `inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-medium hover:bg-brand-soft ${
+                    isActive ? 'border-brand bg-brand-soft text-brand-dark' : 'border-line'
+                  }`
+                }
+              >
+                <Settings size={16} aria-hidden="true" /> Settings
+              </NavLink>
+            )}
+            <button
+              onClick={logout}
+              className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-lg border border-line px-3 text-sm font-medium hover:bg-brand-soft"
+            >
+              <LogOut size={16} aria-hidden="true" /> Sign out
+            </button>
+          </div>
         </div>
       </aside>
 

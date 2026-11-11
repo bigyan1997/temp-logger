@@ -68,11 +68,11 @@ Click **Sign out** at the bottom of the left-hand menu when you finish, especial
 
 ### The front page (day login only)
 
-After signing in, **day staff** see the Achieve HACCP front page, with a card for each part of the app. There are four cards: **Temperature Logger**, **Cleaning & Maintenance** (the cleaning tasks of Table 8 and the 6-monthly thermometer calibration of Table 14), **Records** (every saved record in one place) and **Settings** (logins, staff names, alert emails and public holidays). Click one to open it. The **All modules** link at the top of the left-hand menu brings you back to this page.
+After signing in, **day staff** see the Achieve HACCP front page, with a card for each part of the app. There are three cards: **Temperature Logger**, **Cleaning & Maintenance** (the cleaning tasks of Table 8 and the 6-monthly thermometer calibration of Table 14) and **Records** (every saved record in one place). The **Settings** button (a gear) at the top right, beside **Sign out**, opens logins, staff names, alert emails and public holidays. Day staff also see a **Settings** button beside **Sign out** at the bottom of the left menu in every module. Click one to open it. The **All modules** link at the top of the left-hand menu brings you back to this page.
 
 ![The Achieve HACCP front page](manual/01b-front-page.png)
 
-**Night staff** go straight into the Temperature Logger and never see this page. Calibration, Cleaning & Maintenance, Records and Settings are for day staff only.
+**Night staff** go straight into the Temperature Logger and never see this page. Calibration, Cleaning & Maintenance and Records are for day staff only, and so is the Settings button.
 
 ### Records (day staff)
 
@@ -354,7 +354,7 @@ The **Audit log** lists every void, correction, limit change, login change, publ
 
 What you manage is in two places, both for day staff only (the night login never sees them, and the server refuses it even if someone types the address):
 
-- **Settings** is a card on the front page. It holds what the whole app shares: **Logins**, **Staff names**, **Alert emails** and **Public holidays**.
+- **Settings** is the gear button beside **Sign out** (top right of the front page, bottom of the left menu in every module). It holds what the whole app shares: **Logins**, **Staff names**, **Alert emails** and **Public holidays**.
 - **Lists** is in the Temperature Logger menu. It holds what only the Temperature Logger uses: **Storage units**, **Suppliers** and **Delivery runs**.
 
 The cleaning tasks are managed on the **Tasks** page of Cleaning & Maintenance. The sections of each are listed in the left-hand menu: Staff names, Public holidays, Alert emails and Logins under **Settings**, and Storage units, Suppliers and Delivery runs under **Lists**.

@@ -1,4 +1,4 @@
-import { ChevronRight, LogOut, ShieldCheck } from 'lucide-react'
+import { ChevronRight, LogOut, Settings, ShieldCheck } from 'lucide-react'
 import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../auth.jsx'
 import CalibrationStatus, { useCalibrationDue } from '../components/CalibrationStatus.jsx'
@@ -25,12 +25,22 @@ export default function AppHome() {
             <p className="text-sm text-muted">Achieve Cafe Provisions · {isAdmin ? 'Admin login (day)' : 'Night login'}</p>
           </div>
         </div>
-        <button
-          onClick={logout}
-          className="inline-flex h-10 items-center gap-2 rounded-lg border border-line bg-surface px-3 text-sm font-medium hover:bg-brand-soft"
-        >
-          <LogOut size={16} aria-hidden="true" /> Sign out
-        </button>
+        <div className="flex items-center gap-2">
+          {isAdmin && (
+            <Link
+              to="/settings"
+              className="inline-flex h-10 items-center gap-2 rounded-lg border border-line bg-surface px-3 text-sm font-medium hover:bg-brand-soft"
+            >
+              <Settings size={16} aria-hidden="true" /> Settings
+            </Link>
+          )}
+          <button
+            onClick={logout}
+            className="inline-flex h-10 items-center gap-2 rounded-lg border border-line bg-surface px-3 text-sm font-medium hover:bg-brand-soft"
+          >
+            <LogOut size={16} aria-hidden="true" /> Sign out
+          </button>
+        </div>
       </header>
 
       {isAdmin && (
