@@ -45,8 +45,8 @@ def lines(updates, with_time=True):
     parts = []
     for update in updates:
         head = f'<b>{when(update.happened_at) if with_time else f"{timezone.localtime(update.happened_at):%d/%m/%Y}"}</b>'
-        parts.append(head + (f' {text(update.text)}' if update.text else ''))
-    return '<br/>'.join(parts) or NO_ANSWER
+        parts.append(head + (f'<br/>{text(update.text)}' if update.text else ''))  # the date on its own line, the note under it
+    return '<br/><br/>'.join(parts) or NO_ANSWER
 
 
 def signed_off(report):
