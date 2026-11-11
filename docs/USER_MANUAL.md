@@ -419,7 +419,7 @@ Other reminders go to the same list, and each kind looks different so you can te
 - **Temperature Logger** (teal): storage readings that are late.
 - **Cleaning & Maintenance** (blue): a monthly or quarterly task that is due, then once a week while it is not done (for example pest spray). The button opens the Notifications page.
 - **Calibration** (purple): the 6-monthly thermometer calibration is due soon or overdue.
-- **Achieve HACCP** (grey): things about the whole app, such as a failed database backup.
+- **Achieve HACCP** (grey): things about the whole app, such as a failed database backup or a failed update of the app. These go to one person (set up by whoever looks after the orders PC) instead of the whole Alert emails list.
 
 The subject line starts with the same name, for example "Cleaning & Maintenance: OVERDUE: Pest spray (quarterly)".
 

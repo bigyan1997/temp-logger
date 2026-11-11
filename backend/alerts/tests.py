@@ -12,7 +12,8 @@ from django.test import SimpleTestCase, override_settings
 
 from alerts.emails import module_for, render_html
 from alerts.models import AlertSent
-from alerts.sender import send_due_alerts
+from alerts.checks import Alert
+from alerts.sender import recipients_for, send_due_alerts
 from readings.tests.base import MONDAY_9AM, MONDAY_9PM, ReadingTestCase
 from setup.models import AlertRecipient, Unit
 
@@ -223,6 +224,56 @@ class BackupAlertTests(ReadingTestCase):
     @override_settings(BACKUP_DIR='')
     def test_not_checked_when_backup_dir_is_not_set(self):
         self.assertEqual(self.kinds(at(3, 7)), [])
+
+    @override_settings(SYSTEM_ALERT_EMAIL='system@example.com')
+    def test_a_failed_backup_goes_to_the_system_address_when_it_is_set(self):
+        self.assertEqual(self.kinds(at(3, 7)), ['backup'])
+        self.assertEqual(mail.outbox[0].to, ['system@example.com'])
+        self.assertTrue(mail.outbox[0].subject.startswith('Achieve HACCP: '))
+
+    @override_settings(SYSTEM_ALERT_EMAIL='system@example.com')
+    def test_a_failed_backup_is_still_emailed_when_the_alert_list_is_empty(self):
+        AlertRecipient.objects.all().update(active=False)
+        self.assertEqual(self.kinds(at(3, 7)), ['backup'])
+        self.assertEqual(mail.outbox[0].to, ['system@example.com'])
+
+    def test_a_failed_backup_goes_to_the_alert_list_when_there_is_no_system_address(self):
+        self.assertEqual(self.kinds(at(3, 7)), ['backup'])
+        self.assertEqual(mail.outbox[0].to, ['boss@example.com'])
+
+
+class SystemAlertTests(ReadingTestCase):
+    """Problems with the system itself (failed backup, failed deploy) go to SYSTEM_ALERT_EMAIL; the rest to the list."""
+
+    def test_only_system_problems_use_the_system_address(self):
+        AlertRecipient.objects.create(email='list@example.com')
+        with override_settings(SYSTEM_ALERT_EMAIL='system@example.com'):
+            self.assertEqual(recipients_for(Alert('backup', 'k', 's', 'b')), ['system@example.com'])
+            self.assertEqual(recipients_for(Alert('reminder', 'k', 's', 'b')), ['list@example.com'])
+            self.assertEqual(recipients_for(Alert('cleaning_due', 'k', 's', 'b')), ['list@example.com'])
+            self.assertEqual(recipients_for(Alert('calibration', 'k', 's', 'b')), ['list@example.com'])
+
+    @override_settings(SYSTEM_ALERT_EMAIL='system@example.com')
+    def test_a_failed_deploy_is_emailed_once_per_commit(self):
+        for _ in range(3):  # the deploy retries every 5 minutes
+            call_command('send_system_alert', 'Auto-deploy failed: tests failed', 'Tests failed.', '--kind', 'deploy_failed', '--key', 'abc1234')
+        call_command('send_system_alert', 'Auto-deploy failed: tests failed', 'Tests failed.', '--kind', 'deploy_failed', '--key', 'def5678')
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(mail.outbox[0].to, ['system@example.com'])
+        self.assertEqual(mail.outbox[0].subject, 'Achieve HACCP: Auto-deploy failed: tests failed')
+
+    def test_nothing_is_sent_and_nothing_fails_when_no_system_address_is_set(self):
+        call_command('send_system_alert', 'Auto-deploy failed', 'Tests failed.', '--key', 'abc')
+        self.assertEqual(mail.outbox, [])
+
+    @override_settings(SYSTEM_ALERT_EMAIL='system@example.com')
+    def test_the_system_address_can_be_tested(self):
+        call_command('send_alerts', '--test-system')
+        self.assertEqual(mail.outbox[0].to, ['system@example.com'])
+
+    def test_testing_the_system_address_needs_one_to_be_set(self):
+        with self.assertRaises(CommandError):
+            call_command('send_alerts', '--test-system')
 
 
 class EmailLookTests(SimpleTestCase):

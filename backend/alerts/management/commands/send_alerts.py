@@ -1,5 +1,6 @@
 """Emails any alerts that are due. Run every 5 minutes by a scheduled task (scripts/install_autostart.ps1)."""
 
+from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
@@ -13,9 +14,16 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--test', action='store_true', help='Send one test email to the Alert emails list')
+        parser.add_argument('--test-system', action='store_true', help='Send one test email to SYSTEM_ALERT_EMAIL (failed backups and deploys)')
         parser.add_argument('--demo', action='store_true', help='Send one made-up example of every alert to the list')
 
-    def handle(self, test, demo, **options):
+    def handle(self, test, demo, test_system, **options):
+        if test_system:
+            if not settings.SYSTEM_ALERT_EMAIL:
+                raise CommandError('SYSTEM_ALERT_EMAIL is not set in backend\\.env.')
+            send_alert_email(test_alert(), [settings.SYSTEM_ALERT_EMAIL])
+            self.stdout.write(f'Test email sent to {settings.SYSTEM_ALERT_EMAIL}.')
+            return
         if demo:
             to = recipients()
             if not to:

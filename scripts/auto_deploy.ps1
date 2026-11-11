@@ -41,6 +41,19 @@ function Write-Log($message) {
     Add-Content -Path $log -Value "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')  $message" -Encoding utf8
 }
 
+# Emails SYSTEM_ALERT_EMAIL (backend\.env) that a deploy failed, once per $key (the deploy retries every 5 minutes).
+# Never stops the deploy: if email is not set up or the command is missing, it just carries on.
+function Send-FailureEmail($subject, $message, $key) {
+    try {
+        Push-Location $backend
+        & $python manage.py send_system_alert --kind deploy_failed --key $key $subject $message 2>&1 | Out-Null
+    } catch {
+        Write-Log "  (could not send the failure email: $_)"
+    } finally {
+        Pop-Location
+    }
+}
+
 # Runs a command through cmd so its output is plain text. Returns the exit code;
 # the output goes to the log only when the command fails.
 function Invoke-Step($label, $command, $workdir = $root) {
@@ -127,6 +140,8 @@ try {
     $changed = git diff --name-only $old $new
 
     function Undo-Update($reason) {
+        # Email first, while the new code (and the email command) is still in place.
+        Send-FailureEmail "Auto-deploy failed: $reason" "Auto-deploy of $($new.Substring(0,7)) to the orders PC failed ($reason). The app stays on the previous version, $($old.Substring(0,7)). The change was: $summary. Details are in backend\logs\auto_deploy.log on the orders PC. It will keep trying every 5 minutes until the problem is fixed and pushed, but you will only get this email once." $new
         Write-Log "  Going back to $($old.Substring(0,7)) ($reason). The live app was not changed."
         & git reset --quiet --hard $old
         Remove-Item -Recurse -Force (Join-Path $frontend 'dist-next') -ErrorAction SilentlyContinue
@@ -163,16 +178,19 @@ try {
     }
 
     Write-Log '  App did not come back after the restart - going back to the previous version.'
+    Send-FailureEmail 'Auto-deploy: the app did not come back' "After deploying $($new.Substring(0,7)) the app did not answer, so it is going back to the previous version, $($old.Substring(0,7)). Details are in backend\logs\auto_deploy.log on the orders PC." "$new-down"
     & git reset --quiet --hard $old
     if ($frontendChanged -and (Build-Frontend $changed)) { Publish-Frontend | Out-Null }
     if (Restart-Server) {
         Write-Log "  Back on $($old.Substring(0,7)) - app is up. (A database migration from the failed version stays applied.)"
     } else {
         Write-Log '  ERROR: app still not answering after going back - needs a person to look at it.'
+        Send-FailureEmail 'THE APP IS DOWN on the orders PC' "After a failed deploy the app is still not answering, even on the previous version. Someone needs to look at the orders PC. Details are in backend\logs\auto_deploy.log." "$new-stillDown"
     }
     exit 1
 } catch {
     Write-Log "ERROR: auto-deploy stopped unexpectedly: $_"
+    Send-FailureEmail 'Auto-deploy stopped unexpectedly' "Auto-deploy on the orders PC stopped with an error: $_. Details are in backend\logs\auto_deploy.log. You will get this email at most once a day." "unexpected-$(Get-Date -Format 'yyyy-MM-dd')"
     exit 1
 } finally {
     Remove-Item -Path $lock -Force -ErrorAction SilentlyContinue
