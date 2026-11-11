@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { CheckCircle2, Download, Eye, FileDown, FilePlus2, Paperclip, TriangleAlert, XOctagon } from 'lucide-react'
+import { CheckCircle2, Download, Eye, FileDown, FilePlus2, Paperclip, Trash2, TriangleAlert, XOctagon } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../../api/client.js'
 import { formatDay, todayInSydney } from '../../lib/format.js'
+import DeleteReport from './DeleteReport.jsx'
 import DriveLink from './DriveLink.jsx'
 
 const PAGE_SIZE = 50 // matches the server
@@ -28,6 +29,7 @@ export default function NcrHome({ embedded = false }) {
   const [search, setSearch] = useState('')
   const [showVoided, setShowVoided] = useState(false)
   const [page, setPage] = useState(1)
+  const [deleting, setDeleting] = useState(null) // the report being deleted
   const [from, setFrom] = useState(daysAgo(364))
   const [to, setTo] = useState(todayInSydney())
 
@@ -78,7 +80,7 @@ export default function NcrHome({ embedded = false }) {
       </div>
 
       <div className="mt-4 overflow-x-auto rounded-xl border border-line bg-surface">
-        <table className="w-full min-w-[960px] text-left">
+        <table className="w-full min-w-[1040px] text-left">
           <thead className="border-b border-line text-sm text-muted">
             <tr>
               <th className="px-4 py-3 font-medium">No.</th>
@@ -87,7 +89,7 @@ export default function NcrHome({ embedded = false }) {
               <th className="px-4 py-3 font-medium">Customer</th>
               <th className="px-4 py-3 font-medium">Manufacturer</th>
               <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">PDF</th>
+              <th className="px-4 py-3 font-medium">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
@@ -115,12 +117,17 @@ export default function NcrHome({ embedded = false }) {
                   <a href={`/api/non-conformances/${r.id}/pdf/`} download={`${r.number}.pdf`} aria-label={`Download ${r.number} PDF`} className="inline-flex items-center gap-1 text-brand-dark hover:underline">
                     <Download size={15} aria-hidden="true" /> Download
                   </a>
+                  <button type="button" onClick={() => setDeleting(r)} aria-label={`Delete ${r.number}`} className="ml-3 inline-flex items-center gap-1 text-bad hover:underline">
+                    <Trash2 size={15} aria-hidden="true" /> Delete
+                  </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {deleting && <DeleteReport report={deleting} onClose={() => setDeleting(null)} />}
 
       {data && data.count > PAGE_SIZE && (
         <div className="mt-3 flex items-center gap-3 text-sm text-muted">

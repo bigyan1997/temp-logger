@@ -10,11 +10,15 @@ export default function DeleteReport({ report, onClose }) {
   const navigate = useNavigate()
   const [reason, setReason] = useState('')
   const [sure, setSure] = useState(false)
+  const finish = () => {
+    navigate('/ncr') // off the deleted report's page (or stay on the list)
+    onClose()
+  }
   const remove = useMutation({
     mutationFn: () => api(`/non-conformances/${report.id}/delete/`, { method: 'POST', body: { reason } }),
     onSuccess: (result) => {
       queryClient.invalidateQueries()
-      if (result.problems.length === 0) navigate('/ncr')
+      if (result.problems.length === 0) finish()
     },
   })
   const photoCount = report.photos.length
@@ -36,7 +40,7 @@ export default function DeleteReport({ report, onClose }) {
             <p role="alert" className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-near">
               The report is deleted, but: {remove.data.problems.join(' ')}
             </p>
-            <button type="button" onClick={() => navigate('/ncr')} className="mt-5 h-11 rounded-lg bg-brand px-5 font-semibold text-white hover:bg-brand-dark">Close</button>
+            <button type="button" onClick={finish} className="mt-5 h-11 rounded-lg bg-brand px-5 font-semibold text-white hover:bg-brand-dark">Close</button>
           </>
         ) : (
           <>
