@@ -64,11 +64,13 @@ class NonConformanceTests(ReadingTestCase):
         response = self.create()
         self.assertEqual(response.status_code, 201)
         body = response.json()
-        self.assertEqual(body['number'], 'NCR-0001')
+        self.assertEqual(body['number'], f"NCR-{body['id']:04d}")
         self.assertEqual(body['status'], 'open')
         self.assertEqual(body['recorded_by_name'], 'Sam')
         self.assertEqual(NonConformance.objects.get().entered_by, self.admin)
-        self.assertEqual(self.create().json()['number'], 'NCR-0002')
+        second = self.create().json()
+        self.assertEqual(second['number'], f"NCR-{second['id']:04d}")
+        self.assertGreater(second['id'], body['id'])  # numbers keep counting up
 
     def test_the_night_login_cannot_use_it(self):
         self.sign_in(self.night)
@@ -231,6 +233,7 @@ class DriveCopyTests(ReadingTestCase):
         self.addCleanup(override.disable)
         self.sign_in(self.admin)
         self.report_id = self.post('/api/non-conformances/', **REPORT).json()['id']
+        self.number = f'NCR-{self.report_id:04d}'
 
     def upload(self, *files):
         return self.client.post(f'/api/non-conformances/{self.report_id}/add_photos/', {'files': list(files), 'recorded_by': self.sam.pk}, format='multipart')
@@ -244,11 +247,11 @@ class DriveCopyTests(ReadingTestCase):
         self.assertEqual(response.json()['problems'], [])
         for root in (local, self.drive_folder):
             # The PDF goes in the report's own folder, beside its photo.
-            folder = root / 'Non-Conformance Reports' / 'NCR-0001 - Choc brownies 12pk BR12'
-            files = list(folder.glob('NCR-0001 - Choc brownies 12pk BR12 - *.pdf'))
+            folder = root / 'Non-Conformance Reports' / f'{self.number} - Choc brownies 12pk BR12'
+            files = list(folder.glob(f'{self.number} - Choc brownies 12pk BR12 - *.pdf'))
             self.assertEqual(len(files), 1, root)
             self.assertTrue(files[0].read_bytes().startswith(b'%PDF'))
-        self.assertEqual(len(list((self.drive_folder / 'Non-Conformance Reports' / 'NCR-0001 - Choc brownies 12pk BR12').glob('*.png'))), 1)
+        self.assertEqual(len(list((self.drive_folder / 'Non-Conformance Reports' / f'{self.number} - Choc brownies 12pk BR12').glob('*.png'))), 1)
 
     def test_notified_time_on_a_new_report_becomes_the_first_follow_up(self):
         response = self.post('/api/non-conformances/', notified_at='2026-11-02T09:30:00+11:00', **REPORT)
@@ -283,7 +286,7 @@ class DriveCopyTests(ReadingTestCase):
     def test_a_photo_is_copied_into_a_folder_for_the_report(self):
         response = self.upload(picture(name='brownies: carton?.png'))
         photo = Photo.objects.get()
-        copy = self.drive_folder / 'Non-Conformance Reports' / 'NCR-0001 - Choc brownies 12pk BR12' / f'{photo.pk}-brownies carton .png'
+        copy = self.drive_folder / 'Non-Conformance Reports' / f'{self.number} - Choc brownies 12pk BR12' / f'{photo.pk}-brownies carton .png'
         self.assertTrue(copy.is_file(), list(self.drive_folder.rglob('*')))
         self.assertEqual(copy.read_bytes(), (self.base / 'photos' / photo.path).read_bytes())
         self.assertEqual(response.json()[0]['copy_status'], 'saved')
@@ -330,7 +333,7 @@ class DriveCopyTests(ReadingTestCase):
                 drive.copy_pending()
                 drive.copy_pending()
         self.assertEqual(len(saved), 1)  # once, not on every retry
-        self.assertEqual(saved[0][0], ['Non-Conformance Reports', 'NCR-0001 - Choc brownies 12pk BR12'])
+        self.assertEqual(saved[0][0], ['Non-Conformance Reports', f'{self.number} - Choc brownies 12pk BR12'])
         self.assertEqual(saved[0][2], 'image/png')
         self.assertEqual(Photo.objects.get().copied_to, ['Google Drive folder abc', str(self.drive_folder)])
 
