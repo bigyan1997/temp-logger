@@ -17,7 +17,7 @@ from audit.models import AuditLog, record
 from reports.grids import MAX_DAYS
 
 from . import photos
-from .drive import copy_photo
+from .drive import copy_photo, drive_link
 from .saving import save_report_copies
 from .models import NonConformance, Photo, Update
 from .pdf import render_register, render_report
@@ -95,7 +95,8 @@ class NonConformanceViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixi
         open_reports = list(self.get_queryset().filter(voided=False).filter(~Exists(
             Update.objects.filter(report=OuterRef('pk'), kind=Update.Kind.CLOSED, voided=False))))
         oldest = min((r.date for r in open_reports), default=None)
-        return Response({'open': len(open_reports), 'oldest_open_days': (timezone.localdate() - oldest).days if oldest else None})
+        return Response({'open': len(open_reports), 'oldest_open_days': (timezone.localdate() - oldest).days if oldest else None,
+                         'drive_url': drive_link()})
 
     @action(detail=True, methods=['post'])
     def updates(self, request, pk=None):

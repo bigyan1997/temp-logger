@@ -45,6 +45,7 @@ Full detail is in docs/DEPLOYMENT.md. In short:
 9. Do not run a plain `npx vite build` on the live folder. Keep real hostnames, IPs and passwords in the gitignored `DEPLOYMENT_NOTES.md`.
 
 ## Progress log
+- 2026-11-12: NCR pages show an 'Open in Google Drive' link (list and report) when `GOOGLE_DRIVE_URL` or `GOOGLE_DRIVE_FOLDER_ID` is set; `summary/` returns `drive_url`.
 - 2026-11-11: NCR follow-up form is now a guided flow (no dropdown): it offers the next missing step (notified, response, corrective action, sign off), saving moves on to the next, 'No further action needed' saves 'None', 'Just a note' and clickable step chips for out-of-order.
 - 2026-11-11: NCR: the new-report page has an optional tick 'The manufacturer has been notified' (+ date/time) that saves the first follow-up; follow-ups can carry photos (`Photo.update`, migration `nonconformance/0003`, `add_photos` takes `update`), shown under the follow-up and in the PDF's Manufacturer Response / corrective action rows. Run `migrate`.
 - 2026-11-11: NCR report PDF now follows the paper Table 5 (same rows and wording, photos inside the description box, history below). New `POST /api/non-conformances/{id}/save_to_drive/` (`nonconformance/saving.py`) saves a dated PDF to the report_exports folder and the Drive destinations under `Non-Conformance Reports`; the report page has Download PDF and Upload to Drive buttons.

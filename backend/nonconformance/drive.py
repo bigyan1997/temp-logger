@@ -28,6 +28,15 @@ def configured_labels():
     return labels
 
 
+def drive_link():
+    """A web address for the Drive folder the reports and photos go to, or '' when none is known."""
+    if settings.GOOGLE_DRIVE_URL:
+        return settings.GOOGLE_DRIVE_URL
+    if settings.GOOGLE_DRIVE_FOLDER_ID:
+        return f'https://drive.google.com/drive/folders/{settings.GOOGLE_DRIVE_FOLDER_ID}'
+    return ''
+
+
 def copy_status(photo):
     """off (no extra place is set up), saved (every place has it) or waiting."""
     labels = configured_labels()

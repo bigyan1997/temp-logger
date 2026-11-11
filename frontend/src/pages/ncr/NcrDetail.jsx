@@ -6,6 +6,7 @@ import { api } from '../../api/client.js'
 import StaffPicker, { useStaffChoice } from '../../components/StaffPicker.jsx'
 import VoidReasonDialog from '../../components/VoidReasonDialog.jsx'
 import { formatDateTime, formatDay } from '../../lib/format.js'
+import DriveLink from './DriveLink.jsx'
 import { StatusLabel } from './NcrHome.jsx'
 import { nowForInput, uploadPhotos } from './NewNcr.jsx'
 
@@ -79,6 +80,7 @@ export default function NcrDetail() {
           >
             <CloudUpload size={16} aria-hidden="true" /> {saveToDrive.isPending ? 'Saving…' : 'Upload to Drive'}
           </button>
+          <DriveLink />
           {!voided && (
             <button
               onClick={() => setVoiding({ heading: 'Void this report', title: `${report.number} · ${report.product}`, endpoint: `/non-conformances/${report.id}/void/` })}

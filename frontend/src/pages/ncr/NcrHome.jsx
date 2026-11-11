@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../../api/client.js'
 import { formatDay, todayInSydney } from '../../lib/format.js'
+import DriveLink from './DriveLink.jsx'
 
 const PAGE_SIZE = 50 // matches the server
 const inputClass = 'h-10 rounded-lg border border-line bg-surface px-3 focus:border-brand focus:outline-2 focus:outline-brand'
@@ -57,6 +58,7 @@ export default function NcrHome({ embedded = false }) {
             <FilePlus2 size={16} aria-hidden="true" /> New report
           </Link>
         )}
+        <DriveLink />
         <label className="text-sm">
           Show
           <select value={status} onChange={reset(setStatus)} className={`${inputClass} ml-1`}>

@@ -150,6 +150,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 REPORTS_LOCAL_DIR = BASE_DIR.parent / 'report_exports'
 REPORTS_EXPORT_DIR = config('REPORTS_EXPORT_DIR', default='')  # a folder, e.g. Google Drive for desktop
 GOOGLE_DRIVE_FOLDER_ID = config('GOOGLE_DRIVE_FOLDER_ID', default='')  # upload straight to this Drive folder
+GOOGLE_DRIVE_URL = config('GOOGLE_DRIVE_URL', default='')  # link shown on the reports page, to open that Drive folder
 GOOGLE_SERVICE_ACCOUNT_FILE = config('GOOGLE_SERVICE_ACCOUNT_FILE', default='')  # the key file, kept outside the repo
 
 # The folder scripts/backup.ps1 writes the nightly database backup to. When set, an alert email is sent
@@ -166,7 +167,7 @@ SYSTEM_ALERT_EMAIL = config('SYSTEM_ALERT_EMAIL', default='')
 # The tests must never see this PC's real backup or Google Drive folders: a real backup folder changes
 # which alerts they expect, and they must not drop test PDFs into Drive. Tests that need one set it themselves.
 if sys.argv[1:2] == ['test']:
-    BACKUP_DIR = REPORTS_EXPORT_DIR = GOOGLE_DRIVE_FOLDER_ID = SYSTEM_ALERT_EMAIL = ''
+    BACKUP_DIR = REPORTS_EXPORT_DIR = GOOGLE_DRIVE_FOLDER_ID = GOOGLE_DRIVE_URL = SYSTEM_ALERT_EMAIL = ''
 
 # Alert emails (see docs/DEPLOYMENT.md). With no EMAIL_HOST they are only printed in the server window.
 APP_URL = config('APP_URL', default='')  # where staff open the app, for the button in alert emails (the address you type in the browser, with http://)

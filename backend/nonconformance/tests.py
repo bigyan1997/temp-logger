@@ -270,6 +270,13 @@ class DriveCopyTests(ReadingTestCase):
                                     {'files': [picture()], 'recorded_by': self.sam.pk, 'update': update_id}, format='multipart')
         self.assertEqual(response.status_code, 404)
 
+    def test_drive_link_comes_from_the_url_or_the_folder_id(self):
+        self.assertEqual(self.client.get('/api/non-conformances/summary/').json()['drive_url'], '')
+        with override_settings(GOOGLE_DRIVE_FOLDER_ID='abc123'):
+            self.assertEqual(self.client.get('/api/non-conformances/summary/').json()['drive_url'], 'https://drive.google.com/drive/folders/abc123')
+        with override_settings(GOOGLE_DRIVE_URL='https://drive.google.com/x', GOOGLE_DRIVE_FOLDER_ID='abc123'):
+            self.assertEqual(self.client.get('/api/non-conformances/summary/').json()['drive_url'], 'https://drive.google.com/x')
+
     def test_a_photo_is_copied_into_a_folder_for_the_report(self):
         response = self.upload(picture(name='brownies: carton?.png'))
         photo = Photo.objects.get()
