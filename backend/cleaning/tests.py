@@ -19,17 +19,26 @@ SYDNEY = ZoneInfo('Australia/Sydney')
 
 
 class RuleTests(SimpleTestCase):
-    def test_periods_start_on_the_first_of_the_month_or_quarter(self):
-        self.assertEqual(rules.period_start('monthly', date(2026, 11, 18)), date(2026, 11, 1))
-        self.assertEqual(rules.period_start('quarterly', date(2026, 11, 18)), date(2026, 10, 1))
-        self.assertEqual(rules.period_start('quarterly', date(2026, 3, 31)), date(2026, 1, 1))
-        self.assertEqual(rules.period_start('daily', date(2026, 11, 18)), date(2026, 11, 18))
+    def test_daily_is_due_on_working_days_only(self):
+        self.assertTrue(rules.is_due('daily', date(2026, 11, 2), None))
+        self.assertFalse(rules.is_due('daily', date(2026, 11, 7), None))  # a Saturday
 
-    def test_daily_is_due_on_working_days_and_the_rest_until_done(self):
-        self.assertTrue(rules.is_due('daily', date(2026, 11, 2), False))
-        self.assertFalse(rules.is_due('daily', date(2026, 11, 7), False))  # a Saturday
-        self.assertTrue(rules.is_due('monthly', date(2026, 11, 7), False))
-        self.assertFalse(rules.is_due('monthly', date(2026, 11, 7), True))
+    def test_monthly_is_due_from_the_first_until_ticked_that_month(self):
+        self.assertTrue(rules.is_due('monthly', date(2026, 11, 7), date(2026, 10, 30)))  # last done last month
+        self.assertFalse(rules.is_due('monthly', date(2026, 11, 7), date(2026, 11, 3)))
+        self.assertEqual(rules.due_date('monthly', date(2026, 10, 30), date(2026, 11, 18)), date(2026, 11, 1))
+
+    def test_quarterly_is_due_three_months_after_it_was_last_done(self):
+        done = date(2026, 9, 10)
+        self.assertFalse(rules.is_due('quarterly', date(2026, 11, 11), done))  # not just because a new calendar quarter began
+        self.assertFalse(rules.is_due('quarterly', date(2026, 12, 9), done))
+        self.assertTrue(rules.is_due('quarterly', date(2026, 12, 10), done))
+        self.assertEqual(rules.due_date('quarterly', done, date(2026, 12, 20)), date(2026, 12, 10))
+        self.assertEqual(rules.due_date('quarterly', date(2026, 8, 31), date(2026, 12, 20)), date(2026, 11, 30))  # short month
+
+    def test_a_quarterly_task_never_done_is_due_since_the_quarter_began(self):
+        self.assertTrue(rules.is_due('quarterly', date(2026, 11, 11), None))
+        self.assertEqual(rules.due_date('quarterly', None, date(2026, 11, 11)), date(2026, 10, 1))
 
 
 class ReminderTests(ReadingTestCase):
@@ -53,7 +62,8 @@ class ReminderTests(ReadingTestCase):
         self.assertEqual(notified, {self.forklift.pk, self.pest.pk, self.bait.pk})
 
     def test_a_task_is_due_from_the_first_working_day_of_its_period(self):
-        # 1 Nov 2026 is a Sunday, so the forklift is due on Monday 2 November. The quarter began on Thursday 1 October.
+        # 1 Nov 2026 is a Sunday, so the forklift is due on Monday 2 November. Pest spray, never done, has been due since
+        # the quarter began on Thursday 1 October.
         self.assertNotIn('Forklift', self.due(date(2026, 11, 1)))
         self.assertEqual(self.due(date(2026, 11, 2))['Forklift']['due_date'], date(2026, 11, 2))
         self.assertEqual(self.due(date(2026, 11, 2))['Pest']['due_date'], date(2026, 10, 1))
@@ -90,6 +100,16 @@ class ReminderTests(ReadingTestCase):
         moment = datetime(2026, 11, 2, 9, 0, tzinfo=SYDNEY)
         self.assertEqual([a for a in send_due_alerts(moment) if a.kind.startswith('cleaning')], [])
         self.assertIn('Forklift', self.due(date(2026, 11, 2)))  # but the app still shows it as due
+
+    def test_a_quarterly_task_done_in_september_is_not_due_in_november(self):
+        # The owner ticked pest spray and bait change on 10 September: they are due again around 10 December.
+        admin = User.objects.create_user('sep@x.com', email='sep@x.com', password='x', role='admin')
+        for task in (self.pest, self.bait):
+            CleaningCheck.objects.create(task=task, date=date(2026, 9, 10), recorded_by=self.sam, entered_by=admin)
+        self.assertNotIn('Pest', self.due(date(2026, 11, 11)))
+        self.assertNotIn('Bait', self.due(date(2026, 11, 11)))
+        self.assertIn('Forklift', self.due(date(2026, 11, 11)))  # the monthly one is still its own thing
+        self.assertEqual(self.due(date(2026, 12, 10))['Pest']['due_date'], date(2026, 12, 10))
 
     def test_the_notifications_page_lists_what_is_due_and_what_was_sent(self):
         AlertRecipient.objects.create(email='boss@example.com')
@@ -178,7 +198,8 @@ class CleaningApiTests(ReadingTestCase):
         later = pest('2026-11-09')
         self.assertFalse(later['due'])
         self.assertEqual(later['last_done'], '2026-11-02')
-        self.assertTrue(pest('2027-01-04')['due'])  # next quarter
+        self.assertFalse(pest('2027-01-04')['due'])  # three months after 2 November is 2 February
+        self.assertTrue(pest('2027-02-02')['due'])
 
     def test_voiding_needs_a_reason_is_audited_in_its_own_log_and_lets_it_be_ticked_again(self):
         self.tick(self.bathroom)

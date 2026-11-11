@@ -5,7 +5,7 @@ const section = {
   label: 'Cleaning tasks',
   endpoint: '/cleaning-tasks/',
   intro:
-    'The tasks ticked on the Cleaning screen, one for each column of the paper Table 8. "Every working day" tasks are due Monday to Friday; monthly and quarterly ones are due until they are done in that month or quarter. A task that has been ticked cannot be deleted: deactivate it, and its old ticks keep their name.',
+    'The tasks ticked on the Cleaning screen, one for each column of the paper Table 8. "Every working day" tasks are due Monday to Friday; a monthly task is due from the 1st of each month until it is ticked that month, and a quarterly one is due three months after it was last done. A task that has been ticked cannot be deleted: deactivate it, and its old ticks keep their name.',
   addLabel: 'Add a task',
   empty: 'No tasks yet.',
   activeKey: 'active',

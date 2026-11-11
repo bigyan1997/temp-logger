@@ -16,9 +16,9 @@ def cleaning_alerts(now):
     for item in due_tasks(timezone.localdate(now)):
         if item['last_done'] is None:
             continue
-        task, period, due_date = item['task'], item['period'], item['due_date']
+        task, due_date = item['task'], item['due_date']
         reminder = item['days_late'] // OVERDUE_AFTER_DAYS  # 0 on the first day, 1 a week later, and so on
-        key = f'{task.pk}:{period.isoformat()}:{reminder}'
+        key = f'{task.pk}:{due_date.isoformat()}:{reminder}'
         if reminder == 0:
             lead = f'{task.name} (Table 8) is due. It is {task.get_frequency_display().lower()}.'
             found.append(Alert('cleaning_due', key, f'Due: {task.name}', lead, lead=lead, tone='reminder'))

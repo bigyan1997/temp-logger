@@ -1,8 +1,9 @@
 """Monthly and quarterly tasks that are due (forklift recharge, pest spray, bait change): for the notices in the
 app and the reminder emails (alerts/cleaning_check.py).
 
-A task is due from the first working day of its month or quarter, and stays due until it is ticked. After
-OVERDUE_AFTER_DAYS it is called overdue. Weekends and the public holidays in Settings are not working days."""
+The rules for when a task is due are in rules.py. A due task stays due until it is ticked, and is called overdue
+after OVERDUE_AFTER_DAYS. A due date that falls on a weekend or a public holiday in Settings moves to the next
+working day."""
 
 from datetime import timedelta
 
@@ -22,25 +23,23 @@ def first_working_day(day):
 
 
 def due_tasks(today):
-    """The tasks (with notices switched on) that are due and not yet done this month or quarter, oldest first."""
+    """The tasks (with notices switched on) that are due now, oldest first."""
     found = []
     tasks = CleaningTask.objects.filter(active=True, notify=True).exclude(frequency=Frequency.DAILY)
     for task in tasks:
-        period = rules.period_start(task.frequency, today)
-        due_date = first_working_day(period)
+        last = CleaningCheck.objects.filter(task=task, voided=False, date__lte=today).order_by('-date').first()
+        last_done = last.date if last else None
+        if rules.is_done(task.frequency, last_done, today):
+            continue
+        due_date = first_working_day(rules.due_date(task.frequency, last_done, today))
         if today < due_date:
             continue
-        checks = CleaningCheck.objects.filter(task=task, voided=False, date__gte=period)
-        if checks.exists():
-            continue
-        last = CleaningCheck.objects.filter(task=task, voided=False).order_by('-date').first()
         days_late = (today - due_date).days
         found.append({
             'task': task,
-            'period': period,
             'due_date': due_date,
             'days_late': days_late,
             'state': 'overdue' if days_late >= OVERDUE_AFTER_DAYS else 'due',
-            'last_done': last.date if last else None,
+            'last_done': last_done,
         })
     return sorted(found, key=lambda item: item['due_date'])

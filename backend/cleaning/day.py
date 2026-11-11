@@ -17,8 +17,7 @@ def day_status(day):
     for task in CleaningTask.objects.all():
         if not task.active and task.pk not in done_today:
             continue
-        period = rules.period_start(task.frequency, day)
-        last = live.filter(task=task, date__gte=period, date__lte=day).order_by('-date').first()
+        last = live.filter(task=task, date__lte=day).order_by('-date').first()
         times = done_today.get(task.pk, [])
         tasks.append({
             'id': task.pk,
@@ -26,7 +25,7 @@ def day_status(day):
             'frequency': task.frequency,
             'frequency_label': task.get_frequency_display(),
             'repeatable': task.repeatable,
-            'due': rules.is_due(task.frequency, day, last is not None),
+            'due': rules.is_due(task.frequency, day, last.date if last else None),
             'done': bool(times),
             # Each time it was done that day (a repeatable task can have several).
             'times': [

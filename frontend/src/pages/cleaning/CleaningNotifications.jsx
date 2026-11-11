@@ -12,7 +12,7 @@ export default function CleaningNotifications() {
     <div className="max-w-4xl">
       <h1 className="text-2xl font-semibold">Notifications</h1>
       <p className="mt-1 max-w-prose text-muted">
-        A task shows here from the first working day of its month or quarter until it is ticked off, and is marked overdue after a week.
+        A monthly task shows here from the first working day of the month until it is ticked off. A quarterly one shows three months after it was last done. Either is marked overdue after a week.
         Reminder emails go to the Alert emails list (Settings, Alert emails): once when it falls due, then once a week while it is not done.
         Choose which tasks send reminders on the Tasks page.
       </p>
