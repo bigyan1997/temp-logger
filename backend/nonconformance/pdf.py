@@ -20,6 +20,7 @@ STYLES = getSampleStyleSheet()
 BODY = ParagraphStyle('Body', parent=STYLES['Normal'], fontSize=9, leading=12, spaceAfter=3)
 CELL = ParagraphStyle('Cell', parent=STYLES['Normal'], fontSize=8, leading=10)
 HEAD = ParagraphStyle('Head', parent=CELL, fontName='Helvetica-Bold')
+FORM_LABEL = ParagraphStyle('FormLabel', parent=CELL, fontSize=9.5, leading=12)
 SMALL = ParagraphStyle('Small', parent=STYLES['Normal'], fontSize=8, leading=10, textColor=colors.HexColor('#555555'))
 GREY = colors.HexColor('#e6e6e6')
 RED = '#8c1020'
@@ -105,25 +106,29 @@ def render_report(report):
     width = A4[0] - document.leftMargin - document.rightMargin
     label_width = 52 * mm
 
-    story = [Paragraph(f'5. Table 5: Non-Conformance Report ({report.number})', HEADING)]
+    story = [Paragraph(f'5. Table 5 - Non-Conformance Report ({report.number})', HEADING)]
     if report.voided:
         story.append(Paragraph(f'<font color="{RED}"><b>VOIDED: {text(report.void_reason)}</b></font>', BODY))
+    inner = width - label_width - 4 * mm
+    description = [Paragraph(text(report.description), CELL)]
+    if any(not p.voided for p in report.photos.all()):
+        description += [Spacer(1, 3 * mm)] + photo_flowables(report, inner)  # photos sit in the description box, as on paper
+    # Same rows, in the same order and wording, as the paper form.
     rows = [
-        ('Date', f'{report.date:%d/%m/%Y}'),
-        ('Product name / code', text(report.product)),
-        ('Customer', text(report.customer) or NO_ANSWER),
-        ('Manufacturer', text(report.manufacturer) or NO_ANSWER),
-        ('Description of problem', text(report.description)),
-        ('Has manufacturer been notified (date and time)', lines(live(report, Update.Kind.NOTIFIED))),
-        ('Manufacturer response', lines(live(report, Update.Kind.RESPONSE))),
-        ('Further corrective action to be taken', lines(live(report, Update.Kind.ACTION))),
-        ('Signed / dated', signed_off(report)),
-        ('Reported by', f'{escape(report.recorded_by.name)}, {when(report.recorded_at)}'),
+        ('Date', Paragraph(f'{report.date:%d/%m/%Y}', CELL)),
+        ('Product Name / Code', Paragraph(text(report.product), CELL)),
+        ('Customer', Paragraph(text(report.customer) or NO_ANSWER, CELL)),
+        ('Manufacturer', Paragraph(text(report.manufacturer) or NO_ANSWER, CELL)),
+        ('Description of Problem<br/>(attach photos if available)', description),
+        ('Has manufacturer been notified.<br/>(specify date and time)', Paragraph(lines(live(report, Update.Kind.NOTIFIED)), CELL)),
+        ('Manufacturer Response', Paragraph(lines(live(report, Update.Kind.RESPONSE)), CELL)),
+        ('Specify further corrective action to be taken', Paragraph(lines(live(report, Update.Kind.ACTION)), CELL)),
+        ('Signed / Dated', Paragraph(signed_off(report), CELL)),
     ]
-    table = Table([[Paragraph(label, HEAD), Paragraph(value, CELL)] for label, value in rows], colWidths=[label_width, width - label_width])
+    table = Table([[Paragraph(label, FORM_LABEL), value] for label, value in rows], colWidths=[label_width, width - label_width])
     table.setStyle(table_style(header=False))
-    table.setStyle(TableStyle([('BACKGROUND', (0, 0), (0, -1), GREY)]))
-    story += [table, Spacer(1, 5 * mm)]
+    story += [table, Spacer(1, 3 * mm),
+              Paragraph(f'Reported by {escape(report.recorded_by.name)}, {when(report.recorded_at)}', SMALL), Spacer(1, 4 * mm)]
 
     history = [u for u in report.updates.all()]
     if history:
@@ -138,8 +143,6 @@ def render_report(report):
         history_table = Table(rows, colWidths=[34 * mm, 38 * mm, 24 * mm, width - 96 * mm], repeatRows=1)
         history_table.setStyle(table_style())
         story += [history_table, Spacer(1, 5 * mm)]
-
-    story += photo_flowables(report, width) if any(not p.voided for p in report.photos.all()) else []
 
     buffer = BytesIO()
     document.filename = buffer

@@ -52,6 +52,9 @@ export default function NcrDetail() {
   const [voiding, setVoiding] = useState(null) // { heading, title, endpoint }
   const { data: report, isLoading, error } = useQuery({ queryKey: ['ncr', id], queryFn: () => api(`/non-conformances/${id}/`) })
 
+  // Saves a PDF of the report, as it is now, on this PC and in Google Drive.
+  const saveToDrive = useMutation({ mutationFn: () => api(`/non-conformances/${id}/save_to_drive/`, { method: 'POST' }) })
+
   const addPhotos = useMutation({
     mutationFn: (files) => uploadPhotos(id, files, staffId),
     onSuccess: () => queryClient.invalidateQueries(),
@@ -72,9 +75,16 @@ export default function NcrDetail() {
       <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">{report.number} <span className="ml-2 text-base"><StatusLabel status={report.status} /></span></h1>
         <div className="flex gap-2">
-          <a href={`/api/non-conformances/${report.id}/pdf/`} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center gap-2 rounded-lg border border-line px-3 text-sm font-medium hover:bg-brand-soft">
-            <FileDown size={16} aria-hidden="true" /> PDF
+          <a href={`/api/non-conformances/${report.id}/pdf/`} download={`${report.number}.pdf`} className="inline-flex h-10 items-center gap-2 rounded-lg border border-line px-3 text-sm font-medium hover:bg-brand-soft">
+            <FileDown size={16} aria-hidden="true" /> Download PDF
           </a>
+          <button
+            onClick={() => saveToDrive.mutate()}
+            disabled={saveToDrive.isPending}
+            className="inline-flex h-10 items-center gap-2 rounded-lg border border-line px-3 text-sm font-medium hover:bg-brand-soft disabled:opacity-50"
+          >
+            <CloudUpload size={16} aria-hidden="true" /> {saveToDrive.isPending ? 'Saving…' : 'Upload to Drive'}
+          </button>
           {!voided && (
             <button
               onClick={() => setVoiding({ heading: 'Void this report', title: `${report.number} · ${report.product}`, endpoint: `/non-conformances/${report.id}/void/` })}
@@ -86,6 +96,13 @@ export default function NcrDetail() {
         </div>
       </div>
 
+      {saveToDrive.error && <p role="alert" className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-bad">{saveToDrive.error.message}</p>}
+      {saveToDrive.data && (
+        <p role="status" className={`mt-3 rounded-lg px-3 py-2 text-sm ${saveToDrive.data.problems.length ? 'bg-amber-50 text-near' : 'bg-green-50 text-ok'}`}>
+          {saveToDrive.data.saved.length > 0 && `Saved ${saveToDrive.data.name} to: ${saveToDrive.data.saved.join(', ')}. `}
+          {saveToDrive.data.problems.join(' ')}
+        </p>
+      )}
       {state?.notice && <p role="alert" className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-near">{state.notice}</p>}
       {voided && <p className="mt-3 whitespace-pre-line rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-bad">Voided: {report.void_reason}</p>}
 

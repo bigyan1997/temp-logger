@@ -235,6 +235,18 @@ class DriveCopyTests(ReadingTestCase):
     def upload(self, *files):
         return self.client.post(f'/api/non-conformances/{self.report_id}/add_photos/', {'files': list(files), 'recorded_by': self.sam.pk}, format='multipart')
 
+    def test_the_report_pdf_can_be_saved_to_drive_and_this_pc(self):
+        self.upload(picture())
+        local = self.base / 'local'
+        with override_settings(REPORTS_LOCAL_DIR=local):
+            response = self.client.post(f'/api/non-conformances/{self.report_id}/save_to_drive/')
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.json()['problems'], [])
+        for root in (local, self.drive_folder):
+            files = list((root / 'Non-Conformance Reports').glob('NCR-0001 - Choc brownies 12pk BR12 - *.pdf'))
+            self.assertEqual(len(files), 1, root)
+            self.assertTrue(files[0].read_bytes().startswith(b'%PDF'))
+
     def test_a_photo_is_copied_into_a_folder_for_the_report(self):
         response = self.upload(picture(name='brownies: carton?.png'))
         photo = Photo.objects.get()

@@ -18,6 +18,7 @@ from reports.grids import MAX_DAYS
 
 from . import photos
 from .drive import copy_photo
+from .saving import save_report_copies
 from .models import NonConformance, Photo, Update
 from .pdf import render_register, render_report
 from .serializers import AddUpdateSerializer, NonConformanceSerializer, PhotoSerializer, UpdateSerializer
@@ -148,6 +149,11 @@ class NonConformanceViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixi
         response = HttpResponse(render_report(report), content_type='application/pdf')
         response['Content-Disposition'] = f'inline; filename="{report.number}.pdf"'
         return response
+
+    @action(detail=True, methods=['post'])
+    def save_to_drive(self, request, pk=None):
+        """Save a PDF of the report, as it is now, on this PC and in Google Drive. Each press makes a new dated file."""
+        return Response(save_report_copies(self.get_object()))
 
     @action(detail=False, methods=['get'])
     def register(self, request):
