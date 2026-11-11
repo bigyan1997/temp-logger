@@ -1,20 +1,25 @@
 import {
   BarChart3,
   Bell,
+  CalendarDays,
   ClipboardList,
   FilePlus2,
   FileText,
   Gauge,
   History,
   Home,
+  KeyRound,
+  Mail,
   ListChecks,
   PackageCheck,
+  Route,
   SprayCan,
   Settings,
   Snowflake,
-  SlidersHorizontal,
+  Store,
   Thermometer,
   Truck,
+  Users,
 } from 'lucide-react'
 import { CleaningNavBadge } from '../components/CleaningNotices.jsx'
 
@@ -42,7 +47,15 @@ export const temperatureMenu = {
         { to: '/trends', label: 'Trends', Icon: BarChart3 },
         { to: '/reports', label: 'Reports', Icon: FileText },
         { to: '/audit', label: 'Audit log', Icon: History },
-        { to: '/lists', label: 'Lists', Icon: SlidersHorizontal },
+      ],
+    },
+    {
+      label: 'Lists',
+      adminOnly: true,
+      links: [
+        { to: '/lists/units', label: 'Storage units', Icon: Snowflake },
+        { to: '/lists/suppliers', label: 'Suppliers', Icon: Store },
+        { to: '/lists/runs', label: 'Delivery runs', Icon: Route },
       ],
     },
   ],
@@ -86,6 +99,15 @@ export const recordsMenu = {
 export const settingsMenu = {
   name: 'Settings',
   Icon: Settings,
-  home: { to: '/settings', label: 'Settings', Icon: Settings },
-  groups: [],
+  groups: [
+    {
+      label: 'Settings',
+      links: [
+        { to: '/settings/staff', label: 'Staff names', Icon: Users },
+        { to: '/settings/closed-days', label: 'Public holidays', Icon: CalendarDays },
+        { to: '/settings/alerts', label: 'Alert emails', Icon: Mail },
+        { to: '/settings/logins', label: 'Logins', Icon: KeyRound },
+      ],
+    },
+  ],
 }

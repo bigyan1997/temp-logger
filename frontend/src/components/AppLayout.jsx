@@ -48,9 +48,11 @@ export default function AppLayout({ menu }) {
               <LayoutGrid size={18} aria-hidden="true" /> All modules
             </NavLink>
           )}
-          <NavLink to={menu.home.to} end className={navClass}>
-            <menu.home.Icon size={18} aria-hidden="true" /> {menu.home.label}
-          </NavLink>
+          {menu.home && (
+            <NavLink to={menu.home.to} end className={navClass}>
+              <menu.home.Icon size={18} aria-hidden="true" /> {menu.home.label}
+            </NavLink>
+          )}
 
           {menu.groups
             .filter((group) => isAdmin || !group.adminOnly)

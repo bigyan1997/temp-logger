@@ -357,7 +357,7 @@ What you manage is in two places, both for day staff only (the night login never
 - **Settings** is a card on the front page. It holds what the whole app shares: **Logins**, **Staff names**, **Alert emails** and **Public holidays**.
 - **Lists** is in the Temperature Logger menu. It holds what only the Temperature Logger uses: **Storage units**, **Suppliers** and **Delivery runs**.
 
-The cleaning tasks are managed on the **Tasks** page of Cleaning & Maintenance. In each, the sections are along the top left.
+The cleaning tasks are managed on the **Tasks** page of Cleaning & Maintenance. The sections of each are listed in the left-hand menu: Staff names, Public holidays, Alert emails and Logins under **Settings**, and Storage units, Suppliers and Delivery runs under **Lists**.
 
 ### Staff names
 
