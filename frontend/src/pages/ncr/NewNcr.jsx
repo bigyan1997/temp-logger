@@ -113,17 +113,24 @@ function ReportForm({ staffId, date }) {
       </div>
 
       <div>
-        <label className="flex items-center gap-3 text-base font-medium">
-          <input type="checkbox" checked={notified} onChange={(e) => setNotified(e.target.checked)} className="size-5 accent-brand" />
-          The manufacturer has been notified
-        </label>
+        <fieldset>
+          <legend className="mb-1 text-sm font-medium">Has the manufacturer been notified?</legend>
+          <div className="flex gap-3">
+            {[{ value: true, label: 'Yes' }, { value: false, label: 'No' }].map((choice) => (
+              <label key={choice.label} className={`inline-flex h-11 min-w-20 cursor-pointer items-center justify-center gap-2 rounded-lg border px-4 font-medium ${notified === choice.value ? 'border-brand bg-brand-soft' : 'border-line hover:bg-brand-soft'}`}>
+                <input type="radio" name="notified" checked={notified === choice.value} onChange={() => setNotified(choice.value)} className="size-4 accent-brand" />
+                {choice.label}
+              </label>
+            ))}
+          </div>
+        </fieldset>
         {notified && (
           <div className="mt-2">
             <label htmlFor="notified-at" className="mb-1 block text-sm">Date and time they were told</label>
             <input id="notified-at" type="datetime-local" value={notifiedAt} max={nowForInput()} onChange={(e) => e.target.value && setNotifiedAt(e.target.value)} className={`${inputClass} w-64`} />
           </div>
         )}
-        <p className="mt-1 text-xs text-muted">Not told yet? Leave it unticked and add it later from the report.</p>
+        <p className="mt-1 text-xs text-muted">Not told yet? Leave it on No and add it later from the report.</p>
       </div>
 
       <div>

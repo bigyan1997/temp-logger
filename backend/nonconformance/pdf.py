@@ -126,7 +126,7 @@ def render_report(report):
         ('Customer', Paragraph(text(report.customer) or NO_ANSWER, CELL)),
         ('Manufacturer', Paragraph(text(report.manufacturer) or NO_ANSWER, CELL)),
         ('Description of Problem<br/>(attach photos if available)', description),
-        ('Has manufacturer been notified.<br/>(specify date and time)', Paragraph(lines(live(report, Update.Kind.NOTIFIED)), CELL)),
+        ('Has manufacturer been notified.<br/>(specify date and time)', Paragraph(lines(live(report, Update.Kind.NOTIFIED)) if live(report, Update.Kind.NOTIFIED) else 'No', CELL)),  # a clear No, as the form asks yes or no
         ('Manufacturer Response', with_photos(Update.Kind.RESPONSE)),
         ('Specify further corrective action to be taken', with_photos(Update.Kind.ACTION)),
         ('Signed / Dated', Paragraph(signed_off(report), CELL)),

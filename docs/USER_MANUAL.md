@@ -109,7 +109,7 @@ This is the paper Table 5. Use it when there is a problem with a product: a cust
 ![The list of non-conformance reports](manual/31-ncr-list.png)
 
 1. Click **New report**. Pick your name, check the **Day**, then type the **Product name / code**, the **Customer**, the **Manufacturer** (your supplier names are suggested as you type) and a **Description of the problem**. Enter in the description starts a new line.
-2. If the manufacturer has already been told, tick **The manufacturer has been notified** (the date and time are filled in; change them if needed). Otherwise leave it and add it later.
+2. If the manufacturer has already been told, answer **Has the manufacturer been notified?** with **Yes** (the date and time are filled in; change them if needed) or **No** (add it later from the report; the PDF says No until then).
 3. Click **Choose photos** to attach photos (JPG, PNG, GIF or WEBP, up to 10 MB each, up to 20 per report). Click **Save report**.
 
 ![A new report with a photo chosen](manual/32-ncr-new.png)
