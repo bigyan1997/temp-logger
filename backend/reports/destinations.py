@@ -26,10 +26,16 @@ class LocalFolder:
         return (self.folder / name).exists()
 
     def save(self, name, pdf):
+        self.save_in([], name, pdf)
+
+    def save_in(self, subfolders, name, data, content_type=None):
+        """Save a file inside subfolders (made if they are not there yet), e.g. ['Non-Conformance Photos', 'NCR-0001']."""
+        folder = self.folder.joinpath(*subfolders)
+        folder.mkdir(parents=True, exist_ok=True)
         # Written under a temporary name first, so a sync program never picks up half a file.
-        target = self.folder / name
-        partial = target.with_suffix('.tmp')
-        partial.write_bytes(pdf)
+        target = folder / name
+        partial = target.with_name(target.name + '.tmp')
+        partial.write_bytes(data)
         partial.replace(target)
 
 
@@ -74,12 +80,34 @@ class GoogleDrive:
         return bool(self.check(response)['files'])
 
     def save(self, name, pdf):
+        self.save_in([], name, pdf, 'application/pdf')
+
+    def folder_in(self, parent_id, name):
+        """The id of the folder called `name` inside `parent_id`, made if it is not there yet."""
+        escaped = name.replace('\\', '\\\\').replace("'", "\\'")
+        found = self.check(self.session.get(DRIVE_FILES, params={
+            'q': f"name = '{escaped}' and '{parent_id}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
+            'fields': 'files(id)', 'supportsAllDrives': 'true', 'includeItemsFromAllDrives': 'true',
+        }))['files']
+        if found:
+            return found[0]['id']
+        made = self.session.post(
+            DRIVE_FILES, params={'supportsAllDrives': 'true', 'fields': 'id'},
+            json={'name': name, 'mimeType': 'application/vnd.google-apps.folder', 'parents': [parent_id]},
+        )
+        return self.check(made)['id']
+
+    def save_in(self, subfolders, name, data, content_type='application/pdf'):
+        """Save a file inside subfolders of the Drive folder (made if they are not there yet)."""
         import json
 
-        metadata = json.dumps({'name': name, 'parents': [self.folder_id]}).encode()
+        parent = self.folder_id
+        for subfolder in subfolders:
+            parent = self.folder_in(parent, subfolder)
+        metadata = json.dumps({'name': name, 'parents': [parent]}).encode()
         body = (
             f'--{BOUNDARY}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'.encode() + metadata
-            + f'\r\n--{BOUNDARY}\r\nContent-Type: application/pdf\r\n\r\n'.encode() + pdf
+            + f'\r\n--{BOUNDARY}\r\nContent-Type: {content_type}\r\n\r\n'.encode() + data
             + f'\r\n--{BOUNDARY}--'.encode()
         )
         response = self.session.post(

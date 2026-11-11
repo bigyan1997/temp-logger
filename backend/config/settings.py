@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'alerts',
     'calibration',
     'cleaning',
+    'nonconformance',
 ]
 
 MIDDLEWARE = [
@@ -154,6 +155,9 @@ GOOGLE_SERVICE_ACCOUNT_FILE = config('GOOGLE_SERVICE_ACCOUNT_FILE', default='') 
 # The folder scripts/backup.ps1 writes the nightly database backup to. When set, an alert email is sent
 # if a day has no backup in it. Empty means the backup is not monitored.
 BACKUP_DIR = config('BACKUP_DIR', default='')
+
+# Where the photos attached to non-conformance reports are kept (a folder on this PC, backed up by scripts/backup.ps1).
+NCR_PHOTOS_DIR = config('NCR_PHOTOS_DIR', default=str(BASE_DIR.parent / 'ncr_photos'))
 
 # Where problems with the system itself are emailed: a failed nightly backup, a failed auto-deploy. Empty means a
 # failed backup goes to the Alert emails list instead, and a failed deploy is only written to the log.

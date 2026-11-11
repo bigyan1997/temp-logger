@@ -61,6 +61,7 @@ temp-logger/
     audit/              AuditLog (one `module` per line: temperature or calibration), void/supersede logic
     calibration/        Calibration + GaugeCheck (Table 14), PDF, due date rules, voids
     cleaning/           CleaningTask + CleaningCheck (Table 8): the day's tick list, voids, PDF, due rules
+    nonconformance/     NonConformance + Update + Photo (Table 5): reports, follow-ups, photos (kept in NCR_PHOTOS_DIR, copied to Drive), PDFs
     reports/            PDF generation, CSV export
     requirements.txt
   frontend/
@@ -192,6 +193,7 @@ An out-of-limit reading is saved together with its corrective action: an action 
 | GET `audit-log/?module=` | Admin | The audit log of one module (`temperature`, the default, `calibration` or `cleaning`): voids, limit changes, login changes |
 | GET, POST `calibrations/`; GET `calibrations/{id}/`, `{id}/pdf/`, `due/`; POST `{id}/void/` | Admin | The Calibration module (Table 14). Never edited or deleted; a mistake is voided with a reason (written to the calibration audit log) |
 | GET `cleaning-checks/day/?date=`; POST `cleaning-checks/`; GET `cleaning-checks/` (`from`, `to`, `task`, `include_voided`); POST `cleaning-checks/{id}/void/`; GET `cleaning-checks/pdf/?from=&to=`; GET `cleaning-checks/notifications/` (tasks due now and the reminder emails sent); GET, POST, PATCH, DELETE `cleaning-tasks/` | Admin | The Cleaning & Maintenance module (Table 8). A tick is never edited or deleted; a mistake is voided with a reason. A task nothing refers to can be deleted, otherwise deactivate it |
+| GET, POST `non-conformances/` (`status`, `q`, `from`, `to`, `include_voided`); GET `{id}/`, `{id}/pdf/`, `register/`, `summary/`; POST `{id}/updates/`, `{id}/add_photos/` (multipart), `{id}/void/`, `updates/{id}/void/`, `photos/{id}/void/`; GET `photos/{id}/` | Admin | The Non-Conformance Reports module (Table 5). A report is never edited or deleted; follow-ups are added, and a mistake is voided with a reason. Photos are only served to a signed-in day login |
 | GET `trends/?unit=&from=&to=` | Admin | One unit's temperatures over time |
 | GET `reports/{storage,receiving,dispatch}.pdf?from=&to=` | Admin | PDF copying paper Tables 9, 10 and 11 (up to 186 days (about 6 months); whole Sunday-to-Friday weeks; Table 9 has 4 weeks per page with rotated unit names, Tables 10 and 11 have a row per day, starting with a Sunday night row) |
 | GET `reading-options/` | Anyone | Limits, corrective-action choices per kind of check, product types, storage slot times |

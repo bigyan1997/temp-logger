@@ -68,15 +68,15 @@ Click **Sign out** at the bottom of the left-hand menu when you finish, especial
 
 ### The front page (day login only)
 
-After signing in, **day staff** see the Achieve HACCP front page, with a card for each part of the app. There are three cards: **Temperature Logger**, **Cleaning & Maintenance** (the cleaning tasks of Table 8 and the 6-monthly thermometer calibration of Table 14) and **Records** (every saved record in one place). The **Settings** button (a gear) at the top right, beside **Sign out**, opens logins, staff names, alert emails and public holidays. Day staff also see a **Settings** button beside **Sign out** at the bottom of the left menu in every module. Click one to open it. The **All modules** link at the top of the left-hand menu brings you back to this page.
+After signing in, **day staff** see the Achieve HACCP front page, with a card for each part of the app. There are four cards: **Temperature Logger**, **Cleaning & Maintenance** (the cleaning tasks of Table 8 and the 6-monthly thermometer calibration of Table 14), **Non-Conformance Reports** (Table 5) and **Records** (every saved record in one place). The **Settings** button (a gear) at the top right, beside **Sign out**, opens logins, staff names, alert emails and public holidays. Day staff also see a **Settings** button beside **Sign out** at the bottom of the left menu in every module. Click one to open it. The **All modules** link at the top of the left-hand menu brings you back to this page.
 
 ![The Achieve HACCP front page](manual/01b-front-page.png)
 
-**Night staff** go straight into the Temperature Logger and never see this page. Calibration, Cleaning & Maintenance and Records are for day staff only, and so is the Settings button.
+**Night staff** go straight into the Temperature Logger and never see this page. Calibration, Cleaning & Maintenance, Non-Conformance Reports and Records are for day staff only, and so is the Settings button.
 
 ### Records (day staff)
 
-The **Records** card opens one page with a tab for each kind of record: **Coolrooms & freezers**, **Receiving**, **Dispatch**, **Calibration** and **Cleaning**. Each tab has the same filters (month, day, unit, supplier or run, out of limit only, show voided) and the same **Void / correct** button. The Temperature Logger and Calibration menus also have their own **Records** page that shows only their own records, for quick access.
+The **Records** card opens one page with a tab for each kind of record: **Coolrooms & freezers**, **Receiving**, **Dispatch**, **Calibration**, **Cleaning** and **Non-conformance**. Each tab has the same filters (month, day, unit, supplier or run, out of limit only, show voided) and the same **Void / correct** button. The Temperature Logger and Calibration menus also have their own **Records** page that shows only their own records, for quick access.
 
 ![The Records page, with a tab for each kind of record](manual/28-all-records.png)
 
@@ -101,6 +101,29 @@ This is the paper Table 8. **Tick tasks** (the home page) shows every task for o
 ![Cleaning records: every tick, with Void and the Table 8 PDF](manual/26-cleaning-records.png)
 
 ![The Tasks page: add, rename or deactivate a task](manual/27-cleaning-tasks.png)
+
+### Non-Conformance Reports (day staff)
+
+This is the paper Table 5. Use it when there is a problem with a product: a customer complaint (out of date, a foreign object, melted product), a damaged or contaminated delivery, or evidence of pests. It has its own card on the front page.
+
+![The list of non-conformance reports](manual/31-ncr-list.png)
+
+1. Click **New report**. Pick your name, check the **Day**, then type the **Product name / code**, the **Customer**, the **Manufacturer** (your supplier names are suggested as you type) and a **Description of the problem**. Enter in the description starts a new line.
+2. Click **Choose photos** to attach photos (JPG, PNG, GIF or WEBP, up to 10 MB each, up to 20 per report). Click **Save report**.
+
+![A new report with a photo chosen](manual/32-ncr-new.png)
+
+A report is saved once and never changed. What happens afterwards is added to it as dated **follow-ups**, each with the person's name and the date and time:
+
+- **Manufacturer notified** (the date and time they were told), then **Manufacturer response**, then **Further corrective action**, or a plain **Note**.
+- **Close the report (signed off)** when it is finished. A closed report can still have notes added.
+- A follow-up or photo added by mistake is **voided** with a reason (the Audit log in this module records it). Nothing is deleted.
+
+![A report with its photos and follow-ups](manual/33-ncr-detail.png)
+
+- Each photo is kept on the computer and a copy is saved into Google Drive, in the same place as the report PDFs, in a folder named after the report. Under each photo it says **In Google Drive**, or **Waiting to copy to Google Drive** (it keeps trying by itself if Google Drive for desktop was not running).
+- **PDF** on a report gives that report with its history and photos. **Table 5 register (PDF)**, at the bottom of the list, gives every report in the dates you choose, laid out like the paper table.
+- **Show** on the list chooses Open, Closed or All reports, and **Search** finds a product, customer or manufacturer.
 
 ### Calibration (day staff, inside Cleaning & Maintenance)
 

@@ -64,6 +64,16 @@ function Remove-OldBackups($folder) {
 }
 Remove-OldBackups $BackupDir
 
+# Report photos (non-conformance reports) are files, not database rows, so the dump does not include them. Copy the
+# photos folder next to the backup. Photos are only ever added, so this never removes anything (no /MIR, no /PURGE).
+$photos = $settings['NCR_PHOTOS_DIR']
+if (-not $photos) { $photos = Join-Path $root 'ncr_photos' }
+if (Test-Path $photos) {
+    robocopy $photos (Join-Path $BackupDir 'ncr_photos') /E /XO /R:1 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
+    if ($LASTEXITCODE -ge 8) { Write-Log "WARNING: copying the report photos failed (robocopy exit $LASTEXITCODE)." } else { Write-Log 'Report photos copied.' }
+    $global:LASTEXITCODE = 0  # robocopy uses 1 to mean "files were copied"; that is not a failure of the backup
+}
+
 # Second copy in the Google Drive for desktop folder (BACKUP_DRIVE_DIR in backend\.env).
 # Drive uploads it by itself. A failure here is logged but does not fail the backup,
 # because the local copy above is already safe.

@@ -1,10 +1,13 @@
 import { Link, Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from './auth.jsx'
 import AppLayout from './components/AppLayout.jsx'
-import { cleaningMenu, recordsMenu, settingsMenu, temperatureMenu } from './lib/menus.js'
+import { cleaningMenu, ncrMenu, recordsMenu, settingsMenu, temperatureMenu } from './lib/menus.js'
 import CalibrationHome from './pages/calibration/CalibrationHome.jsx'
 import CalibrationRecords from './pages/calibration/CalibrationRecords.jsx'
 import NewCalibration from './pages/calibration/NewCalibration.jsx'
+import NcrDetail from './pages/ncr/NcrDetail.jsx'
+import NcrHome from './pages/ncr/NcrHome.jsx'
+import NewNcr from './pages/ncr/NewNcr.jsx'
 import CleaningHome from './pages/cleaning/CleaningHome.jsx'
 import CleaningNotifications from './pages/cleaning/CleaningNotifications.jsx'
 import CleaningRecords from './pages/cleaning/CleaningRecords.jsx'
@@ -106,6 +109,20 @@ export default function App() {
         <Route path="/calibration/new" element={adminPage(<NewCalibration />)} />
         <Route path="/calibration/records" element={adminPage(<CalibrationRecords />)} />
         <Route path="/calibration/audit" element={adminPage(<AuditLog module="calibration" />)} />
+      </Route>
+
+      {/* The Non-Conformance Reports module (Table 5): day staff only. */}
+      <Route
+        element={
+          <RequireAuth>
+            <AppLayout menu={ncrMenu} />
+          </RequireAuth>
+        }
+      >
+        <Route path="/ncr" element={adminPage(<NcrHome />)} />
+        <Route path="/ncr/new" element={adminPage(<NewNcr />)} />
+        <Route path="/ncr/audit" element={adminPage(<AuditLog module="nonconformance" />)} />
+        <Route path="/ncr/:id" element={adminPage(<NcrDetail />)} />
       </Route>
 
       {/* Settings shared by the whole app. Day staff only. */}

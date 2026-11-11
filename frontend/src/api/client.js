@@ -32,14 +32,15 @@ export class ApiError extends Error {
 
 export async function api(path, { method = 'GET', body } = {}) {
   const headers = { Accept: 'application/json' }
-  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  const isUpload = body instanceof FormData // files: the browser sets the content type itself
+  if (body !== undefined && !isUpload) headers['Content-Type'] = 'application/json'
   if (method !== 'GET') headers['X-CSRFToken'] = getCookie('csrftoken')
 
   const response = await fetch(`/api${path}`, {
     method,
     headers,
     credentials: 'same-origin',
-    ...(body !== undefined && { body: JSON.stringify(body) }),
+    ...(body !== undefined && { body: isUpload ? body : JSON.stringify(body) }),
   })
 
   const data = response.status === 204 ? null : await response.json().catch(() => null)

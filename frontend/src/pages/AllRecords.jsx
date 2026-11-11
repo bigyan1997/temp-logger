@@ -1,6 +1,7 @@
 import { useSearchParams } from 'react-router-dom'
 import CalibrationRecords from './calibration/CalibrationRecords.jsx'
 import CleaningRecords from './cleaning/CleaningRecords.jsx'
+import NcrHome from './ncr/NcrHome.jsx'
 import Records from './admin/Records.jsx'
 
 // One tab for each kind of record. `kind` is what Records.jsx understands; Calibration and Cleaning have their own pages.
@@ -10,6 +11,7 @@ const tabs = [
   { key: 'dispatch', label: 'Dispatch' },
   { key: 'calibration', label: 'Calibration' },
   { key: 'cleaning', label: 'Cleaning' },
+  { key: 'ncr', label: 'Non-conformance' },
 ]
 
 // Every saved record of every module in one place (day staff only). The tab is kept in the address (?tab=).
@@ -35,7 +37,7 @@ export default function AllRecords() {
       </div>
 
       {/* key: start each tab with fresh filters */}
-      {tab === 'calibration' ? <CalibrationRecords key={tab} embedded /> : tab === 'cleaning' ? <CleaningRecords key={tab} embedded /> : <Records key={tab} kind={tab} />}
+      {tab === 'calibration' ? <CalibrationRecords key={tab} embedded /> : tab === 'cleaning' ? <CleaningRecords key={tab} embedded /> : tab === 'ncr' ? <NcrHome key={tab} embedded /> : <Records key={tab} kind={tab} />}
     </div>
   )
 }

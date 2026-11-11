@@ -19,6 +19,7 @@ import {
   Store,
   Thermometer,
   Truck,
+  TriangleAlert,
   Users,
 } from 'lucide-react'
 import { CleaningNavBadge } from '../components/CleaningNotices.jsx'
@@ -94,6 +95,22 @@ export const recordsMenu = {
   Icon: ClipboardList,
   home: { to: '/all-records', label: 'All records', Icon: ClipboardList },
   groups: [],
+}
+
+export const ncrMenu = {
+  name: 'Non-Conformance',
+  Icon: TriangleAlert,
+  home: { to: '/ncr', label: 'Reports', Icon: ClipboardList },
+  groups: [
+    {
+      label: 'Table 5',
+      adminOnly: true,
+      links: [
+        { to: '/ncr/new', label: 'New report', Icon: FilePlus2 },
+        { to: '/ncr/audit', label: 'Audit log', Icon: History },
+      ],
+    },
+  ],
 }
 
 export const settingsMenu = {

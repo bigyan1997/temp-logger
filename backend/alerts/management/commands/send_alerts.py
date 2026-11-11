@@ -7,6 +7,7 @@ from django.utils import timezone
 from alerts.checks import sample_alerts, test_alert
 from alerts.emails import send_alert_email
 from alerts.sender import recipients, send_due_alerts
+from nonconformance.drive import copy_pending
 
 
 class Command(BaseCommand):
@@ -43,3 +44,10 @@ class Command(BaseCommand):
         for alert in sent:
             self.stdout.write(f'Sent: {alert.subject}')
         self.stdout.write(f'Done: {len(sent)} alert(s).')
+        # This task runs every 5 minutes, so it also retries any report photo that is not in Google Drive yet.
+        try:
+            copied = copy_pending()
+            if copied:
+                self.stdout.write(f'Copied {copied} report photo(s) to Google Drive.')
+        except Exception as problem:  # never let this stop the alerts
+            self.stdout.write(f'Report photo copy failed: {problem}')

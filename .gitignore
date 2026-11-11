@@ -27,3 +27,6 @@ test.sqlite3
 
 # Saved report PDFs (real records, kept on the PC only)
 report_exports/
+
+# Photos attached to non-conformance reports (real records, kept on the PC only)
+ncr_photos/
