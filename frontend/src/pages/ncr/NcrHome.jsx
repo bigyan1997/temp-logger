@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { CheckCircle2, FileDown, FilePlus2, Paperclip, TriangleAlert, XOctagon } from 'lucide-react'
+import { CheckCircle2, Download, Eye, FileDown, FilePlus2, Paperclip, TriangleAlert, XOctagon } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../../api/client.js'
@@ -76,7 +76,7 @@ export default function NcrHome({ embedded = false }) {
       </div>
 
       <div className="mt-4 overflow-x-auto rounded-xl border border-line bg-surface">
-        <table className="w-full min-w-[820px] text-left">
+        <table className="w-full min-w-[960px] text-left">
           <thead className="border-b border-line text-sm text-muted">
             <tr>
               <th className="px-4 py-3 font-medium">No.</th>
@@ -85,12 +85,13 @@ export default function NcrHome({ embedded = false }) {
               <th className="px-4 py-3 font-medium">Customer</th>
               <th className="px-4 py-3 font-medium">Manufacturer</th>
               <th className="px-4 py-3 font-medium">Status</th>
+              <th className="px-4 py-3 font-medium">PDF</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
-            {isLoading && <tr><td colSpan={6} className="px-4 py-3 text-muted">Loading…</td></tr>}
+            {isLoading && <tr><td colSpan={7} className="px-4 py-3 text-muted">Loading…</td></tr>}
             {!isLoading && reports.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-3 text-muted">{status === 'open' ? 'No open reports.' : 'No reports found.'}</td></tr>
+              <tr><td colSpan={7} className="px-4 py-3 text-muted">{status === 'open' ? 'No open reports.' : 'No reports found.'}</td></tr>
             )}
             {reports.map((r) => (
               <tr key={r.id} className={`hover:bg-brand-soft ${r.voided ? 'text-muted line-through' : ''}`}>
@@ -105,6 +106,14 @@ export default function NcrHome({ embedded = false }) {
                 <td className="px-4 py-3">{r.customer}</td>
                 <td className="px-4 py-3">{r.manufacturer}</td>
                 <td className="px-4 py-3 no-underline"><StatusLabel status={r.status} /></td>
+                <td className="whitespace-nowrap px-4 py-3 no-underline">
+                  <a href={`/api/non-conformances/${r.id}/pdf/`} target="_blank" rel="noreferrer" aria-label={`View ${r.number} PDF`} className="mr-3 inline-flex items-center gap-1 text-brand-dark hover:underline">
+                    <Eye size={15} aria-hidden="true" /> View
+                  </a>
+                  <a href={`/api/non-conformances/${r.id}/pdf/`} download={`${r.number}.pdf`} aria-label={`Download ${r.number} PDF`} className="inline-flex items-center gap-1 text-brand-dark hover:underline">
+                    <Download size={15} aria-hidden="true" /> Download
+                  </a>
+                </td>
               </tr>
             ))}
           </tbody>
