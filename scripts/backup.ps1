@@ -87,4 +87,10 @@ if ($driveDir) {
     } catch {
         Write-Log "WARNING: could not copy to Google Drive folder ($driveDir): $_"
     }
+    # The report photos too, so Drive holds everything needed to restore. Added only, never removed (as above).
+    if (Test-Path $photos) {
+        robocopy $photos (Join-Path $driveDir 'ncr_photos') /E /XO /R:1 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
+        if ($LASTEXITCODE -ge 8) { Write-Log "WARNING: copying the report photos to Google Drive failed (robocopy exit $LASTEXITCODE)." } else { Write-Log 'Report photos copied to Google Drive.' }
+        $global:LASTEXITCODE = 0
+    }
 }
