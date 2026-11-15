@@ -18,7 +18,9 @@ STYLES = getSampleStyleSheet()
 HEAD = ParagraphStyle('Head', parent=STYLES['Normal'], fontSize=6.5, leading=7.5, alignment=1)
 CELL = ParagraphStyle('Cell', parent=STYLES['Normal'], fontSize=7, leading=8)
 TICKED = ParagraphStyle('Ticked', parent=CELL, alignment=1)
+HEAD_LEFT = ParagraphStyle('HeadLeft', parent=HEAD, alignment=0)
 NOTE = ParagraphStyle('Note', parent=STYLES['Normal'], fontSize=8, leading=10, spaceAfter=2)
+NOTE_TITLE = ParagraphStyle('NoteTitle', parent=NOTE, spaceAfter=3, keepWithNext=1)  # the title never sits alone at a page end
 GREY = colors.HexColor('#e6e6e6')
 TICK = '<font name="ZapfDingbats">4</font>'  # a check mark, which the normal fonts do not have
 
@@ -26,6 +28,29 @@ TICK = '<font name="ZapfDingbats">4</font>'  # a check mark, which the normal fo
 def lines(text):
     """Safe to put in a Paragraph, keeping the line breaks of a note."""
     return escape(text).replace('\r', '').replace('\n', '<br/>')
+
+
+def detail_table(title, text_heading, checks, text_of, width):
+    """A tidy table under the schedule: Date, Task, the note (or void reason) and who did it.
+    A note with several lines stays together in its own cell, so it is clear where each one starts and ends."""
+    date_width, task_width, by_width = 20 * mm, 55 * mm, 28 * mm
+    rows = [[Paragraph(heading, HEAD_LEFT) for heading in ('Date', 'Task', text_heading, 'Done by')]]
+    for check in checks:
+        rows.append([
+            Paragraph(f'{check.date:%d/%m/%y}', CELL),
+            Paragraph(escape(check.task.name), CELL),
+            Paragraph(lines(text_of(check)), CELL),
+            Paragraph(escape(check.recorded_by.name), CELL),
+        ])
+    table = Table(rows, colWidths=[date_width, task_width, width - date_width - task_width - by_width, by_width], repeatRows=1)
+    table.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+        ('BACKGROUND', (0, 0), (-1, 0), GREY),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 3),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+    ]))
+    return [Paragraph(f'<b>{title}</b>', NOTE_TITLE), table, Spacer(1, 4 * mm)]
 
 
 def tick_text(times):
@@ -84,13 +109,11 @@ def render_cleaning(start, end):
     ]))
 
     story = [Paragraph('8. Table 8: Cleaning & Maintenance Schedule', HEADING), table, Spacer(1, 4 * mm)]
-    notes = [check for check in live if check.note]
+    notes = sorted((check for check in live if check.note), key=lambda check: (check.date, check.pk))
     if notes:
-        story.append(Paragraph('<b>Notes</b>', NOTE))
-        story += [Paragraph(f'{check.date:%d/%m/%y} {escape(check.task.name)}: {lines(check.note)}', NOTE) for check in notes]
+        story += detail_table('Notes', 'Note', notes, lambda check: check.note, width)
     if voided:
-        story.append(Paragraph('<b>Voided entries (not counted above)</b>', NOTE))
-        story += [Paragraph(f'{check.date:%d/%m/%y} {escape(check.task.name)}: {lines(check.void_reason)}', NOTE) for check in voided]
+        story += detail_table('Voided entries (not counted above)', 'Reason', voided, lambda check: check.void_reason, width)
 
     buffer = BytesIO()
     document.filename = buffer
