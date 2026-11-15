@@ -4,7 +4,7 @@ import { useRef, useState } from 'react'
 import { api } from '../../api/client.js'
 import CleaningNotices from '../../components/CleaningNotices.jsx'
 import EntryShell from '../../components/EntryShell.jsx'
-import { formatDay } from '../../lib/format.js'
+import { formatDay, todayInSydney } from '../../lib/format.js'
 import { focusNext } from '../../lib/focusNext.js'
 
 const NEXT_TASK = 'input[data-task]:not(:disabled)' // the tick boxes that can still be ticked
@@ -38,8 +38,16 @@ function statusText(task, workingDay) {
   if (task.repeatable && task.done) return `Done ${task.times.length} time${task.times.length === 1 ? '' : 's'} today. Tick to add another`
   if (task.done) return `Done by ${task.times[0].done_by}`
   if (task.due) return 'Due'
-  if (task.last_done) return `Done on ${formatDay(task.last_done)}`
   return workingDay ? 'Not due' : 'No cleaning scheduled on weekends'
+}
+
+// Shown on every task, whatever its status, so staff can see how long it has been.
+function lastDoneText(task, date) {
+  if (!task.last_done) return 'Never done'
+  const text = `Last done ${formatDay(task.last_done)}`
+  if (date !== todayInSydney()) return text // "ago" only makes sense when looking at today
+  const days = Math.round((new Date(date) - new Date(task.last_done)) / 86_400_000)
+  return days === 0 ? `${text} (today)` : `${text} (${days} day${days === 1 ? '' : 's'} ago)`
 }
 
 function TaskList({ staffId, date }) {
@@ -120,6 +128,7 @@ function TaskList({ staffId, date }) {
                 <span className="mb-1 block w-fit rounded bg-brand-soft px-1.5 py-0.5 text-xs text-brand-dark">{task.frequency_label}</span>
               )}
               {statusText(task, data.working_day)}
+              <span className="block text-xs">{lastDoneText(task, date)}</span>
             </div>
             {task.times.length > 0 && (
               <ul className="basis-full space-y-1.5 pl-9 text-sm">

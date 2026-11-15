@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, FileDown } from 'lucide-react'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { api } from '../../api/client.js'
@@ -213,6 +213,16 @@ export default function Records({ kind: fixedKind }) {
             }} className="size-5 accent-brand" />
           Show voided
         </label>
+        {/* The paper table (9, 10 or 11) for the days shown here. It covers whole weeks, so the dates are rounded out. */}
+        <a
+          href={`/api/reports/${kind}.pdf?from=${from}&to=${to}`}
+          target="_blank"
+          rel="noreferrer"
+          title="The paper table as a PDF, for the days shown. It covers whole Sunday-to-Friday weeks."
+          className="inline-flex h-10 items-center gap-2 rounded-lg bg-brand px-4 font-semibold text-white hover:bg-brand-dark"
+        >
+          <FileDown size={16} aria-hidden="true" /> PDF
+        </a>
       </div>
 
       <div className="mt-4 overflow-x-auto rounded-xl border border-line bg-surface">
