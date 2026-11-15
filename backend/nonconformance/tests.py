@@ -1,5 +1,6 @@
 import shutil
 import tempfile
+from datetime import timedelta
 from io import BytesIO
 from pathlib import Path
 from unittest import mock
@@ -367,6 +368,31 @@ class DriveCopyTests(ReadingTestCase):
         self.assertEqual(saved[0][0], ['Non-Conformance Reports', f'{self.number} - Choc brownies 12pk BR12'])
         self.assertEqual(saved[0][2], 'image/png')
         self.assertEqual(Photo.objects.get().copied_to, ['Google Drive folder abc', str(self.drive_folder)])
+
+    def test_a_photo_stuck_for_hours_is_emailed_once_a_day_to_the_system_address(self):
+        from alerts.drive_check import drive_upload_alerts
+        from alerts.emails import MODULES, module_for
+
+        shutil.rmtree(self.drive_folder)  # Drive cannot be reached
+        self.upload(picture(name='carton.png'))
+        uploaded = Photo.objects.get().recorded_at
+        self.assertEqual(drive_upload_alerts(uploaded + timedelta(hours=1)), [])  # may still sort itself out
+        alerts = drive_upload_alerts(uploaded + timedelta(hours=4))
+        self.assertEqual(len(alerts), 1)
+        self.assertEqual(alerts[0].kind, 'drive_upload')
+        self.assertEqual(alerts[0].items, (f'{self.number}: carton.png',))
+        self.assertIn('could not be reached', alerts[0].body)
+        self.assertIs(module_for('drive_upload'), MODULES['system'])  # so it goes to SYSTEM_ALERT_EMAIL
+        self.drive_folder.mkdir()  # Drive is back and the retry copies it
+        drive.copy_pending()
+        self.assertEqual(drive_upload_alerts(uploaded + timedelta(hours=5)), [])
+
+    def test_nothing_is_emailed_when_no_drive_place_is_set_up(self):
+        from alerts.drive_check import drive_upload_alerts
+
+        with override_settings(REPORTS_EXPORT_DIR='', GOOGLE_DRIVE_FOLDER_ID=''):
+            self.upload(picture())
+            self.assertEqual(drive_upload_alerts(Photo.objects.get().recorded_at + timedelta(days=1)), [])
 
 
 class SignedInDriveTests(ReadingTestCase):
