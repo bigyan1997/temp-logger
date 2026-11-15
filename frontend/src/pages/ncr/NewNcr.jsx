@@ -6,6 +6,7 @@ import { api } from '../../api/client.js'
 import EntryShell from '../../components/EntryShell.jsx'
 import { enterMovesOn } from '../../lib/focusNext.js'
 import { useActiveList } from '../../lib/useActiveList.js'
+import { FILE_ACCEPT, FILE_HELP } from './Attachment.jsx'
 
 const inputClass =
   'h-12 w-full rounded-lg border border-line bg-surface px-3 text-base focus:border-brand focus:outline-2 focus:outline-brand'
@@ -134,12 +135,12 @@ function ReportForm({ staffId, date }) {
       </div>
 
       <div>
-        <p className="mb-1 text-sm font-medium">Photos (if available)</p>
+        <p className="mb-1 text-sm font-medium">Photos and files (if available)</p>
         <label className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg border border-line px-4 font-medium hover:bg-brand-soft">
-          <ImagePlus size={18} aria-hidden="true" /> Choose photos
+          <ImagePlus size={18} aria-hidden="true" /> Choose photos or files
           <input
             type="file"
-            accept="image/jpeg,image/png,image/gif,image/webp"
+            accept={FILE_ACCEPT}
             multiple
             className="sr-only"
             onChange={(e) => {
@@ -148,7 +149,7 @@ function ReportForm({ staffId, date }) {
             }}
           />
         </label>
-        <p className="mt-1 text-xs text-muted">JPG, PNG, GIF or WEBP, up to 10 MB each. A copy is also saved to Google Drive.</p>
+        <p className="mt-1 text-xs text-muted">{FILE_HELP} A copy is also saved to Google Drive.</p>
         {files.length > 0 && (
           <ul className="mt-2 space-y-1 text-sm">
             {files.map((file, index) => (

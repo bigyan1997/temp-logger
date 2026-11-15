@@ -71,9 +71,13 @@ def table_style(header=True):
 
 
 def photo_flowables(photo_list, width):
-    """The photos, two to a row, each with its file name. A file that cannot be drawn is just named."""
+    """The photos, two to a row, each with its file name. Documents (PDF, Word...) cannot be drawn, so they are listed
+    by name. A picture that cannot be drawn is named too."""
     pictures, problems = [], []
+    documents = [photo.original_name for photo in photo_list if not photo.content_type.startswith('image/')]
     for photo in photo_list:
+        if not photo.content_type.startswith('image/'):
+            continue
         try:
             path = photos.full_path(photo.path)
             with PilImage.open(path) as opened:
@@ -90,6 +94,8 @@ def photo_flowables(photo_list, width):
         table = Table([[Table([[cell[0]], [cell[1]]]) for cell in cells]], colWidths=[width / 2] * len(row))
         table.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'TOP')]))
         story += [table, Spacer(1, 3 * mm)]
+    if documents:
+        story.append(Paragraph('Documents attached (kept with the report): ' + escape(', '.join(documents)), SMALL))
     if problems:
         story.append(Paragraph('Photo file(s) could not be shown: ' + escape(', '.join(problems)), SMALL))
     return story
@@ -160,7 +166,7 @@ def render_register(start, end):
     rows = [[Paragraph(name, HEAD) for name in names]]
     for report in reports:
         photo_count = sum(1 for photo in report.photos.all() if not photo.voided)
-        description = text(report.description) + (f'<br/><i>({photo_count} photo{"s" if photo_count != 1 else ""} attached)</i>' if photo_count else '')
+        description = text(report.description) + (f'<br/><i>({photo_count} file{"s" if photo_count != 1 else ""} attached)</i>' if photo_count else '')
         rows.append([
             Paragraph(f'<b>{report.number}</b><br/>{report.date:%d/%m/%Y}', CELL), Paragraph(text(report.product), CELL),
             Paragraph(text(report.customer) or NO_ANSWER, CELL), Paragraph(text(report.manufacturer) or NO_ANSWER, CELL),

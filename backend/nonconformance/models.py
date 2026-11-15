@@ -65,7 +65,7 @@ class Photo(Attributed):
     update = models.ForeignKey(Update, null=True, blank=True, on_delete=models.PROTECT, related_name='photos')
     path = models.CharField(max_length=200, help_text='Where the file is, inside NCR_PHOTOS_DIR.')
     original_name = models.CharField(max_length=200)
-    content_type = models.CharField(max_length=40)
+    content_type = models.CharField(max_length=100)  # a Word file's type alone is 71 letters
     size = models.PositiveIntegerField()
     # Copies kept somewhere else too (the same Google Drive places the report PDFs go to), by place name.
     copied_to = models.JSONField(default=list, blank=True)

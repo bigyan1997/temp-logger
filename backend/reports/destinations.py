@@ -117,8 +117,19 @@ class GoogleDrive:
         self.check(response)
 
 
+def test_destinations():
+    """On a test computer: one TEST folder in the signed-in account's Drive, and nothing live."""
+    # Imported here: the signed-in Drive lives with the non-conformance code, and the rest of this file does not need it.
+    from nonconformance import oauth_drive
+
+    return [oauth_drive.OAuthDrive(root_name=settings.DRIVE_TEST_REPORTS_FOLDER)] if oauth_drive.enabled() else []
+
+
 def extra_destinations():
-    """The optional extra copies named in settings (backend\\.env): a Google Drive folder and/or a synced folder."""
+    """The optional extra copies named in settings (backend\\.env): a Google Drive folder and/or a synced folder.
+    On a test computer (DRIVE_TEST_MODE) they are replaced by a TEST folder, so live Drive is never touched."""
+    if settings.DRIVE_TEST_MODE:
+        return test_destinations()
     found = []
     if settings.GOOGLE_DRIVE_FOLDER_ID:
         if not settings.GOOGLE_SERVICE_ACCOUNT_FILE:

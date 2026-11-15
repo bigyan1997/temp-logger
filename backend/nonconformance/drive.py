@@ -16,25 +16,30 @@ from . import oauth_drive, photos
 from .models import Photo
 
 # One folder per report, holding its photos and its PDF: <ROOT_FOLDER>/NCR-0001 - <product>/
-ROOT_FOLDER = 'Non-Conformance Reports'
+ROOT_FOLDER = oauth_drive.REPORT_ROOT
 
 
 def configured_labels():
-    """The names of the places photos should be copied to (the same labels reports/destinations.py gives them)."""
+    """The names of the places photos should be copied to (the same labels reports/destinations.py gives them).
+    On a test computer only the TEST folder in the signed-in account counts: the live places are never used."""
     labels = []
-    if settings.GOOGLE_DRIVE_FOLDER_ID:
-        labels.append(f'Google Drive folder {settings.GOOGLE_DRIVE_FOLDER_ID}')
-    if settings.REPORTS_EXPORT_DIR:
-        labels.append(str(Path(settings.REPORTS_EXPORT_DIR)))
+    if not settings.DRIVE_TEST_MODE:
+        if settings.GOOGLE_DRIVE_FOLDER_ID:
+            labels.append(f'Google Drive folder {settings.GOOGLE_DRIVE_FOLDER_ID}')
+        if settings.REPORTS_EXPORT_DIR:
+            labels.append(str(Path(settings.REPORTS_EXPORT_DIR)))
     if oauth_drive.enabled():
-        labels.append(oauth_drive.LABEL)
+        labels.append(oauth_drive.label())
     return labels
 
 
 def destinations():
     """Every place a copy should go, and the problems finding them (one place failing must not stop the others)."""
     places, problems = [], []
-    for make in (extra_destinations, lambda: [oauth_drive.OAuthDrive()] if oauth_drive.enabled() else []):
+    makers = [lambda: [oauth_drive.OAuthDrive()] if oauth_drive.enabled() else []]
+    if not settings.DRIVE_TEST_MODE:
+        makers.insert(0, extra_destinations)  # the live folders; a test computer must not touch them
+    for make in makers:
         try:
             places += make()
         except Exception as problem:
@@ -44,11 +49,11 @@ def destinations():
 
 def drive_link():
     """A web address for the Drive folder the reports and photos go to, or '' when none is known."""
-    if settings.GOOGLE_DRIVE_URL:
+    if settings.GOOGLE_DRIVE_URL and not settings.DRIVE_TEST_MODE:
         return settings.GOOGLE_DRIVE_URL
     if oauth_drive.enabled():
         return oauth_drive.folder_url()
-    if settings.GOOGLE_DRIVE_FOLDER_ID:
+    if settings.GOOGLE_DRIVE_FOLDER_ID and not settings.DRIVE_TEST_MODE:
         return f'https://drive.google.com/drive/folders/{settings.GOOGLE_DRIVE_FOLDER_ID}'
     return ''
 

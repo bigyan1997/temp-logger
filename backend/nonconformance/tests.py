@@ -34,6 +34,22 @@ class PhotoFileTests(SimpleTestCase):
         self.assertIsNone(photos.sniff(b'MZ\x90\x00 this is a program'))
         self.assertIsNone(photos.sniff(b'<html><script>'))
 
+    def test_documents_are_recognised_by_their_first_bytes_and_their_name(self):
+        self.assertEqual(photos.sniff(b'%PDF-1.7 ...', 'scan.PDF'), ('pdf', 'application/pdf'))
+        self.assertEqual(photos.sniff(b'PK\x03\x04' + b'0' * 20, 'letter.docx')[0], 'docx')
+        self.assertEqual(photos.sniff(b'PK\x03\x04' + b'0' * 20, 'prices.xlsx')[0], 'xlsx')
+        self.assertEqual(photos.sniff(b'\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1' + b'0' * 20, 'old.doc')[0], 'doc')
+        self.assertEqual(photos.sniff(b'date,amount\n1,2\n', 'list.csv')[0], 'csv')
+        self.assertLessEqual(len(photos.DOCUMENTS['pptx'][0]), 100)  # fits the content_type column
+
+    def test_a_document_must_be_what_its_name_says_and_programs_and_web_pages_are_refused(self):
+        self.assertIsNone(photos.sniff(b'MZ\x90\x00 a program', 'report.pdf'))  # a program named as a PDF
+        self.assertIsNone(photos.sniff(b'%PDF-1.7', 'letter.docx'))  # a PDF named as Word
+        self.assertIsNone(photos.sniff(b'PK\x03\x04' + b'0' * 20, 'run.exe'))  # not a kind we keep
+        self.assertIsNone(photos.sniff(b'<html><script>alert(1)</script>', 'notes.txt'))  # a web page named as text
+        self.assertIsNone(photos.sniff(b'\x00\x01\x02 binary', 'notes.txt'))
+        self.assertIsNone(photos.sniff(b'<svg onload=alert(1)>', 'logo.svg'))
+
     def test_a_path_outside_the_photos_folder_is_refused(self):
         with override_settings(NCR_PHOTOS_DIR=tempfile.gettempdir()):
             with self.assertRaises(ValueError):
@@ -211,6 +227,37 @@ class NonConformanceTests(ReadingTestCase):
         self.assertEqual(self.upload(report_id, fake).status_code, 400)
         self.assertEqual(Photo.objects.count(), 0)
         self.assertEqual(self.client.post(f'/api/non-conformances/{report_id}/add_photos/', {'recorded_by': self.sam.pk}, format='multipart').status_code, 400)
+
+    def test_a_pdf_and_a_word_file_can_be_attached_and_only_the_pdf_opens_in_the_browser(self):
+        report_id = self.create().json()['id']
+        pdf = SimpleUploadedFile('supplier-email.pdf', b'%PDF-1.7 a small test file', content_type='application/pdf')
+        word = SimpleUploadedFile('complaint.docx', b'PK\x03\x04' + b'0' * 30, content_type='application/octet-stream')
+        response = self.upload(report_id, pdf, word)
+        self.assertEqual(response.status_code, 201)
+        pdf_url, word_url = [item['url'] for item in response.json()]
+        self.assertEqual([item['is_picture'] for item in response.json()], [False, False])
+
+        shown = self.client.get(pdf_url)
+        self.assertEqual(shown['Content-Type'], 'application/pdf')
+        self.assertIn('inline', shown['Content-Disposition'])
+        downloaded = self.client.get(word_url)
+        self.assertEqual(downloaded['Content-Type'], photos.DOCUMENTS['docx'][0])
+        self.assertIn('attachment', downloaded['Content-Disposition'])
+        self.assertIn('complaint.docx', downloaded['Content-Disposition'])
+        self.assertEqual(downloaded['X-Content-Type-Options'], 'nosniff')
+
+    def test_a_disguised_file_is_refused_even_with_a_document_name(self):
+        report_id = self.create().json()['id']
+        for name, content in [('invoice.pdf', b'MZ\x90\x00 a program'), ('page.txt', b'<html><script>alert(1)</script>'), ('logo.svg', b'<svg onload=alert(1)>')]:
+            self.assertEqual(self.upload(report_id, SimpleUploadedFile(name, content)).status_code, 400, name)
+        self.assertEqual(Photo.objects.count(), 0)
+
+    def test_the_report_pdf_names_the_documents_and_still_draws_the_pictures(self):
+        report_id = self.create().json()['id']
+        self.upload(report_id, picture(), SimpleUploadedFile('supplier-email.pdf', b'%PDF-1.7 a small test file'))
+        response = self.client.get(f'/api/non-conformances/{report_id}/pdf/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.content.startswith(b'%PDF'))
 
     def test_a_photo_that_is_too_big_or_too_many_photos_are_refused(self):
         report_id = self.create().json()['id']
@@ -398,16 +445,61 @@ class DriveCopyTests(ReadingTestCase):
 class SignedInDriveTests(ReadingTestCase):
     """The signed-in Google account (drive_authorize) is a copy place too, with the report folder made inside its root."""
 
-    # The root folder name is set explicitly: the orders PC's .env uses its own name, and a test must not depend on that.
-    @override_settings(NCR_DRIVE_ROOT_FOLDER='Non-Conformance Reports')
-    def test_the_root_folder_name_is_not_made_again_inside_the_root(self):
+    def test_the_root_folder_name_is_not_made_again_inside_the_root_whatever_it_is_called(self):
         from reports.destinations import GoogleDrive
         from .oauth_drive import OAuthDrive
 
-        place = object.__new__(OAuthDrive)
-        with mock.patch.object(GoogleDrive, 'save_in') as save_in:
-            place.save_in(['Non-Conformance Reports', 'NCR-0001 - Brownies'], 'a.png', b'x', 'image/png')
-        save_in.assert_called_once_with(['NCR-0001 - Brownies'], 'a.png', b'x', 'image/png')
+        # The orders PC calls its root "Achieve HACCP - Non-Conformance Reports", a test computer "TEST - ...", and the
+        # rest of the app always sends 'Non-Conformance Reports' first. It must be dropped in every case.
+        for root, test_mode in [('Non-Conformance Reports', False), ('Achieve HACCP - Non-Conformance Reports', False), ('Non-Conformance Reports', True)]:
+            with self.subTest(root=root, test_mode=test_mode), override_settings(NCR_DRIVE_ROOT_FOLDER=root, DRIVE_TEST_MODE=test_mode):
+                place = object.__new__(OAuthDrive)
+                with mock.patch.object(GoogleDrive, 'save_in') as save_in:
+                    place.save_in(['Non-Conformance Reports', 'NCR-0001 - Brownies'], 'a.png', b'x', 'image/png')
+                save_in.assert_called_once_with(['NCR-0001 - Brownies'], 'a.png', b'x', 'image/png')
+
+    def test_a_test_computer_uses_a_folder_that_starts_with_test(self):
+        from . import oauth_drive
+
+        with override_settings(NCR_DRIVE_ROOT_FOLDER='Achieve HACCP - Non-Conformance Reports', DRIVE_TEST_MODE=False):
+            self.assertEqual(oauth_drive.ncr_root_name(), 'Achieve HACCP - Non-Conformance Reports')
+            self.assertEqual(oauth_drive.label(), oauth_drive.LABEL)
+        with override_settings(NCR_DRIVE_ROOT_FOLDER='Achieve HACCP - Non-Conformance Reports', DRIVE_TEST_MODE=True):
+            self.assertEqual(oauth_drive.ncr_root_name(), 'TEST - Achieve HACCP - Non-Conformance Reports')
+            self.assertEqual(oauth_drive.label(), oauth_drive.TEST_LABEL)  # a test copy is never counted as the live one
+
+    def test_in_test_mode_the_live_drive_places_are_never_used_or_linked(self):
+        live = dict(GOOGLE_DRIVE_FOLDER_ID='live-folder', GOOGLE_SERVICE_ACCOUNT_FILE='key.json', REPORTS_EXPORT_DIR='C:/live-synced',
+                    GOOGLE_DRIVE_URL='https://drive.google.com/live')
+        with override_settings(DRIVE_TEST_MODE=False, **live):
+            self.assertEqual(len(drive.configured_labels()), 2)
+            self.assertEqual(drive.drive_link(), 'https://drive.google.com/live')
+        with override_settings(DRIVE_TEST_MODE=True, **live), mock.patch('nonconformance.oauth_drive.enabled', return_value=False):
+            self.assertEqual(drive.configured_labels(), [])  # nothing live, and not signed in: no Drive copy at all
+            self.assertEqual(drive.drive_link(), '')
+            with mock.patch('nonconformance.drive.extra_destinations') as live_places:
+                self.assertEqual(drive.destinations(), ([], []))
+            live_places.assert_not_called()
+        with override_settings(DRIVE_TEST_MODE=True, **live), mock.patch('nonconformance.oauth_drive.enabled', return_value=True):
+            self.assertEqual(drive.configured_labels(), ['Google Drive TEST folder (signed-in account)'])
+
+    def test_in_test_mode_report_and_calibration_pdfs_go_to_their_own_test_folder(self):
+        from reports.destinations import extra_destinations
+
+        asked = []
+
+        class FakeDrive:
+            def __init__(self, root_name=None):
+                asked.append(root_name)
+
+        live = dict(GOOGLE_DRIVE_FOLDER_ID='live-folder', GOOGLE_SERVICE_ACCOUNT_FILE='key.json', REPORTS_EXPORT_DIR='C:/live-synced')
+        with override_settings(DRIVE_TEST_MODE=True, **live), mock.patch('nonconformance.oauth_drive.enabled', return_value=True):
+            with mock.patch('nonconformance.oauth_drive.OAuthDrive', FakeDrive):
+                places = extra_destinations()
+        self.assertEqual(len(places), 1)  # not the live folder id, not the live synced folder
+        self.assertEqual(asked, ['TEST - Achieve HACCP Reports'])
+        with override_settings(DRIVE_TEST_MODE=True, **live), mock.patch('nonconformance.oauth_drive.enabled', return_value=False):
+            self.assertEqual(extra_destinations(), [])  # not signed in: local copy only
 
     def test_it_is_a_copy_place_only_when_signed_in(self):
         self.assertEqual(drive.configured_labels(), [])

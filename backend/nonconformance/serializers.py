@@ -29,15 +29,19 @@ class UpdateSerializer(serializers.ModelSerializer):
 
 class PhotoSerializer(serializers.ModelSerializer):
     url = serializers.SerializerMethodField()
+    is_picture = serializers.SerializerMethodField()
     copy_status = serializers.SerializerMethodField()
     recorded_by_name = serializers.CharField(source='recorded_by.name', read_only=True)
 
     class Meta:
         model = Photo
         fields = [
-            'id', 'update', 'url', 'original_name', 'size', 'recorded_by_name', 'recorded_at', 'copy_status', 'copy_error',
-            'voided', 'void_reason',
+            'id', 'update', 'url', 'original_name', 'content_type', 'is_picture', 'size', 'recorded_by_name', 'recorded_at',
+            'copy_status', 'copy_error', 'voided', 'void_reason',
         ]
+
+    def get_is_picture(self, photo):
+        return photo.content_type.startswith('image/')  # the screens draw pictures; anything else is shown as a file
 
     def get_copy_status(self, photo):
         return copy_status(photo)

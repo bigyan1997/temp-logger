@@ -124,7 +124,7 @@ class NonConformanceViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixi
 
     @action(detail=True, methods=['post'])
     def add_photos(self, request, pk=None):
-        """Attach one or more photos (multipart form field `files`, plus `recorded_by`)."""
+        """Attach one or more photos or documents (multipart form field `files`, plus `recorded_by`)."""
         report = self.get_object()
         if report.voided:
             return Response({'detail': 'This report is voided.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -135,9 +135,9 @@ class NonConformanceViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixi
             update = get_object_or_404(report.updates, pk=request.data['update'])
         files = request.FILES.getlist('files')
         if not files:
-            return Response({'files': 'Choose at least one photo.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'files': 'Choose at least one file.'}, status=status.HTTP_400_BAD_REQUEST)
         if report.photos.filter(voided=False).count() + len(files) > photos.MAX_PER_REPORT:
-            return Response({'files': f'A report can have up to {photos.MAX_PER_REPORT} photos.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'files': f'A report can have up to {photos.MAX_PER_REPORT} photos and files.'}, status=status.HTTP_400_BAD_REQUEST)
 
         saved = []
         for uploaded in files:
@@ -221,8 +221,11 @@ class PhotoView(APIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         if not path.is_file():
             return Response({'detail': 'The photo file is missing on this computer.'}, status=status.HTTP_404_NOT_FOUND)
-        response = FileResponse(open(path, 'rb'), content_type=photo.content_type)
-        response['Content-Disposition'] = 'inline'
+        # Pictures and PDFs open in the browser; a Word or Excel file is only ever downloaded.
+        response = FileResponse(
+            open(path, 'rb'), content_type=photo.content_type,
+            as_attachment=not photos.shows_in_browser(photo.content_type), filename=photo.original_name,
+        )
         response['X-Content-Type-Options'] = 'nosniff'
         return response
 

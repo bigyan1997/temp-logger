@@ -6,6 +6,7 @@ import { api } from '../../api/client.js'
 import StaffPicker, { useStaffChoice } from '../../components/StaffPicker.jsx'
 import VoidReasonDialog from '../../components/VoidReasonDialog.jsx'
 import { formatDateTime, formatDay } from '../../lib/format.js'
+import Attachment, { FILE_ACCEPT } from './Attachment.jsx'
 import DeleteReport from './DeleteReport.jsx'
 import DriveLink from './DriveLink.jsx'
 import { StatusLabel } from './NcrHome.jsx'
@@ -114,14 +115,12 @@ export default function NcrDetail() {
         <Field label="Reported by" value={`${report.recorded_by_name}, ${formatDateTime(report.recorded_at)}`} />
       </dl>
 
-      <h2 className="mb-2 mt-8 text-lg font-semibold">Photos</h2>
-      {photos.length === 0 && <p className="text-muted">No photos.</p>}
+      <h2 className="mb-2 mt-8 text-lg font-semibold">Photos and files</h2>
+      {photos.length === 0 && <p className="text-muted">No photos or files.</p>}
       <ul className="flex flex-wrap gap-4">
         {photos.map((photo) => (
           <li key={photo.id} className="w-44">
-            <a href={photo.url} target="_blank" rel="noreferrer">
-              <img src={photo.url} alt={photo.original_name} loading="lazy" className="h-32 w-44 rounded-lg border border-line object-cover" />
-            </a>
+            <Attachment photo={photo} size="h-32 w-44" />
             <p className="mt-1 truncate text-sm" title={photo.original_name}>{photo.original_name}</p>
             <CopyLabel photo={photo} />
             {!voided && (
@@ -136,15 +135,15 @@ export default function NcrDetail() {
         ))}
       </ul>
       {voidedPhotos.length > 0 && (
-        <p className="mt-2 text-sm text-muted">Voided photos (kept): {voidedPhotos.map((p) => `${p.original_name} (${p.void_reason})`).join(', ')}</p>
+        <p className="mt-2 text-sm text-muted">Voided photos and files (kept): {voidedPhotos.map((p) => `${p.original_name} (${p.void_reason})`).join(', ')}</p>
       )}
       {!voided && (
         <div className="mt-3">
           <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-line px-3 text-sm font-medium hover:bg-brand-soft">
-            <ImagePlus size={16} aria-hidden="true" /> {addPhotos.isPending ? 'Adding…' : 'Add photos'}
+            <ImagePlus size={16} aria-hidden="true" /> {addPhotos.isPending ? 'Adding…' : 'Add photos or files'}
             <input
               type="file"
-              accept="image/jpeg,image/png,image/gif,image/webp"
+              accept={FILE_ACCEPT}
               multiple
               disabled={!staffId || addPhotos.isPending}
               className="sr-only"
@@ -183,9 +182,8 @@ export default function NcrDetail() {
               <ul className="mt-2 flex flex-wrap gap-3">
                 {updatePhotos(update).map((photo) => (
                   <li key={photo.id} className="w-36">
-                    <a href={photo.url} target="_blank" rel="noreferrer">
-                      <img src={photo.url} alt={photo.original_name} loading="lazy" className="h-24 w-36 rounded-lg border border-line object-cover" />
-                    </a>
+                    <Attachment photo={photo} size="h-24 w-36" />
+                    <p className="mt-1 truncate text-xs" title={photo.original_name}>{photo.original_name}</p>
                     <CopyLabel photo={photo} />
                   </li>
                 ))}
@@ -307,8 +305,8 @@ function FollowUpForm({ report, closed, staff, staffId, setStaffId, problem }) {
       {chosen.value !== 'closed' && (
         <div>
           <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-line px-3 text-sm font-medium hover:bg-brand-soft">
-            <ImagePlus size={16} aria-hidden="true" /> {chosen.value === 'response' ? 'Add the manufacturer’s photo' : 'Add a photo'} (optional)
-            <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple className="sr-only"
+            <ImagePlus size={16} aria-hidden="true" /> {chosen.value === 'response' ? 'Add the manufacturer’s photo or file' : 'Add a photo or file'} (optional)
+            <input type="file" accept={FILE_ACCEPT} multiple className="sr-only"
               onChange={(e) => { setFiles([...files, ...e.target.files]); e.target.value = '' }} />
           </label>
           {files.length > 0 && <span className="ml-3 text-sm">{files.map((f) => f.name).join(', ')} <button type="button" onClick={() => setFiles([])} className="ml-1 text-muted underline">remove</button></span>}
