@@ -23,6 +23,11 @@ export function dueText(item) {
     : `${item.name} is due (since ${since}).`
 }
 
+// Says when the job was last done, so staff can see how long it has been.
+export function lastDoneText(item) {
+  return item.last_done ? `Last done on ${formatDay(item.last_done)}.` : 'Never done yet.'
+}
+
 // One banner for each task that is due. Shown on the front page and the Cleaning home.
 export default function CleaningNotices({ enabled = true }) {
   const { data } = useCleaningNotifications(enabled)
@@ -40,9 +45,12 @@ export default function CleaningNotices({ enabled = true }) {
               overdue ? 'border-bad/50 bg-red-50 text-bad' : 'border-near/50 bg-amber-50 text-near'
             }`}
           >
-            <p className="flex items-center gap-2 font-medium">
-              <Icon size={20} aria-hidden="true" /> {dueText(item)}
-            </p>
+            <div>
+              <p className="flex items-center gap-2 font-medium">
+                <Icon size={20} aria-hidden="true" /> {dueText(item)}
+              </p>
+              <p className="pl-7 text-sm">{lastDoneText(item)}</p>
+            </div>
             <Link to="/cleaning" className="inline-flex h-10 items-center rounded-lg bg-brand px-4 font-semibold text-white hover:bg-brand-dark">
               Tick it off
             </Link>

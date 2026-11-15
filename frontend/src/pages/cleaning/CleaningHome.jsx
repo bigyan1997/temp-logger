@@ -115,10 +115,12 @@ function TaskList({ staffId, date }) {
               />
               <span className="font-medium">{task.name}</span>
             </label>
-            <span className="w-56 text-sm text-muted">
-              {task.frequency !== 'daily' && <span className="mr-2 rounded bg-brand-soft px-1.5 py-0.5 text-xs text-brand-dark">{task.frequency_label}</span>}
+            <div className="w-56 text-sm text-muted">
+              {task.frequency !== 'daily' && (
+                <span className="mb-1 block w-fit rounded bg-brand-soft px-1.5 py-0.5 text-xs text-brand-dark">{task.frequency_label}</span>
+              )}
               {statusText(task, data.working_day)}
-            </span>
+            </div>
             {task.times.length > 0 && (
               <ul className="basis-full space-y-1.5 pl-9 text-sm">
                 {task.times.map((time) => (
