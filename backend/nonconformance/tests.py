@@ -372,6 +372,8 @@ class DriveCopyTests(ReadingTestCase):
 class SignedInDriveTests(ReadingTestCase):
     """The signed-in Google account (drive_authorize) is a copy place too, with the report folder made inside its root."""
 
+    # The root folder name is set explicitly: the orders PC's .env uses its own name, and a test must not depend on that.
+    @override_settings(NCR_DRIVE_ROOT_FOLDER='Non-Conformance Reports')
     def test_the_root_folder_name_is_not_made_again_inside_the_root(self):
         from reports.destinations import GoogleDrive
         from .oauth_drive import OAuthDrive
