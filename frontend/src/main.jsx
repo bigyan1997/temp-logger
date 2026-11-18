@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { loginProblemCache } from './lib/loginProblems.js'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
@@ -7,6 +8,7 @@ import { AuthProvider } from './auth.jsx'
 import './index.css'
 
 const queryClient = new QueryClient({
+  queryCache: loginProblemCache(),
   defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
 })
 

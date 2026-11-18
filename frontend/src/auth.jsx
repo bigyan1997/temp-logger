@@ -58,13 +58,20 @@ export function AuthProvider({ children }) {
     return u
   }, [])
 
+  // For the "Sign in again" button: end whatever is left of the old session, then show the login page.
+  const signInAgain = useCallback(async () => {
+    await api('/auth/logout/', { method: 'POST' }).catch(() => {}) // it may already be gone, which is fine
+    setNotice('Please sign in again.')
+    setUser(null)
+  }, [])
+
   const logout = useCallback(async () => {
     await api('/auth/logout/', { method: 'POST' })
     setUser(null)
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, loading, trouble, notice, login, logout, isAdmin: user?.role === 'admin' }}>
+    <AuthContext.Provider value={{ user, loading, trouble, notice, login, logout, signInAgain, isAdmin: user?.role === 'admin' }}>
       {children}
     </AuthContext.Provider>
   )

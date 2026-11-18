@@ -3,6 +3,7 @@ import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../auth.jsx'
 import CalibrationStatus, { useCalibrationDue } from '../components/CalibrationStatus.jsx'
 import CleaningNotices from '../components/CleaningNotices.jsx'
+import LoginProblemBanner from '../components/LoginProblemBanner.jsx'
 import { modulesFor } from '../lib/modules.js'
 
 // The front page of Achieve HACCP: one card for each module.
@@ -43,8 +44,12 @@ export default function AppHome() {
         </div>
       </header>
 
+      <div className="mt-6">
+        <LoginProblemBanner />
+      </div>
+
       {isAdmin && (
-        <div className="mt-8">
+        <div className="mt-2">
           <CleaningNotices />
         </div>
       )}

@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../auth.jsx'
 import { modulesFor } from '../lib/modules.js'
 import { useStaffChoice } from './StaffPicker.jsx'
+import LoginProblemBanner from './LoginProblemBanner.jsx'
 import UpdateBanner from './UpdateBanner.jsx'
 
 const navClass = ({ isActive }) =>
@@ -118,6 +119,7 @@ export default function AppLayout({ menu }) {
 
       <main className="min-w-0 flex-1 px-4 py-6 sm:px-8 sm:py-8">
         <UpdateBanner />
+        <LoginProblemBanner />
         <Outlet />
       </main>
     </div>

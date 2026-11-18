@@ -33,6 +33,23 @@ class AuthTests(TestCase):
         self.assertEqual(self.client.post('/api/auth/logout/').status_code, 204)
         self.assertIn(self.client.get('/api/auth/me/').status_code, (401, 403))
 
+    def test_a_link_opened_in_the_browser_after_the_login_ended_shows_a_sign_in_page_not_the_api_page(self):
+        browser = {'HTTP_ACCEPT': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'}
+        r = self.client.get('/api/storage-readings/', **browser)
+        self.assertEqual(r.status_code, 403)  # still refused, just not with a technical page
+        self.assertIn('Please sign in again', r.content.decode())
+        self.assertNotIn('Django REST framework', r.content.decode())
+        self.assertIn('Please sign in again', self.client.get('/api/non-conformances/1/pdf/', **browser).content.decode())
+
+    def test_the_apps_own_requests_still_get_json_and_a_signed_in_browser_link_is_not_touched(self):
+        r = self.client.get('/api/storage-readings/', HTTP_ACCEPT='application/json')
+        self.assertEqual(r.status_code, 403)
+        self.assertIn('detail', r.json())
+        self.client.force_login(self.admin)
+        r = self.client.get('/api/auth/me/', HTTP_ACCEPT='text/html,*/*;q=0.8')
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r['Content-Type'], 'application/json')  # not the API page, plain JSON
+
     def test_inactive_user_cannot_log_in(self):
         self.night.is_active = False
         self.night.save()

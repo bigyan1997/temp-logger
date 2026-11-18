@@ -45,11 +45,14 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'accounts.sign_in_page.SignInAgainPage',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'
 
 REST_FRAMEWORK = {
+    # JSON only: the default also includes the technical "browsable API" page, which staff must never land on.
+    'DEFAULT_RENDERER_CLASSES': ['rest_framework.renderers.JSONRenderer'],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
     ],

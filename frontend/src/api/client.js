@@ -18,7 +18,12 @@ function messagesIn(value) {
 function describeError(body, status) {
   if (typeof body?.message === 'string') return body.message
   const problems = messagesIn(body)
-  return problems.length ? problems.join(' ') : `Something went wrong (${status}).`
+  const text = problems.join(' ')
+  // Login problems get plain words, not the server's technical ones ("CSRF Failed...", "credentials were not provided").
+  if (status === 401 || /credentials were not provided/i.test(text)) return 'Your login has ended. Please sign in again.'
+  if (status === 403 && /permission/i.test(text)) return 'This login is not allowed to do that. Sign in with the day login.'
+  if (status === 403 && (!text || /csrf/i.test(text))) return 'This page is out of date. Refresh it (F5) or sign in again, then try again.'
+  return text || `Something went wrong (${status}).`
 }
 
 export class ApiError extends Error {
