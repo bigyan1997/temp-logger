@@ -176,15 +176,23 @@ class WeeklyGridTests(ReadingTestCase):
     def test_corrective_actions_say_who_logged_them_and_on_which_login(self):
         self.dispatch('5.1', corrective={'action': 'rechecked', 'notes': 'Done'})  # entered by the night login, as Sam
         rows = corrective_rows(START, END, 'dispatch')
-        self.assertEqual(rows['headers'][3], 'Logged by')
-        self.assertEqual(rows['rows'][0][3], 'Sam (night)')
-        self.assertEqual(len(rows['headers']), 4)  # no sign-off column any more
+        self.assertEqual(rows['headers'], ['Date', 'Reading', 'Action taken', 'Notes', 'Logged by'])  # no sign-off column
+        self.assertEqual(rows['rows'][0][4], 'Sam (night)')
+
+    def test_corrective_actions_have_the_date_in_its_own_column(self):
+        self.dispatch('5.1', date='2026-11-03', corrective={'action': 'rechecked', 'notes': 'Done'})
+        self.storage(self.freezer, '-12.0', slot=MONDAY_9PM, corrective=FIX)
+        dispatch_row = corrective_rows(START, END, 'dispatch')['rows'][0]
+        storage_row = corrective_rows(START, END, 'storage')['rows'][0]
+        self.assertEqual(dispatch_row[0], 'Tue 03/11/2026')
+        self.assertNotIn('03/11', dispatch_row[1])
+        self.assertEqual(storage_row[1], 'Freezer, 9.00 PM: -12.0 °C')
 
     def test_corrective_actions_are_in_date_order_with_their_week(self):
         self.dispatch('5.1', date='2026-11-10', corrective={'action': 'rechecked', 'notes': 'Done'})  # entered first, but later
         self.dispatch('5.2', date='2026-11-03', corrective={'action': 'rechecked', 'notes': 'Done'})
         rows = corrective_rows(date(2026, 11, 1), date(2026, 11, 14), 'dispatch')
-        self.assertIn('5.2', rows['rows'][0][0])
+        self.assertIn('5.2', rows['rows'][0][1])
         self.assertEqual(rows['week_starts'], [date(2026, 11, 1), date(2026, 11, 8)])
 
     def test_weeks_are_marked_so_the_pdf_can_draw_a_heavier_line(self):

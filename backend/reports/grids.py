@@ -237,6 +237,17 @@ def reading_date(reading):
     return timezone.localtime(reading.slot).date() if hasattr(reading, 'slot') else reading.date
 
 
+def reading_text(reading):
+    """What was read, without the date (the date has its own column): "Coolroom, 9.00 PM: 6.5 °C"."""
+    if hasattr(reading, 'slot'):
+        what = 'not used' if reading.not_used else f'{reading.value} °C'
+        return f'{reading.unit}, {clock_label(timezone.localtime(reading.slot))}: {what}'
+    if hasattr(reading, 'supplier'):
+        what = 'no delivery' if reading.no_delivery else f'{reading.temp} °C'
+        return f'{reading.supplier}: {what}'
+    return f'{reading.run}: {reading.temp} °C'
+
+
 def week_start(day):
     """The Sunday that starts the week containing `day` (weeks run Sunday to Saturday)."""
     return day - timedelta(days=(day.weekday() + 1) % 7)
@@ -255,10 +266,12 @@ def corrective_rows(start, end, kind):
 
     ordered = sorted(actions, key=lambda action: (reading_date(action.reading), action.created_at))
     rows = [
-        [str(a.reading), a.get_action_display(), a.notes, logged_by(a.reading)] for a in ordered
+        [f'{reading_date(a.reading):%a %d/%m/%Y}', reading_text(a.reading), a.get_action_display(), a.notes,
+         logged_by(a.reading)]
+        for a in ordered
     ]
     return {
-        'headers': ['Reading', 'Action taken', 'Notes', 'Logged by'],
+        'headers': ['Date', 'Reading', 'Action taken', 'Notes', 'Logged by'],
         'rows': rows,
         'week_starts': [week_start(reading_date(a.reading)) for a in ordered],
     }
