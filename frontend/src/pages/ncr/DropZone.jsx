@@ -26,7 +26,7 @@ export default function DropZone({ onFiles, disabled = false, className = '', ch
       className={`rounded-xl border-2 border-dashed p-3 ${over ? 'border-brand bg-brand-soft' : 'border-line'} ${className}`}
     >
       {children}
-      <p className="mt-2 text-xs text-muted">{over ? 'Drop the files here' : 'You can also drag photos and files here.'}</p>
+      <p className="mt-2 text-xs text-muted">{over ? 'Drop the files here' : 'You can drag photos and files here.'}</p>
     </div>
   )
 }
