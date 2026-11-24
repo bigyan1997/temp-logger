@@ -7,6 +7,7 @@ import StaffPicker, { useStaffChoice } from '../../components/StaffPicker.jsx'
 import VoidReasonDialog from '../../components/VoidReasonDialog.jsx'
 import { formatDateTime, formatDay } from '../../lib/format.js'
 import Attachment, { FILE_ACCEPT } from './Attachment.jsx'
+import DropZone from './DropZone.jsx'
 import DeleteReport from './DeleteReport.jsx'
 import DriveLink from './DriveLink.jsx'
 import { StatusLabel } from './NcrHome.jsx'
@@ -138,7 +139,7 @@ export default function NcrDetail() {
         <p className="mt-2 text-sm text-muted">Voided photos and files (kept): {voidedPhotos.map((p) => `${p.original_name} (${p.void_reason})`).join(', ')}</p>
       )}
       {!voided && (
-        <div className="mt-3">
+        <DropZone className="mt-3" disabled={!staffId || addPhotos.isPending} onFiles={(dropped) => addPhotos.mutate(dropped)}>
           <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-line px-3 text-sm font-medium hover:bg-brand-soft">
             <ImagePlus size={16} aria-hidden="true" /> {addPhotos.isPending ? 'Adding…' : 'Add photos or files'}
             <input
@@ -155,7 +156,7 @@ export default function NcrDetail() {
           </label>
           {!staffId && <span className="ml-3 text-sm text-muted">Pick your name below first.</span>}
           {addPhotos.error && <p role="alert" className="mt-2 text-sm text-bad">{addPhotos.error.message}</p>}
-        </div>
+        </DropZone>
       )}
 
       <h2 className="mb-2 mt-8 text-lg font-semibold">What has happened since</h2>
@@ -303,14 +304,14 @@ function FollowUpForm({ report, closed, staff, staffId, setStaffId, problem }) {
         </div>
       )}
       {chosen.value !== 'closed' && (
-        <div>
+        <DropZone onFiles={(dropped) => setFiles([...files, ...dropped])}>
           <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-line px-3 text-sm font-medium hover:bg-brand-soft">
             <ImagePlus size={16} aria-hidden="true" /> {chosen.value === 'response' ? 'Add the manufacturer’s photo or file' : 'Add a photo or file'} (optional)
             <input type="file" accept={FILE_ACCEPT} multiple className="sr-only"
               onChange={(e) => { setFiles([...files, ...e.target.files]); e.target.value = '' }} />
           </label>
           {files.length > 0 && <span className="ml-3 text-sm">{files.map((f) => f.name).join(', ')} <button type="button" onClick={() => setFiles([])} className="ml-1 text-muted underline">remove</button></span>}
-        </div>
+        </DropZone>
       )}
       {save.error && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-bad">{save.error.message}</p>}
       <div className="flex flex-wrap items-center gap-4">
