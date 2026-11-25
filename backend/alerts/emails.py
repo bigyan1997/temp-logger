@@ -23,6 +23,7 @@ MODULES = {
     'temperature': {'name': 'Temperature Logger', 'icon': '🌡️', 'colour': BRAND, 'path': '/log/storage', 'button': 'Open the Temperature Logger'},
     'cleaning': {'name': 'Cleaning & Maintenance', 'icon': '🧹', 'colour': '#2f6f9f', 'path': '/cleaning/notifications', 'button': 'Open Notifications'},
     'calibration': {'name': 'Calibration', 'icon': '📏', 'colour': '#6b4fa3', 'path': '/calibration', 'button': 'Open Calibration'},
+    'servicing': {'name': 'Servicing', 'icon': '🔧', 'colour': '#8a5a1f', 'path': '/service/records', 'button': 'Open Service records'},
     'system': {'name': 'Achieve HACCP', 'icon': '🛡️', 'colour': '#4a5a60', 'path': '', 'button': ''},
 }
 # alert kind -> module (see checks.py and the other *_check.py files). Anything not listed is about the whole app.
@@ -30,6 +31,7 @@ KIND_MODULE = {
     'reminder': 'temperature', 'reminder2': 'temperature', 'out_of_limit': 'temperature', 'sample': 'temperature',
     'cleaning_due': 'cleaning', 'cleaning_late': 'cleaning',
     'calibration': 'calibration', 'calibration_overdue': 'calibration',
+    'service_due': 'servicing', 'service_overdue': 'servicing',
 }
 
 

@@ -105,4 +105,5 @@ def due_alerts(now):
     from .calibration_check import calibration_alerts
     from .cleaning_check import cleaning_alerts
     from .drive_check import drive_upload_alerts
-    return reminders(now) + missed_backup(now) + calibration_alerts(now) + cleaning_alerts(now) + drive_upload_alerts(now)
+    from .service_check import service_alerts
+    return reminders(now) + missed_backup(now) + calibration_alerts(now) + cleaning_alerts(now) + service_alerts(now) + drive_upload_alerts(now)

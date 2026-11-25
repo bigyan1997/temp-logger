@@ -30,13 +30,14 @@ class ServiceFileSerializer(serializers.ModelSerializer):
 
 class ServiceRecordSerializer(RecordedBySerializerMixin, serializers.ModelSerializer):
     number = serializers.CharField(read_only=True)
+    kind_label = serializers.CharField(source='get_kind_display', read_only=True)
     recorded_by_name = serializers.CharField(source='recorded_by.name', read_only=True)
     entered_by_name = serializers.CharField(source='entered_by.display_name', read_only=True)
     files = ServiceFileSerializer(many=True, read_only=True)
 
     class Meta:
         model = ServiceRecord
-        fields = ['id', 'number', 'equipment', 'service_date', 'serviced_by', 'work_done', 'invoice_number',
+        fields = ['id', 'number', 'kind', 'kind_label', 'equipment', 'service_date', 'serviced_by', 'work_done', 'invoice_number',
                   'recorded_by', 'recorded_by_name', 'entered_by_name', 'recorded_at', 'files']
         read_only_fields = ['recorded_at']
 
@@ -71,4 +72,4 @@ class ServiceEditSerializer(ServiceRecordSerializer):
     """The details that can be corrected afterwards. Who typed the record in (`recorded_by`) never changes."""
 
     class Meta(ServiceRecordSerializer.Meta):
-        fields = ['equipment', 'service_date', 'serviced_by', 'work_done', 'invoice_number']
+        fields = ['kind', 'equipment', 'service_date', 'serviced_by', 'work_done', 'invoice_number']

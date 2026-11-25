@@ -3,6 +3,11 @@ from django.db import models
 from setup.models import Attributed
 
 
+class ServiceKind(models.TextChoices):
+    SERVICE = 'service', 'Routine service'
+    REPAIR = 'repair', 'Repair'
+
+
 class ServiceRecord(Attributed):
     """One service or repair of a piece of equipment (a coolroom, a freezer...): what was done, who did it, when,
     and the invoice. Edits are kept in the audit log; a delete (with a reason) leaves one audit line.
@@ -10,6 +15,8 @@ class ServiceRecord(Attributed):
     `serviced_by` is the company or technician who did the work. `recorded_by` (from Attributed) is the staff member
     who typed it in."""
 
+    # Only a routine service starts the 6-monthly clock (see due.py); a repair does not.
+    kind = models.CharField(max_length=10, choices=ServiceKind.choices, default=ServiceKind.SERVICE)
     equipment = models.CharField(max_length=100, help_text='What was serviced, e.g. Coolroom or Chest Freezer.')
     service_date = models.DateField(help_text='The day the work was done.')
     serviced_by = models.CharField(max_length=150, help_text='Company or technician who did the work.')

@@ -15,7 +15,10 @@ from nonconformance import photos
 from nonconformance.views import named_person
 from setup.models import StaffMember
 
+from django.utils import timezone
+
 from .drive import copy_file
+from .due import equipment_due
 from .removal import delete_file, delete_record
 from .models import ServiceFile, ServiceRecord
 from .serializers import ServiceEditSerializer, ServiceFileSerializer, ServiceRecordSerializer
@@ -53,6 +56,8 @@ class ServiceRecordViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixin
             services = services.filter(service_date__gte=params['from'])
         if params.get('to'):
             services = services.filter(service_date__lte=params['to'])
+        if params.get('kind') in ('service', 'repair'):
+            services = services.filter(kind=params['kind'])
         if params.get('equipment'):
             services = services.filter(equipment__iexact=params['equipment'])
         search = params.get('q', '').strip()
@@ -65,6 +70,11 @@ class ServiceRecordViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixin
 
     def perform_create(self, serializer):
         serializer.save(entered_by=self.request.user)
+
+    @action(detail=False, methods=['get'])
+    def due(self, request):
+        """Each piece of equipment with the date its next 6-monthly service is due."""
+        return Response(equipment_due(timezone.localdate()))
 
     @action(detail=True, methods=['post'])
     def add_files(self, request, pk=None):

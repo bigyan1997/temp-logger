@@ -45,6 +45,7 @@ export default function ServiceDetail() {
         <div className="rounded-xl border border-line bg-surface p-5">
           <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
             <Item label="Date">{formatDay(service.service_date)}</Item>
+            <Item label="Type">{service.kind_label}</Item>
             <Item label="Equipment">{service.equipment}</Item>
             <Item label="Done by">{service.serviced_by}</Item>
             <Item label="Invoice number">{service.invoice_number || '-'}</Item>
@@ -108,6 +109,7 @@ function Item({ label, children }) {
 }
 
 function EditForm({ service, staffId, onDone }) {
+  const [kind, setKind] = useState(service.kind)
   const [equipment, setEquipment] = useState(service.equipment)
   const [servicedBy, setServicedBy] = useState(service.serviced_by)
   const [date, setDate] = useState(service.service_date)
@@ -117,7 +119,7 @@ function EditForm({ service, staffId, onDone }) {
   const save = useMutation({
     mutationFn: () => api(`/service-records/${service.id}/edit/`, {
       method: 'POST',
-      body: { recorded_by: staffId, equipment, serviced_by: servicedBy, service_date: date, work_done: workDone, invoice_number: invoiceNumber },
+      body: { recorded_by: staffId, kind, equipment, serviced_by: servicedBy, service_date: date, work_done: workDone, invoice_number: invoiceNumber },
     }),
     onSuccess: onDone,
   })
@@ -126,6 +128,12 @@ function EditForm({ service, staffId, onDone }) {
   return (
     <form onSubmit={(e) => { e.preventDefault(); save.mutate() }} className="space-y-4 rounded-xl border border-line bg-surface p-5">
       <div className="grid gap-4 sm:grid-cols-2">
+        <label className="text-sm font-medium">Type of visit
+          <select value={kind} onChange={(e) => setKind(e.target.value)} className={`${inputClass} mt-1 font-normal`}>
+            <option value="service">Routine service</option>
+            <option value="repair">Repair</option>
+          </select>
+        </label>
         <label className="text-sm font-medium">What was serviced
           <input value={equipment} onChange={(e) => setEquipment(e.target.value)} maxLength={100} autoFocus className={`${inputClass} mt-1 font-normal`} />
         </label>

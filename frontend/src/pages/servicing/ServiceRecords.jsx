@@ -8,6 +8,7 @@ import { formatDay } from '../../lib/format.js'
 import { FILE_ACCEPT } from '../ncr/Attachment.jsx'
 import DriveLink from '../ncr/DriveLink.jsx'
 import { uploadServiceFiles } from './NewService.jsx'
+import ServiceDue from './ServiceDue.jsx'
 
 const PAGE_SIZE = 50 // matches the server
 const inputClass = 'h-10 rounded-lg border border-line bg-surface px-3 focus:border-brand focus:outline-2 focus:outline-brand'
@@ -40,16 +41,20 @@ export default function ServiceRecords({ embedded = false }) {
   const queryClient = useQueryClient()
   const { staff, staffId, setStaffId } = useStaffChoice()
   const [search, setSearch] = useState('')
+  const [kind, setKind] = useState('') // '', 'service' or 'repair'
   const [page, setPage] = useState(1)
   const [deleting, setDeleting] = useState(null) // { kind: 'record' | 'file', item }
   const [leftOver, setLeftOver] = useState([]) // problems cleaning up after a delete
   const [reason, setReason] = useState('')
 
-  const query = `?page=${page}${search.trim() ? `&q=${encodeURIComponent(search.trim())}` : ''}`
-  const { data, isLoading } = useQuery({ queryKey: ['service-list', search, page], queryFn: () => api(`/service-records/${query}`) })
+  const query = `?page=${page}${search.trim() ? `&q=${encodeURIComponent(search.trim())}` : ''}${kind ? `&kind=${kind}` : ''}`
+  const { data, isLoading } = useQuery({ queryKey: ['service-list', search, kind, page], queryFn: () => api(`/service-records/${query}`) })
   const services = data?.results ?? []
 
-  const refresh = () => queryClient.invalidateQueries({ queryKey: ['service-list'] })
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['service-list'] })
+    queryClient.invalidateQueries({ queryKey: ['service-due'] })
+  }
   const addFiles = useMutation({
     mutationFn: ({ id, files }) => uploadServiceFiles(id, files, staffId),
     onSuccess: refresh,
@@ -87,6 +92,7 @@ export default function ServiceRecords({ embedded = false }) {
         </p>
       )}
       {notice && <p role="alert" className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm">{notice}</p>}
+      <ServiceDue />
 
       <div className="mt-4 flex flex-wrap items-end gap-4">
         {!embedded && (
@@ -95,6 +101,14 @@ export default function ServiceRecords({ embedded = false }) {
           </Link>
         )}
         <DriveLink />
+        <label className="text-sm">
+          Type
+          <select value={kind} onChange={(e) => { setKind(e.target.value); setPage(1) }} className={`${inputClass} ml-1`}>
+            <option value="">All</option>
+            <option value="service">Routine service</option>
+            <option value="repair">Repair</option>
+          </select>
+        </label>
         <label className="text-sm">
           Search
           <input value={search} onChange={(e) => { setSearch(e.target.value); setPage(1) }} placeholder="Equipment, who, invoice…" className={`${inputClass} ml-1 w-64`} />
@@ -132,7 +146,11 @@ export default function ServiceRecords({ embedded = false }) {
                   <Link to={`/service/${s.id}`} className="text-brand-dark hover:underline">{s.number}</Link>
                 </td>
                 <td className="whitespace-nowrap px-4 py-4">{formatDay(s.service_date)}</td>
-                <td className="px-4 py-4 font-semibold">{s.equipment}</td>
+                <td className="px-4 py-4">
+                  <span className="font-semibold">{s.equipment}</span>
+                  <br />
+                  <span className="text-xs text-muted">{s.kind_label}</span>
+                </td>
                 <td className="px-4 py-4">{s.serviced_by}</td>
                 <td className="whitespace-pre-line px-4 py-4">
                   {s.work_done}

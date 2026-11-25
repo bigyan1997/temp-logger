@@ -35,18 +35,24 @@ function ServiceForm({ staffId, date }) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { data: units = [] } = useActiveList('/units/')
-  const [equipment, setEquipment] = useState('')
+  const [kind, setKind] = useState('service')
+  const [picked, setPicked] = useState([]) // unit names ticked
+  const [other, setOther] = useState('') // anything that is not a unit
   const [servicedBy, setServicedBy] = useState('')
   const [workDone, setWorkDone] = useState('')
   const [invoiceNumber, setInvoiceNumber] = useState('')
   const [files, setFiles] = useState([])
+
+  // One record covers everything ticked; each piece gets its own due date (see backend/servicing/due.py).
+  const equipment = [...picked, other.trim()].filter(Boolean).join(', ')
+  const toggle = (name) => setPicked(picked.includes(name) ? picked.filter((n) => n !== name) : [...picked, name])
 
   const save = useMutation({
     mutationFn: async () => {
       const service = await api('/service-records/', {
         method: 'POST',
         body: {
-          recorded_by: staffId, service_date: date, equipment, serviced_by: servicedBy, work_done: workDone,
+          recorded_by: staffId, service_date: date, kind, equipment, serviced_by: servicedBy, work_done: workDone,
           invoice_number: invoiceNumber,
         },
       })
@@ -68,7 +74,8 @@ function ServiceForm({ staffId, date }) {
   })
 
   const problem = !staffId ? 'Pick your name first.'
-    : !equipment.trim() ? 'Say what was serviced.'
+    : !equipment ? 'Tick what was serviced.'
+    : equipment.length > 100 ? 'That is too many names for one record: split it into two records.'
     : !servicedBy.trim() ? 'Say who did the service.'
     : !workDone.trim() ? 'Say what was done.'
     : null
@@ -80,21 +87,35 @@ function ServiceForm({ staffId, date }) {
         e.preventDefault()
         save.mutate()
       }}
-      className="max-w-3xl space-y-5 rounded-xl border border-line bg-surface p-5"
+      className="space-y-5 rounded-xl border border-line bg-surface p-5"
     >
       <div className="grid gap-5 sm:grid-cols-2">
-        <div>
-          <label htmlFor="equipment" className="mb-1 block text-sm font-medium">What was serviced (required)</label>
-          <input id="equipment" value={equipment} onChange={(e) => setEquipment(e.target.value)} list="equipment-list" autoFocus maxLength={100} className={inputClass} />
-          <datalist id="equipment-list">
-            {units.map((u) => <option key={u.id} value={u.name} />)}
-          </datalist>
-          <p className="mt-1 text-xs text-muted">Pick a coolroom or freezer, or type anything else.</p>
-        </div>
+        <fieldset>
+          <legend className="mb-1 text-sm font-medium">What was serviced (required)</legend>
+          <div className="flex flex-wrap gap-2">
+            {units.map((u) => (
+              <label key={u.id} className={`inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg border px-3 ${picked.includes(u.name) ? 'border-brand bg-brand-soft font-semibold' : 'border-line'}`}>
+                <input type="checkbox" checked={picked.includes(u.name)} onChange={() => toggle(u.name)} className="size-4 accent-brand" />
+                {u.name}
+              </label>
+            ))}
+          </div>
+          <label htmlFor="other-equipment" className="mt-3 block text-sm font-medium">Something else (optional)</label>
+          <input id="other-equipment" value={other} onChange={(e) => setOther(e.target.value)} maxLength={60} placeholder="Anything that is not listed above" className={inputClass} />
+          <p className="mt-1 text-xs text-muted">Tick every unit that was serviced in this visit. For a routine service, each one is then due again in 6 months.</p>
+        </fieldset>
         <div>
           <label htmlFor="serviced-by" className="mb-1 block text-sm font-medium">Who did the service (required)</label>
           <input id="serviced-by" value={servicedBy} onChange={(e) => setServicedBy(e.target.value)} maxLength={150} placeholder="Company or technician" className={inputClass} />
         </div>
+      </div>
+
+      <div className="sm:w-1/2">
+        <label htmlFor="kind" className="mb-1 block text-sm font-medium">Type of visit</label>
+        <select id="kind" value={kind} onChange={(e) => setKind(e.target.value)} className={inputClass}>
+          <option value="service">Routine service (due again in 6 months)</option>
+          <option value="repair">Repair (does not change the next service date)</option>
+        </select>
       </div>
 
       <div>
