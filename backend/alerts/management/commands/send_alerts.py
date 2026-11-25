@@ -8,6 +8,7 @@ from alerts.checks import sample_alerts, test_alert
 from alerts.emails import send_alert_email
 from alerts.sender import recipients, send_due_alerts
 from nonconformance.drive import copy_pending
+from servicing.drive import copy_pending as copy_pending_service_files
 
 
 class Command(BaseCommand):
@@ -46,7 +47,7 @@ class Command(BaseCommand):
         self.stdout.write(f'Done: {len(sent)} alert(s).')
         # This task runs every 5 minutes, so it also retries any report photo that is not in Google Drive yet.
         try:
-            copied = copy_pending()
+            copied = copy_pending() + copy_pending_service_files()
             if copied:
                 self.stdout.write(f'Copied {copied} report photo(s) to Google Drive.')
         except Exception as problem:  # never let this stop the alerts

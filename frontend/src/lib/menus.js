@@ -21,6 +21,7 @@ import {
   Truck,
   TriangleAlert,
   Users,
+  Wrench,
 } from 'lucide-react'
 import { CleaningNavBadge } from '../components/CleaningNotices.jsx'
 
@@ -85,6 +86,15 @@ export const cleaningMenu = {
         { to: '/calibration/new', label: 'New calibration', Icon: FilePlus2 },
         { to: '/calibration/records', label: 'Records', Icon: ClipboardList },
         { to: '/calibration/audit', label: 'Audit log', Icon: History },
+      ],
+    },
+    {
+      label: 'Servicing',
+      adminOnly: true,
+      links: [
+        { to: '/service/new', label: 'New service record', Icon: FilePlus2 },
+        { to: '/service/records', label: 'Service records', Icon: Wrench },
+        { to: '/service/audit', label: 'Audit log', Icon: History },
       ],
     },
   ],

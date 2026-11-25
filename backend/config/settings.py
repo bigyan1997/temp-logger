@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'calibration',
     'cleaning',
     'nonconformance',
+    'servicing',
 ]
 
 MIDDLEWARE = [

@@ -15,7 +15,7 @@ export const modules = [
   {
     key: 'cleaning',
     name: 'Cleaning & Maintenance',
-    description: 'Tick off the cleaning and maintenance tasks, with reminders for the monthly and quarterly ones, and the 6-monthly thermometer calibration.',
+    description: 'Tick off the cleaning and maintenance tasks, with reminders for the monthly and quarterly ones, the 6-monthly thermometer calibration, and service records with invoices.',
     tables: 'HACCP Tables 8 and 14',
     to: '/cleaning',
     Icon: SprayCan,

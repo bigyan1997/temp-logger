@@ -16,6 +16,7 @@ class AuditLog(models.Model):
         LOGIN_CREATED = 'login_created', 'Login created'
         LOGIN_CHANGED = 'login_changed', 'Login changed'
         DELETED = 'deleted', 'Item deleted'
+        EDITED = 'edited', 'Entry edited'
         CLOSED_DAY = 'closed_day', 'Closed day changed'
 
     class Module(models.TextChoices):
@@ -23,6 +24,7 @@ class AuditLog(models.Model):
         CALIBRATION = 'calibration', 'Calibration'
         CLEANING = 'cleaning', 'Cleaning & Maintenance'
         NONCONFORMANCE = 'nonconformance', 'Non-Conformance Reports'
+        SERVICING = 'servicing', 'Service Records'
 
     # Each module reads only its own lines, so the records and voids of one never show in another.
     module = models.CharField(max_length=20, choices=Module.choices, default=Module.TEMPERATURE)

@@ -62,6 +62,7 @@ temp-logger/
     calibration/        Calibration + GaugeCheck (Table 14), PDF, due date rules, voids
     cleaning/           CleaningTask + CleaningCheck (Table 8): the day's tick list, voids, PDF, due rules
     nonconformance/     NonConformance + Update + Photo (Table 5): reports, follow-ups (photos can belong to a follow-up), photos kept in NCR_PHOTOS_DIR and copied to Google Drive (drive.py, oauth_drive.py, saving.py), paper-style PDFs, `drive_authorize` command
+    servicing/          ServiceRecord + ServiceFile: equipment services (coolroom, freezer...) with who did it, when, and invoices of any kind (PDF, photo, Word...). Files reuse `nonconformance/photos.py` (type check, NCR_PHOTOS_DIR) and are copied to Google Drive under `Service Records/SVC-0001 - <equipment>/` (`servicing/drive.py`, retried by send_alerts). Edited and deleted by day staff with the name of who did it (`removal.py`: PC files removed, the record's Drive folder to the Bin, one audit line); own audit log (`module=servicing`)
     reports/            PDF generation, CSV export
     requirements.txt
   frontend/

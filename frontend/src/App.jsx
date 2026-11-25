@@ -5,6 +5,9 @@ import { cleaningMenu, ncrMenu, recordsMenu, settingsMenu, temperatureMenu } fro
 import CalibrationHome from './pages/calibration/CalibrationHome.jsx'
 import CalibrationRecords from './pages/calibration/CalibrationRecords.jsx'
 import NewCalibration from './pages/calibration/NewCalibration.jsx'
+import NewService from './pages/servicing/NewService.jsx'
+import ServiceDetail from './pages/servicing/ServiceDetail.jsx'
+import ServiceRecords from './pages/servicing/ServiceRecords.jsx'
 import NcrDetail from './pages/ncr/NcrDetail.jsx'
 import NcrHome from './pages/ncr/NcrHome.jsx'
 import NewNcr from './pages/ncr/NewNcr.jsx'
@@ -109,6 +112,10 @@ export default function App() {
         <Route path="/calibration/new" element={adminPage(<NewCalibration />)} />
         <Route path="/calibration/records" element={adminPage(<CalibrationRecords />)} />
         <Route path="/calibration/audit" element={adminPage(<AuditLog module="calibration" />)} />
+        <Route path="/service/new" element={adminPage(<NewService />)} />
+        <Route path="/service/records" element={adminPage(<ServiceRecords />)} />
+        <Route path="/service/audit" element={adminPage(<AuditLog module="servicing" />)} />
+        <Route path="/service/:id" element={adminPage(<ServiceDetail />)} />
       </Route>
 
       {/* The Non-Conformance Reports module (Table 5): day staff only. */}
