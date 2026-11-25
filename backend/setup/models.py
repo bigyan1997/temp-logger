@@ -54,6 +54,8 @@ class Supplier(models.Model):
     active = models.BooleanField(default=True)
     # Only sets what Receiving starts on; staff can still change it for a delivery.
     usually_frozen = models.BooleanField(default=False)
+    # Delivers at night: the night login's Receiving screen shows only these; the day login sees every supplier (see readings/suppliers.py).
+    night_only = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['id']  # the order they were added, which is the order of the paper sheet

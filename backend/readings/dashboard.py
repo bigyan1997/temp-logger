@@ -5,11 +5,12 @@ from datetime import timedelta
 from django.utils import timezone
 
 from setup.closed_days import closed_labels, day_closure, storage_closure
-from setup.models import Supplier, Unit
+from setup.models import Unit
 
 from .choices import Status
 from .models import DispatchReading, ReceivingCheck, StorageReading
 from .schedule import GRACE_PERIOD, slots_on
+from .suppliers import suppliers_for
 
 MISSED_LOOKBACK_DAYS = 2    # today and yesterday
 OUT_OF_LIMIT_LOOKBACK = timedelta(days=7)
@@ -94,7 +95,7 @@ def progress_today(today):
         },
         'receiving': {
             'done': ReceivingCheck.objects.filter(date=today, voided=False).count(),
-            'total': 0 if day_closure(today, closed) else Supplier.objects.filter(active=True).count(),
+            'total': 0 if day_closure(today, closed) else suppliers_for(today, day_login=True).count(),
         },
         'dispatch': {'done': DispatchReading.objects.filter(date=today, voided=False).count()},
     }

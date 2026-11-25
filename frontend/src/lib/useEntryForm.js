@@ -8,6 +8,7 @@ const blankEntry = () => ({
   temp: '',
   note: '',
   noDelivery: false,
+  hardFrozen: false, // frozen delivery ticked HF: the temperature is filled in as -18
   packagingOk: true,
   productType: 'chilled',
   corrective: emptyCorrective,
@@ -37,7 +38,7 @@ export function useEntryForm({ endpoint, staffId, buildBody, startWith }) {
 
   function setField(key, patch) {
     // Changing the value starts over: any earlier confirmation no longer applies.
-    const changesValue = 'temp' in patch || 'noDelivery' in patch || 'packagingOk' in patch || 'productType' in patch
+    const changesValue = 'temp' in patch || 'noDelivery' in patch || 'hardFrozen' in patch || 'packagingOk' in patch || 'productType' in patch
     update(key, { ...patch, ...(changesValue && { confirmed: false, phase: 'idle', message: '', warnings: [] }) })
   }
 

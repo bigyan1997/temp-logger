@@ -74,7 +74,7 @@ export const sections = [
     empty: 'No suppliers yet.',
     activeKey: 'active',
     title: (item) => item.name,
-    detail: (item) => (item.usually_frozen ? 'Usually frozen' : 'Usually chilled'),
+    detail: (item) => `${item.usually_frozen ? 'Usually frozen' : 'Usually chilled'}${item.night_only ? ' · Night login only' : ''}`,
     fields: [
       { name: 'name', label: 'Supplier name', type: 'text', required: true },
       {
@@ -82,6 +82,12 @@ export const sections = [
         label: 'Usually frozen',
         type: 'checkbox',
         help: 'Receiving starts on Frozen for this supplier. It can still be changed to Chilled on any delivery.',
+      },
+      {
+        name: 'night_only',
+        label: 'Night login only',
+        type: 'checkbox',
+        help: 'For a supplier that delivers at night: the night login sees only the suppliers ticked here on Receiving. The day login and this list show every supplier.',
       },
     ],
   },

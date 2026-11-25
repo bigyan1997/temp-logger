@@ -5,6 +5,9 @@ import { parseTemp, statusFor } from '../lib/status.js'
 import CorrectiveFields, { isCorrectiveValid } from './CorrectiveFields.jsx'
 import StatusBadge from './StatusBadge.jsx'
 
+// What a hard frozen (HF) delivery records, so nobody has to type it.
+const HARD_FROZEN_TEMP = '-18'
+
 const inputClass =
   'h-11 rounded-lg border border-line bg-surface px-3 text-base focus:border-brand focus:outline-2 focus:outline-brand'
 
@@ -76,7 +79,7 @@ export default function EntryRow({ label, hint, done, limit, entry, onChange, on
             <select
               aria-label={`Product type for ${label}`}
               value={entry.productType}
-              onChange={(e) => onChange({ productType: e.target.value })}
+              onChange={(e) => onChange({ productType: e.target.value, ...(entry.hardFrozen && { hardFrozen: false, temp: '' }) })}
               disabled={entry.noDelivery}
               className={inputClass}
             >
@@ -84,6 +87,18 @@ export default function EntryRow({ label, hint, done, limit, entry, onChange, on
               <option value="frozen">Frozen</option>
               <option value="baked_pie">Freshly baked pies</option>
             </select>
+            {entry.productType === 'frozen' && (
+              <label className="flex items-center gap-2 text-sm" title="Hard frozen: records -18 °C without typing it">
+                <input
+                  type="checkbox"
+                  checked={entry.hardFrozen}
+                  disabled={entry.noDelivery}
+                  onChange={(e) => onChange({ hardFrozen: e.target.checked, temp: e.target.checked ? HARD_FROZEN_TEMP : '' })}
+                  className="size-5 accent-brand"
+                />
+                HF (Hard frozen)
+              </label>
+            )}
           </>
         )}
 
@@ -92,7 +107,7 @@ export default function EntryRow({ label, hint, done, limit, entry, onChange, on
             <input
               type="checkbox"
               checked={entry.noDelivery}
-              onChange={(e) => onChange({ noDelivery: e.target.checked, temp: '' })}
+              onChange={(e) => onChange({ noDelivery: e.target.checked, temp: '', hardFrozen: false })}
               className="size-5 accent-brand"
             />
             {skipLabel ?? 'No delivery'}
@@ -106,7 +121,7 @@ export default function EntryRow({ label, hint, done, limit, entry, onChange, on
           value={entry.temp}
           onChange={(e) => onChange({ temp: e.target.value })}
           onKeyDown={submitOnEnter}
-          disabled={busy || entry.noDelivery}
+          disabled={busy || entry.noDelivery || entry.hardFrozen}
           inputMode="decimal"
           autoComplete="off"
           autoFocus={autoFocus}

@@ -172,3 +172,8 @@ Full detail is in docs/DEPLOYMENT.md. In short:
 - Each piece of equipment is due again 6 months after its latest service record (`backend/servicing/due.py`). One record can list several pieces separated by commas ("Coolroom, Old Coolroom, Freezer"); each gets its own due date from that visit.
 - Emails (`backend/alerts/service_check.py`): once within 15 days of the due date (`service_due`), once if overdue (`service_overdue`); the key holds the due date, so a new service starts a fresh round.
 - Service records page shows a "Next service due" panel (`ServiceDue.jsx`, `GET /api/service-records/due/`). A record has a type, Routine service or Repair (`ServiceRecord.kind`, migration 0004): only routine services start the 6-month clock, a repair does not. Existing records default to Routine; edit one to mark it a repair. Not pushed yet.
+
+## 2026-11-26 - night-only suppliers, hard frozen tick, All on service form
+- Suppliers have a "Night login only" tick (`Supplier.night_only`, setup/0011): the night login's Receiving screen shows only those suppliers (plus any already logged that day); the day login and the Lists page show every supplier (`readings/suppliers.py`).
+- Receiving: a frozen delivery has an "HF (Hard frozen)" tick that fills the temperature as -18 (frontend only, `EntryRow.jsx`). The owner does not want HF marked in the record, so it is saved as a plain -18 reading.
+- New service record: an "All" tick next to the unit tick boxes ticks every unit.

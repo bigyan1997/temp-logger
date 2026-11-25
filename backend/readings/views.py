@@ -193,7 +193,7 @@ class DayView(APIView):
             day = date.fromisoformat(request.query_params['date']) if 'date' in request.query_params else None
         except ValueError:
             return Response({'code': 'bad_date', 'message': 'Use a date like 2026-11-02.'}, status=400)
-        return Response(build_day(day or timezone.localdate()))
+        return Response(build_day(day or timezone.localdate(), day_login=request.user.is_admin_role))
 
 
 class TrendsView(APIView):

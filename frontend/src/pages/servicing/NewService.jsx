@@ -47,6 +47,9 @@ function ServiceForm({ staffId, date }) {
   const equipment = [...picked, other.trim()].filter(Boolean).join(', ')
   const toggle = (name) => setPicked(picked.includes(name) ? picked.filter((n) => n !== name) : [...picked, name])
 
+  const allPicked = units.length > 0 && units.every((u) => picked.includes(u.name))
+  const toggleAll = () => setPicked(allPicked ? [] : units.map((u) => u.name))
+
   const save = useMutation({
     mutationFn: async () => {
       const service = await api('/service-records/', {
@@ -93,6 +96,10 @@ function ServiceForm({ staffId, date }) {
         <fieldset>
           <legend className="mb-1 text-sm font-medium">What was serviced (required)</legend>
           <div className="flex flex-wrap gap-2">
+            <label className={`inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg border px-3 ${allPicked ? 'border-brand bg-brand-soft font-semibold' : 'border-line'}`}>
+              <input type="checkbox" checked={allPicked} onChange={toggleAll} className="size-4 accent-brand" />
+              All
+            </label>
             {units.map((u) => (
               <label key={u.id} className={`inline-flex h-11 cursor-pointer items-center gap-2 rounded-lg border px-3 ${picked.includes(u.name) ? 'border-brand bg-brand-soft font-semibold' : 'border-line'}`}>
                 <input type="checkbox" checked={picked.includes(u.name)} onChange={() => toggle(u.name)} className="size-4 accent-brand" />

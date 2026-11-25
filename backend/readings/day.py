@@ -3,11 +3,12 @@
 from django.utils import timezone
 
 from setup.closed_days import closed_labels, day_closure, storage_closure
-from setup.models import Run, Supplier, Unit
+from setup.models import Run, Unit
 
 from .dashboard import missed_storage_slots
 from .models import DispatchReading, ReceivingCheck, StorageReading
 from .schedule import GRACE_PERIOD, slots_on
+from .suppliers import suppliers_for
 
 
 def slot_state(slot, now, all_done, closed=None):
@@ -51,7 +52,7 @@ def storage_for_day(day, now):
     return result
 
 
-def receiving_for_day(day):
+def receiving_for_day(day, day_login=True):
     checks = {c.supplier_id: c for c in ReceivingCheck.objects.filter(date=day, voided=False).select_related('recorded_by')}
     return [
         {
@@ -66,7 +67,7 @@ def receiving_for_day(day):
                 'logged_by': check.recorded_by.name,
             } if (check := checks.get(supplier.pk)) else None,
         }
-        for supplier in Supplier.objects.filter(active=True)
+        for supplier in suppliers_for(day, day_login)
     ]
 
 
@@ -98,13 +99,13 @@ def missed_for_screen(now):
     return list(groups.values())
 
 
-def build_day(day, now=None):
+def build_day(day, now=None, day_login=True):
     now = now or timezone.now()
     return {
         'date': day,
         'closed': day_closure(day),  # Receiving and Dispatch are skipped on this date
         'storage': storage_for_day(day, now),
-        'receiving': receiving_for_day(day),
+        'receiving': receiving_for_day(day, day_login),
         'dispatch': dispatch_for_day(day),
         'missed': missed_for_screen(now),
     }
